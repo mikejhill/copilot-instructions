@@ -22,7 +22,7 @@ This skill helps you:
 
 Use the Feature Reference for quick lookup, the Feature Selection Guide to make informed choices, and the linked documentation for comprehensive implementation guidance.
 
-See also the **Global Rules** section for importnat rules which apply when creating or editing all features.
+See also the **Global Rules** section for important rules which apply when creating or editing all features.
 
 ## Feature Reference
 
