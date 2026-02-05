@@ -138,9 +138,11 @@ The agent supports two distinct workflows. Determine which workflow applies base
 
 2. **Start Interactive Rebase**:
 
-   **Setup Custom Editor (Required to avoid Vim):**
+   **CRITICAL CONSTRAINT**: Never attempt to use `--edit-todo` or rely on the native editor. The native editor will not be available. Instead, you MUST edit the todo list file directly using file manipulation commands.
 
-   Create a temporary editor script that inserts a `break` command at the start of the rebase todo list:
+   **Setup Direct Todo List Editing (Required):**
+
+   Create a temporary editor script that allows direct file manipulation without opening an interactive editor:
 
    ```powershell
    # PowerShell
@@ -170,9 +172,9 @@ The agent supports two distinct workflows. Determine which workflow applies base
    **Execute Rebase:**
    - Run `git rebase -i --autostash <commit-hash>~1` (where `<commit-hash>` is the target commit)
    - Or use `git rebase -i --autostash HEAD~N` where N is how many commits back
-   - Git will pause with the todo list ready to edit
-   - Read the todo list to see the current rebase plan
-   - Edit the todo list file to change `pick` to the appropriate action:
+   - Git will automatically invoke the custom editor script, which creates the todo list file with a `break` command inserted at the start
+   - Read the todo list file directly to see the current rebase plan
+   - Edit the todo list file directly (do NOT use `--edit-todo` or open any editor) to change `pick` to the appropriate action:
      - `reword` for renaming commit message only
      - `edit` for adding files or modifying content
      - `fixup` or `squash` if combining commits
@@ -248,6 +250,7 @@ The agent supports two distinct workflows. Determine which workflow applies base
 - Each staged hunk belongs logically to the current commit's stated purpose
 - All commits pushed successfully to remote (exit code 0)
 - Force push (if used) received explicit user confirmation
+- During rebase, todo list was edited directly (never used `--edit-todo` or native editor)
 
 ### Failure Modes:
 
@@ -268,6 +271,7 @@ The agent supports two distinct workflows. Determine which workflow applies base
 - [ ] Each hunk staged belongs logically to the current commit's message
 - [ ] Commit messages reference correct ticket numbers
 - [ ] All commits are pushed successfully
+- [ ] During rebase, todo list was edited directly without using `--edit-todo` or native editor
 
 ## When to Ask for Help
 
