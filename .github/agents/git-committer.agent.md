@@ -236,13 +236,26 @@ Follow the Infer → Clarify → Confirm pattern (see "How to Use the #tool:vsco
    **Execute Rebase:**
    - Run `git rebase -i --autostash <commit-hash>~1` (where `<commit-hash>` is the target commit)
    - Or use `git rebase -i --autostash HEAD~N` where N is how many commits back
-   - Git will automatically invoke the custom editor script, which creates the todo list file with a `break` command inserted at the start
-   - Read the todo list file directly to see the current rebase plan
+   - Git will automatically invoke the custom editor script, which inserts a `break` command at the start of the rebase
+   - **EXPECTED OUTPUT** (indicates rebase started successfully):
+     ```
+     Created autostash: <object-hash>
+     Stopped at <commit-hash> (<commit-message>)
+     ```
+   - This output means the rebase has **successfully started** and is paused at the `break` command
+   - **Locate the todo list file**: `.git/rebase-merge/git-rebase-todo` (relative to repository root)
+   - Read the todo list file directly using: `Get-Content .git/rebase-merge/git-rebase-todo` (PowerShell) or `cat .git/rebase-merge/git-rebase-todo` (Bash)
+   - The file will contain lines like:
+     ```
+     break
+     pick <hash> <commit message>
+     pick <hash> <commit message>
+     ```
    - Edit the todo list file directly (do NOT use `--edit-todo` or open any editor) to change `pick` to the appropriate action:
      - `reword` for renaming commit message only
      - `edit` for adding files or modifying content
      - `fixup` or `squash` if combining commits
-   - Run `git rebase --continue` to start executing the rebase
+   - Run `git rebase --continue` to execute the rebase with your modifications
 
 3. **Execute Fix** (depends on action chosen):
 
