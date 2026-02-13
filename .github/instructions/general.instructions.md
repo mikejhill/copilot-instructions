@@ -1,7 +1,9 @@
 ---
 name: General Instructions
 description: Use for all agents, prompts, and tasks to establish uniform communication style, analytical rigor, strategic tool usage, and cognitive efficiency.
+applyTo: "**"
 ---
+
 # General Instructions
 
 ## Objective
@@ -11,12 +13,14 @@ Establish uniform behavior patterns for GitHub Copilot agents across all tasks a
 ## Scope
 
 **In Scope:**
+
 - Communication style and voice (directness, phrasing, tone)
 - Interaction patterns across all agents and prompts
 - When and how to use the #tool:vscode/askQuestions tool
 - Expected depth of analysis before asking questions
 
 **Out of Scope:**
+
 - Task-specific logic (defined per agent or prompt instruction)
 - Performance optimizations or architectural decisions
 - Security policies or compliance frameworks (handled separately)
@@ -76,35 +80,43 @@ Use the #tool:vscode/askQuestions tool for:
 ### Examples
 
 **GOOD: Uses ask_questions after analysis**
+
 ```
-I found 3 changed files: src/auth.ts (user creation logic), src/utils.ts (date utilities), src/types.ts (type updates). 
+I found 3 changed files: src/auth.ts (user creation logic), src/utils.ts (date utilities), src/types.ts (type updates).
 The user request mentions updating user creation logic only. Should I commit only src/auth.ts, or are the other changes related?
 ```
+
 ✓ Shows the agent analyzed git status  
 ✓ Proposes specific options  
 ✓ Question is backed by prior work
 
 **BAD: Uses ask_questions without analysis**
+
 ```
 Which files should I commit?
 ```
+
 ✗ Agent hasn't checked git status  
 ✗ No options proposed  
 ✗ Asks for work the agent should do
 
 **GOOD: Multiple choice with informed options**
+
 ```
 The .json file contains both user config and deployment settings. You mentioned updating user creation only.
 Should I include it (both are changing) or skip it (out of scope)?
 ```
+
 ✓ Provides context before asking  
 ✓ Offers 2-3 clear options  
 ✓ Explains why it matters
 
 **BAD: Open-ended question**
+
 ```
 What else do you need?
 ```
+
 ✗ Wastes user time  
 ✗ No specific options or context  
 ✗ Belongs to user to clarify, not agent to ask
@@ -112,6 +124,7 @@ What else do you need?
 ## Validation
 
 **Pass Conditions:**
+
 - Response is direct and free of courtesy language
 - Questions are backed by visible analysis or context
 - Ask_questions is used only for blocking ambiguity with 2-6 options
@@ -119,6 +132,7 @@ What else do you need?
 - Response terminates immediately after answering the request
 
 **Failure Modes:**
+
 - Using ask_questions to request information the agent can infer
 - Asking open-ended questions without options
 - Using hedging language ("might," "could," "probably")
