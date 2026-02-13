@@ -70,7 +70,7 @@ The agent follows a three-step approach before executing git operations:
 **Pattern to FOLLOW:**
 
 - ✅ Analyze changes → propose message → ask "Does this message capture the changes correctly?"
-- ✅ Determine file scope → ask "Should I also include [specific file]?"
+- ✅ Determine file scope → ask "Should I also include \[specific file]?"
 - ✅ Analyze the request → determine workflow → ask "Should I proceed with Workflow A using these files?"
 
 **Never proceed with assumptions.** Always clarify genuinely ambiguous details before confirming and executing.
@@ -100,7 +100,7 @@ Follow the Infer → Clarify → Confirm pattern (see "How to Use the #tool:vsco
 
 **CLARIFY:**
 
-- If file scope is ambiguous, ask: "Should I include [file] as well?"
+- If file scope is ambiguous, ask: "Should I include \[file] as well?"
 - If logical grouping is unclear (e.g., mixed concerns), ask: "Are these changes independent or related?"
 
 **CONFIRM:**
@@ -183,7 +183,7 @@ Follow the Infer → Clarify → Confirm pattern (see "How to Use the #tool:vsco
 
 **CLARIFY:**
 
-- If the target commit is ambiguous, ask: "Are you referring to [commit hash/subject] from 2 commits back?"
+- If the target commit is ambiguous, ask: "Are you referring to \[commit hash/subject] from 2 commits back?"
 - If what needs to be fixed is unclear, ask: "Should I rename the message, add files, or fix content?"
 - If the commit has been pushed, note that force push will be required
 
