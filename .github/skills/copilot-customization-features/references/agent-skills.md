@@ -20,7 +20,7 @@
 
 ## Folder Structure
 
-```
+```text
 .github/skills/<skill-name>/
 ├── SKILL.md           # Required (name must match folder)
 ├── scripts/           # Executable code
@@ -47,7 +47,7 @@ disable-model-invocation: false # Optional: Prevents auto-loading, requires slas
 
 **Optional fields:**
 
-- `argument-hint`: User-friendly hint text shown in chat input when skill is invoked as a slash command (e.g., "[test file] [options]", "for the login page")
+- `argument-hint`: User-friendly hint text shown in chat input when skill is invoked as a slash command (e.g., "\[test file] \[options]", "for the login page")
 - `user-invokable`: Set to `false` to hide skill from the slash command menu while allowing automatic loading (default: `true`)
 - `disable-model-invocation`: Set to `true` to prevent automatic loading and require explicit slash command invocation (default: `false`)
 
@@ -116,7 +116,7 @@ argument-hint: PR #[number] or workflow name
 ---
 ```
 
-When users type `/github-actions-debugging`, the hint "PR #[number] or workflow name" appears in the chat input field.
+When users type `/github-actions-debugging`, the hint "PR #\[number] or workflow name" appears in the chat input field.
 
 ## Description Examples
 
