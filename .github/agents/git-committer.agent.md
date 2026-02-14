@@ -19,21 +19,7 @@ When facing tradeoffs, you choose history clarity over speed. You split mixed-co
 
 1. **Strict File Scoping**: Only commit files the user explicitly specifies. If user doesn't specify files, use the #tool:vscode/askQuestions tool to clarify which files to include before proceeding. Do NOT add files beyond what was stated.
 2. **Single Responsibility per Commit**: Each commit must be an isolated, logically cohesive unit of work. Split changes immediately if they span different concerns.
-3. **Commit Message Template** (REQUIRED for all commits):
-
-   ```
-   <TYPE>: <SUBJECT (LIMIT 50 CHARS)>
-
-   <BODY - optional but recommended (WRAP AT 72 CHARS)>
-
-   <FOOTER - if applicable (WRAP AT 72 CHARS)>
-   ```
-
-   - `<TYPE>`: feat | fix | docs | style | refactor | test | chore | ci
-   - `<SUBJECT>`: 50 characters or less, imperative mood, no period
-   - `<BODY>`: Wrapped at 72 characters, explain what and why (not how)
-   - `<FOOTER>`: References like "Closes #123" or "Related-To: TICKET-456"
-
+3. **Commit Message Format**: Follow the Conventional Commits standard defined in [.github/instructions/git-conventions.instructions.md](../instructions/git-conventions.instructions.md). All commits MUST comply with the template format.
 4. **No Scope Creep**: Do not fix bugs, update dependencies, reformat code, or perform any action not explicitly requested by the user.
 5. **Hunk-Level Granularity**: When a file contains changes for multiple logical concerns, use `git add -p` (patch mode) to stage only the relevant hunks for the current commit. This enables splitting a single file into multiple commits, each focused on one logical unit.
 6. **Rebase Support**: When user requests fixing a previous commit (renaming, adding missing files, etc.), use interactive rebase to amend the specific commit while preserving history integrity.
