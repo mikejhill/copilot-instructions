@@ -21,7 +21,7 @@ When facing tradeoffs, you choose history clarity over speed. You split mixed-co
 2. **Single Responsibility per Commit**: Each commit must be an isolated, logically cohesive unit of work. Split changes immediately if they span different concerns.
 3. **Commit Message Format**: Follow the Conventional Commits standard defined in [.github/instructions/git-conventions.instructions.md](../instructions/git-conventions.instructions.md). All commits MUST comply with the template format.
 4. **No Scope Creep**: Do not fix bugs, update dependencies, reformat code, or perform any action not explicitly requested by the user.
-5. **Hunk-Level Granularity**: When a file contains changes for multiple logical concerns, use `git add -p` (patch mode) to stage only the relevant hunks for the current commit. This enables splitting a single file into multiple commits, each focused on one logical unit.
+5. **Hunk-Level Granularity**: When a file contains changes for multiple logical concerns, use patch file manipulation to stage only the relevant hunks for each commit. Extract patches, filter hunks by concern, and apply them separately to create atomic commits.
 6. **Rebase Support**: When user requests fixing a previous commit (renaming, adding missing files, etc.), use interactive rebase to amend the specific commit while preserving history integrity.
 
 ## How to Use the #tool:vscode/askQuestions tool: Infer → Clarify → Confirm
@@ -101,8 +101,8 @@ Follow the Infer → Clarify → Confirm pattern (see "How to Use the #tool:vsco
    - For each file in scope, run `git diff <file>` to inspect changes
    - Determine the minimum logical grouping for ONE commit
    - If multiple logical units exist, extract the first isolated unit only
-   - **For each file, check if it contains mixed concerns**: If a file has changes for multiple different purposes, use `git add -p` to stage only the relevant hunks
-   - State explicitly which files (or specific hunks within files) will be included in this commit and the logical reason
+   - **For each file, check if it contains mixed concerns**: If a file has changes for multiple different purposes, use patch file manipulation to isolate hunks (see "Mixed-Concern File Handling" section)
+   - State explicitly which files (and specific hunks if applicable) will be included in this commit and the logical reason
 
 2. **Construct Commit Message**:
    - Analyze the `git diff` output to understand what changed in the files to be committed
@@ -121,8 +121,7 @@ Follow the Infer → Clarify → Confirm pattern (see "How to Use the #tool:vsco
 
 4. **Execute Commit**:
    - If file contains only changes for this commit: Run `git add <file>`
-   - If file has mixed changes: Run `git add -p <file>` (patch mode) to interactively select only the hunks relevant to this commit
-   - When using patch mode, review each hunk and answer `y` to include or `n` to skip
+   - If file has mixed changes: Use patch file manipulation workflow (see "Mixed-Concern File Handling" section)
    - Run `git commit -m "<message>"`
    - Verify commit succeeded by checking exit code and running `git log -1 --oneline` to confirm
 
@@ -169,8 +168,8 @@ Follow the instructions in [.github/instructions/git-rebase.instructions.md](../
 - Footer (if present) includes ticket references in correct format
 - No unrelated changes included (no formatting, refactoring, or scope creep)
 - User confirmed commits when any ambiguity existed
-- For mixed-concern files, patch mode was used to stage only relevant hunks
-- Each staged hunk belongs logically to the current commit's stated purpose
+- For mixed-concern files, user was informed and either handled patch-mode manually or accepted broader commit scope
+- Each staged change belongpatch file manipulation was used to isolate hunks for separate commits
 - All commits pushed successfully to remote (exit code 0)
 - Force push (if used) received explicit user confirmation
 - During rebase, todo list was edited directly (never used `--edit-todo` or native editor)
@@ -190,32 +189,95 @@ Follow the instructions in [.github/instructions/git-rebase.instructions.md](../
 - [ ] Each commit message follows the template format
 - [ ] No unrelated changes included (no formatting, bug fixes, etc.)
 - [ ] User confirmed ambiguous commits before execution
-- [ ] For mixed-concern files, patch mode was used to split hunks correctly
-- [ ] Each hunk staged belongs logically to the current commit's message
+- [ ] For mixed-concern files, patch manipulation was used to split hunks into separate commits
+- [ ] Each change staged belongs logically to the current commit's message
 - [ ] Commit messages reference correct ticket numbers
 - [ ] All commits are pushed successfully
 - [ ] During rebase, todo list was edited directly without using `--edit-todo` or native editor
 
-## Hunk Mode Quick Reference
+## Mixed-Concern File Handling
 
-**When to use `git add -p`:**
+**When a file has changes for multiple logical concerns, use patch file manipulation:**
 
-- File has changes for Feature A and Bug Fix B
-- File has changes for refactoring plus bug fixes
-- File has changes for related features that should be separate commits
+### Automated Patch-Based Workflow
 
-**Patch mode interaction:**
+1. **Create full patch**:
 
-```text
-(1/3) Stage this hunk [y,n,q,a,d,j,J,g,/,e,?]?
-y - stage this hunk
-n - do not stage this hunk
-q - quit; do not stage this hunk or any of the remaining ones
-a - stage this hunk and all later hunks in the file
-s - split the current hunk into smaller hunks
-e - manually edit the current hunk
+   ```bash
+   git diff <file> > temp.patch
+   ```
+
+2. **Analyze patch hunks**:
+   - Read the patch file
+   - Identify hunk boundaries (lines starting with `@@`)
+   - Determine which concern each hunk belongs to based on content
+
+3. **For each logical concern** (Concern A, then Concern B, etc.):
+
+   **a. Create filtered patch**:
+   - Copy patch header (lines before first `@@`)
+   - Include only hunks belonging to current concern
+   - Save as `concern-a.patch`
+
+   **b. Apply and commit**:
+
+   ```bash
+   git apply --cached concern-a.patch    # Stage only these hunks
+   git commit -m "<message>"              # Commit this concern
+   ```
+
+   **c. Update working directory**:
+
+   ```bash
+   git checkout -- <file>                 # Reset to HEAD
+   git diff HEAD > remaining.patch        # Get remaining changes
+   ```
+
+4. **Repeat** for remaining concerns until all hunks are committed
+
+5. **Cleanup temporary files**:
+   ```bash
+   Remove-Item temp.patch, concern-a.patch, concern-b.patch, remaining.patch -ErrorAction SilentlyContinue
+   ```
+
+### Example: File with 2 Concerns
+
+```bash
+# Initial state: file.ts has hunks for Feature A and Bug Fix B
+
+# Create patch
+git diff file.ts > full.patch
+
+# Analyze hunks, create filtered patches
+# (manually edit or programmatically filter)
+# feature-a.patch contains hunks 1, 3
+# bugfix-b.patch contains hunks 2, 4
+
+# Commit Feature A
+git apply --cached feature-a.patch
+git commit -m "feat: add feature A"
+
+# Reset and commit Bug Fix B
+git checkout -- file.ts
+git apply --cached bugfix-b.patch
+git commit -m "fix: resolve bug B"
+
+# Cleanup temporary files
+Remove-Item full.patch, feature-a.patch, bugfix-b.patch -ErrorAction SilentlyContinue
 ```
 
-- Review each hunk carefully.
-- Pick `y` to include, `n` to skip.
-- Use `s` if a hunk contains mixed concerns and needs further splitting.
+### Fallback: Single Commit with Descriptive Body
+
+If hunks are too intertwined to separate cleanly:
+
+- Stage entire file: `git add <file>`
+- Commit with body explaining mixed concerns:
+
+  ```text
+  refactor: update file.ts
+
+  Includes two changes:
+  - Feature A: Added new functionality
+  - Bug Fix B: Resolved race condition
+
+  ```
