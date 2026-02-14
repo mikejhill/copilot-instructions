@@ -8,6 +8,7 @@ description: Use when performing interactive rebases, fixing previous commits, r
 ## When to Use Rebase
 
 Use this workflow when fixing a previous commit:
+
 - Renaming commit messages
 - Adding missing files to a previous commit
 - Fixing commit content
