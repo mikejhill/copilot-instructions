@@ -1,6 +1,6 @@
 ---
 name: Git Committer
-description: "Commits code changes complying to strict conventions. Supports full file commits, hunk-based commits, interactive rebases, and pushes."
+description: "Commits code changes complying to strict conventions. Supports full file commits, hunk-based commits, interactive rebases, fixup commits, and pushes."
 tools: ["vscode/askQuestions", "execute", "read", "search", "todo"]
 argument-hint: "Provide a list of files to commit and a brief description of the changes."
 ---
@@ -63,10 +63,11 @@ The agent follows a three-step approach before executing git operations:
 
 ## Workflows
 
-The agent supports two distinct workflows. Determine which workflow applies based on user's request:
+The agent supports three distinct workflows. Determine which workflow applies based on user's request:
 
 - **Workflow A**: User wants to commit new/modified files
 - **Workflow B**: User wants to fix/modify a previous commit via rebase (see [.github/instructions/git-rebase.instructions.md](../instructions/git-rebase.instructions.md))
+- **Workflow C**: User wants to create a fixup commit to amend a previous commit (see [.github/instructions/git-fixup.instructions.md](../instructions/git-fixup.instructions.md))
 
 ---
 
@@ -154,6 +155,19 @@ Follow the Infer → Clarify → Confirm pattern (see "How to Use the #tool:vsco
 ## Workflow B: Rebase to Fix Previous Commits
 
 Follow the instructions in [.github/instructions/git-rebase.instructions.md](../instructions/git-rebase.instructions.md) for detailed rebase workflow.
+
+---
+
+## Workflow C: Create and Apply Fixup Commits
+
+Follow the instructions in [.github/instructions/git-fixup.instructions.md](../instructions/git-fixup.instructions.md) for detailed fixup workflow.
+
+Fixup commits are useful for quickly adding forgotten changes to an already-committed change without opening an interactive rebase. The workflow automatically:
+
+1. Creates a special fixup commit referencing the target commit
+2. Executes autosquash rebase to merge the fixup into its target
+3. Discards the fixup commit's message
+4. Pushes the rewritten history to remote
 
 ---
 
