@@ -33,13 +33,16 @@ param(
 
 Set-StrictMode -Version Latest
 
+#region Constants
 # Constants (global scope only)
 [string]$ScriptVersion = "1.0.0"
+#endregion Constants
 
 <#
 .SYNOPSIS
 Example class with documented behavior.
 #>
+#region Classes
 class ExampleProcessor {
     [string]$InputPath
 
@@ -66,7 +69,9 @@ class ExampleProcessor {
         return Get-Item -Path $this.InputPath
     }
 }
+#endregion Classes
 
+#region Main
 function Main {
     param(
         [Parameter(Mandatory)]
@@ -79,6 +84,7 @@ function Main {
 }
 
 Main @PSBoundParameters
+#endregion Main
 ```
 
 ## One-Off Template

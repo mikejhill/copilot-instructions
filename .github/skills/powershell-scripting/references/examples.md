@@ -10,7 +10,7 @@ Get-ChildItem -Path $Path -File -Recurse | Sort-Object Length -Descending | Sele
 
 ## Full Script (Skeleton)
 
-Use the full script skeleton in [templates.md](templates.md) as the baseline. Add domain-specific classes and methods in the class section and keep orchestration in `Main`.
+Use the full script skeleton in [templates.md](templates.md) as the baseline. Keep major sections in `#region <Name>`/`#endregion` blocks (Constants, Classes, Main) and add domain-specific classes and methods in the class section while keeping orchestration in `Main`.
 
 ## Full Script (Refactor Example)
 
@@ -48,6 +48,7 @@ param(
 
 Set-StrictMode -Version Latest
 
+#region Classes
 class RegistryScanner {
     [string]$BasePath
 
@@ -80,7 +81,9 @@ class RegistryScanner {
         return $null -ne $value -and $value.Enabled -eq 1
     }
 }
+#endregion Classes
 
+#region Main
 function Main {
     param([string]$RegistryPath)
 
@@ -89,4 +92,5 @@ function Main {
 }
 
 Main @PSBoundParameters
+#endregion Main
 ```

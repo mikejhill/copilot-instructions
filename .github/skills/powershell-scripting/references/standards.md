@@ -33,11 +33,19 @@ param()
 
 Set-StrictMode -Version Latest
 
+#region Constants
 # Constants
+#endregion Constants
+#region Classes
 # Classes
+#endregion Classes
+#region HelperFunctions
 # Helper functions
+#endregion HelperFunctions
+#region Main
 # Main
 # Main invocation
+#endregion Main
 ```
 
 ## Object-Oriented Design

@@ -77,6 +77,7 @@ Produce PowerShell solutions in two modes: full scripts for persisted automation
 - Max 3 levels of nesting
 - One blank line between functions/classes
 - Guard clauses at function entry
+- Use `#region <Name>`/`#endregion` for major logical sections (Constants, Classes, Helpers, Main)
 
 ## Constraints
 
