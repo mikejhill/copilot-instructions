@@ -79,7 +79,7 @@ Skills can include additional files in the same directory:
 Skills load in stages to optimize token usage:
 
 1. **Discovery** (~100 tokens): Agent reads `name` and `description`
-2. **Instructions** (<5000 tokens): Loads SKILL.md body when relevant
+2. **Instructions** (<5000 tokens, ~250 lines max): Loads SKILL.md body when relevant
 3. **Resources**: Additional files load only when referenced
 
 ## Using Skills as Slash Commands
