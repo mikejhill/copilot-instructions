@@ -61,7 +61,7 @@ Set-StrictMode -Version Latest
 
 Example format:
 
-```
+```text
 Process: Setting value in registry.
 Error: Access denied.
 Cause: Missing permissions.
@@ -105,8 +105,8 @@ Avoid expensive string construction when verbose logging is disabled. Guard heav
 
 ```powershell
 if ($VerbosePreference -eq 'Continue') {
-	$details = Get-HeavyDiagnostics -Path $Path
-	Write-Verbose ("[Scan] Details: {0}" -f $details)
+  $details = Get-HeavyDiagnostics -Path $Path
+  Write-Verbose ("[Scan] Details: {0}" -f $details)
 }
 ```
 
