@@ -16,6 +16,13 @@ Instructions that work are concrete, specific, and demonstrate expected behavior
 - **Personas over generic competence.** When the task requires a specific viewpoint, a persona anchors the reasoning. Security reviews, performance optimization, and compliance checks each benefit from a defined perspective.
 - **Constraints as boundaries.** Stating what you MUST NOT do and what you MUST do creates guardrails. Optional behavior uses MAY.
 
+**What belongs in instructions:**
+
+- **Objectives and decisions.** Specify the outcome, boundaries, and decision points the model must handle.
+- **Non-deterministic judgment.** Capture reasoning that cannot be enforced by automation.
+- **Automation-aware detail.** If a formatter, linter, or hook already enforces a deterministic rule (spacing, ordering, naming), reference the automation and omit the rule from instructions.
+- **Avoid duplication.** Do not repeat rules that are already guaranteed by tooling; redundancy increases inconsistency.
+
 An instruction set follows this path: objective → scope → inputs → outputs → constraints → procedure → validation → examples. This order forces logical thinking. Skip any step and instructions become incomplete.
 
 ## Writing Effective Language for Models
@@ -77,7 +84,7 @@ Execute all eight steps in order. Omitting any step produces incomplete instruct
 4. **Specify outputs**
    - Prescribe exact output format (JSON, Markdown, file path, etc.).
    - Name every file or artifact produced.
-   - Include formatting rules (line length, indentation, naming conventions).
+   - Include formatting rules only when no automation enforces them; otherwise reference the formatter/linter/hook and omit formatting details.
 5. **State constraints**
    - Declare safety and security constraints.
    - Declare style, tone, and formatting constraints.
@@ -104,6 +111,7 @@ Execute all eight steps in order. Omitting any step produces incomplete instruct
 - **Specify every edge case.** Do not assume the reader will infer behavior for "unusual" inputs.
 - **Prohibit undesired behavior by name.** Use "Do not X" instead of "Avoid X."
 - **Bind outputs to exact formats.** JSON structure, Markdown heading levels, file paths—be specific.
+- **Defer deterministic formatting to automation.** If tooling enforces formatting, reference it and omit redundant formatting rules.
 - **Use lists, not prose.** Prose hides requirements; lists expose them.
 - **Mark non-negotiable rules with MUST/MUST NOT.** Mark optional behavior with MAY.
 - **Use identical terminology throughout.** Define a term once, then use only that term.
@@ -356,6 +364,10 @@ Tooling constraints (part of Step 5: State constraints) define what the agent ca
 - Credentials, API keys, or sensitive environment variables are involved
 - The agent must understand the runtime environment
 
+**Deterministic rules belong in automation:**
+
+- If formatting, ordering, or naming is enforced by a formatter, linter, or hook, state that automation in constraints or assumptions and omit the deterministic rule text from instructions.
+
 **Do not include if:**
 
 - The task is pure reasoning or analysis (no tools needed)
@@ -411,7 +423,7 @@ Assumptions:
 - [ ] Objective: Single sentence, begins with a verb, states measurable outcome.
 - [ ] Scope: Explicit in-scope list and explicit out-of-scope list (not empty by default).
 - [ ] Inputs: Required inputs with type/format, optional inputs with effects, all assumptions stated.
-- [ ] Outputs: Exact format specified (JSON/Markdown/file path), file names and artifacts named, formatting rules included.
+- [ ] Outputs: Exact format specified (JSON/Markdown/file path), file names and artifacts named, formatting rules included only when no automation enforces them.
 - [ ] Constraints: Safety, security, style, tone, tool usage, and resource constraints all declared.
 - [ ] Procedure: Steps numbered sequentially, decision points as explicit if/then rules, no vague action verbs.
 - [ ] Validation: Pass conditions, failure handling, and named failure modes specified.
@@ -443,6 +455,7 @@ Assumptions:
 - [ ] Environment assumptions stated in Inputs section, not mixed with constraints.
 - [ ] No rule contradictions (if X is MUST NOT and X also appears as MUST, resolve explicitly).
 - [ ] Conflict resolution clause included if multiple rules could conflict.
+- [ ] Deterministic formatting rules omitted when automation exists; automation referenced instead.
 
 ### Structural Integrity
 

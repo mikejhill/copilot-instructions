@@ -26,9 +26,9 @@ Use for reusable automation. Requires read access to InputPath.
 #>
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)]
-    [ValidateNotNullOrEmpty()]
-    [string]$InputPath
+  [Parameter(Mandatory)]
+  [ValidateNotNullOrEmpty()]
+  [string]$InputPath
 )
 
 Set-StrictMode -Version Latest
@@ -44,43 +44,43 @@ Example class with documented behavior.
 #>
 #region Classes
 class ExampleProcessor {
-    [string]$InputPath
+  [string]$InputPath
 
-    <#
-    .SYNOPSIS
-    Initialize a new ExampleProcessor.
+  <#
+  .SYNOPSIS
+  Initialize a new ExampleProcessor.
 
-    .PARAMETER InputPath
-    Input path to process.
-    #>
-    ExampleProcessor([string]$inputPath) {
-        $this.InputPath = $inputPath
+  .PARAMETER InputPath
+  Input path to process.
+  #>
+  ExampleProcessor([string]$inputPath) {
+    $this.InputPath = $inputPath
+  }
+
+  <#
+  .SYNOPSIS
+  Execute the processing action.
+  #>
+  [object] Execute() {
+    if (-not (Test-Path -Path $this.InputPath)) {
+      throw "Process: Validate input. Error: Path not found. Cause: Missing path. Solution: Provide a valid path."
     }
 
-    <#
-    .SYNOPSIS
-    Execute the processing action.
-    #>
-    [object] Execute() {
-        if (-not (Test-Path -Path $this.InputPath)) {
-            throw "Process: Validate input. Error: Path not found. Cause: Missing path. Solution: Provide a valid path."
-        }
-
-        return Get-Item -Path $this.InputPath
-    }
+    return Get-Item -Path $this.InputPath
+  }
 }
 #endregion Classes
 
 #region Main
 function Main {
-    param(
-        [Parameter(Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [string]$InputPath
-    )
+  param(
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$InputPath
+  )
 
-    $processor = [ExampleProcessor]::new($InputPath)
-    return $processor.Execute()
+  $processor = [ExampleProcessor]::new($InputPath)
+  return $processor.Execute()
 }
 
 Main @PSBoundParameters
