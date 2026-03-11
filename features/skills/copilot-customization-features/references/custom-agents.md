@@ -26,7 +26,7 @@ argument-hint: "feature=..."                  # Optional: Hint text in chat inpu
 tools: ["search", "web"]                      # Optional: Defaults to all user-enabled tools
 model: "Claude Sonnet 4"                      # Optional: Overrides user's selected model
 agents: ["Agent1", "Agent2"]                  # Optional: Restrict allowed subagents (omit=all, []=none)
-user-invokable: true                          # Optional: Default true. Whether users can select this agent in the UI
+user-invocable: true                          # Optional: Default true. Whether users can select this agent in the UI
 disable-model-invocation: false               # Optional: Default false. If true, prevents subagent invocation
 handoffs:                                     # Optional: Workflow transitions
   - label: "Implement Plan"
@@ -46,7 +46,7 @@ All fields are optional:
   - Common patterns: `["read", "search"]` (read-only), `["read", "edit", "search"]` (no terminal)
 - `model`: Specific AI model to use (overrides user's selected model).
 - `agents`: Restrict allowed subagents by name array. Omit for all agents, `[]` for none.
-- `user-invokable`: Whether the agent can be selected and invoked by users in the UI. Default is `true`.
+- `user-invocable`: Whether the agent can be selected and invoked by users in the UI. Default is `true`.
 - `disable-model-invocation`: If `true`, prevents the agent from being invoked as a subagent. Default is `false`.
 - `handoffs`: Define sequential workflow transitions with:
   - `label`: Button text shown to user
@@ -141,7 +141,7 @@ Next: User clicks "Start Implementation" to begin coding
 - Stored in `.github/agents/` folder
 - File naming: `*.agent.md`
 - All frontmatter fields are optional
-- Configure `user-invokable` and `disable-model-invocation` to control UI visibility and subagent behavior
+- Configure `user-invocable` and `disable-model-invocation` to control UI visibility and subagent behavior
 - Use minimal tool sets appropriate to the agent's role
 - Define clear constraints on what the agent should NOT do
 - Handoffs are defined when workflow needs staged steps
