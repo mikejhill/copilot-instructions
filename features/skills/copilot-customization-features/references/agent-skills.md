@@ -16,7 +16,7 @@
   - **Automatic:** Auto-selected when user request matches the frontmatter `description`
   - **Manual:** Invoked via slash commands in chat (e.g., `/skill-name additional context`)
   - **CRITICAL:** Only `name` and `description` are used for discovery—the description is the ONLY text that determines automatic loading.
-  - By default, skills appear in the slash command menu and can auto-load. Use `user-invokable` and `disable-model-invocation` frontmatter fields to control this behavior.
+  - By default, skills appear in the slash command menu and can auto-load. Use `user-invocable` and `disable-model-invocation` frontmatter fields to control this behavior.
 
 ## Folder Structure
 
@@ -35,7 +35,7 @@
 name: skill-name # Required: Lowercase alphanumeric + hyphens, must match folder name
 description: "Use when..." # Required: State capability and when to use. Drives auto-activation.
 argument-hint: "[test file] [options]" # Optional: Hint shown in chat input when invoked as a slash command
-user-invokable: true # Optional: Controls if skill appears in the slash-command menu (default: true)
+user-invocable: true # Optional: Controls if skill appears in the slash-command menu (default: true)
 disable-model-invocation: false # Optional: Prevents auto-loading, requires slash-command invocation (default: false)
 ---
 ```
@@ -48,7 +48,7 @@ disable-model-invocation: false # Optional: Prevents auto-loading, requires slas
 **Optional fields:**
 
 - `argument-hint`: User-friendly hint text shown in chat input when skill is invoked as a slash command (e.g., "\[test file] \[options]", "for the login page")
-- `user-invokable`: Set to `false` to hide skill from the slash command menu while allowing automatic loading (default: `true`)
+- `user-invocable`: Set to `false` to hide skill from the slash command menu while allowing automatic loading (default: `true`)
 - `disable-model-invocation`: Set to `true` to prevent automatic loading and require explicit slash command invocation (default: `false`)
 
 ## Description Field
@@ -98,7 +98,7 @@ Use frontmatter fields to control how skills are accessed:
 | Configuration                    | In the slash command menu? | Auto-loads? | Use Case                                            |
 | -------------------------------- | -------------------------- | ----------- | --------------------------------------------------- |
 | Default (both omitted)           | Yes                        | Yes         | General-purpose skills                              |
-| `user-invokable: false`          | No                         | Yes         | Background knowledge skills that load when relevant |
+| `user-invocable: false`          | No                         | Yes         | Background knowledge skills that load when relevant |
 | `disable-model-invocation: true` | Yes                        | No          | Skills you only want to run on demand               |
 | Both set                         | No                         | No          | Disabled skills                                     |
 
@@ -182,7 +182,7 @@ Output: Analysis of workflow failures with suggested fixes
 - Monolithic SKILL.md with everything in one file instead of using reference files
 - Name mismatch between folder name and frontmatter `name` field
 - Missing step-by-step procedures (descriptions without actionable guidance)
-- Setting both `user-invokable: false` and `disable-model-invocation: true` (disables skill entirely)
+- Setting both `user-invocable: false` and `disable-model-invocation: true` (disables skill entirely)
 - Using generic `argument-hint` that doesn't help users understand what to provide
 
 ## Validation Checklist
@@ -190,7 +190,7 @@ Output: Analysis of workflow failures with suggested fixes
 - Stored in `.github/skills/<name>/SKILL.md`
 - Folder name must match `name` field in frontmatter
 - Required fields: `name` and `description` in frontmatter are specific
-- Optional fields used appropriately: `argument-hint`, `user-invokable`, `disable-model-invocation`
+- Optional fields used appropriately: `argument-hint`, `user-invocable`, `disable-model-invocation`
 - Keep SKILL.md under 500 lines; use reference files for lengthy content
 - File references should be one level deep from SKILL.md
 - Body includes what skill accomplishes, when to use, procedures, and examples
