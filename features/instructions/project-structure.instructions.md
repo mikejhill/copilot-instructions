@@ -33,16 +33,16 @@ Maintain consistent directory organization: separate documentation, configuratio
 
 ## Standard Directories
 
-| Directory | Purpose |
-|-----------|---------|
-| `README.md` | Project overview, setup, basic usage |
-| `LICENSE` | License file (use SPDX identifier) |
-| `.gitignore` | Exclusions: `.tmp/`, build artifacts, `.env` files |
-| `.github/` | Workflows, issue templates, `copilot-instructions.md`, PR templates |
-| `.tmp/` | Temporary agent/developer workspace (never committed) |
-| `docs/` | All documentation beyond root-level files |
-| Source dir | Language-specific: `src/`, `lib/`, `cmd/`, `internal/`, `pkg/`, or root |
-| Test dir | Language-specific: `tests/`, `spec/`, colocated `*_test.*`, or `src/test/` |
+| Directory    | Purpose                                                                    |
+| ------------ | -------------------------------------------------------------------------- |
+| `README.md`  | Project overview, setup, basic usage                                       |
+| `LICENSE`    | License file (use SPDX identifier)                                         |
+| `.gitignore` | Exclusions: `.tmp/`, build artifacts, `.env` files                         |
+| `.github/`   | Workflows, issue templates, `copilot-instructions.md`, PR templates        |
+| `.tmp/`      | Temporary agent/developer workspace (never committed)                      |
+| `docs/`      | All documentation beyond root-level files                                  |
+| Source dir   | Language-specific: `src/`, `lib/`, `cmd/`, `internal/`, `pkg/`, or root    |
+| Test dir     | Language-specific: `tests/`, `spec/`, colocated `*_test.*`, or `src/test/` |
 | Config files | Root-level: `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, etc. |
 
 ## Example: Python

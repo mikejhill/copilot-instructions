@@ -10,10 +10,10 @@ Use these rules when the user does not explicitly choose a mode:
 
 ## Mode Summary
 
-| Mode        | When to Use                    | Output          | Core Expectations                                           |
-| ----------- | ------------------------------ | --------------- | ----------------------------------------------------------- |
-| FullProject | Persisted, packaged automation | Directory tree  | OOP, strict typing, pyproject.toml, tests, logging          |
-| OneOff      | Ad-hoc, immediate execution    | Inline snippet  | Short, stdlib-first, idiomatic, type hints on any functions |
+| Mode        | When to Use                    | Output         | Core Expectations                                           |
+| ----------- | ------------------------------ | -------------- | ----------------------------------------------------------- |
+| FullProject | Persisted, packaged automation | Directory tree | OOP, strict typing, pyproject.toml, tests, logging          |
+| OneOff      | Ad-hoc, immediate execution    | Inline snippet | Short, stdlib-first, idiomatic, type hints on any functions |
 
 ## OneOff Guardrails
 
