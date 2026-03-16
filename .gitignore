@@ -1,0 +1,34 @@
+# Base .gitignore template. Covers universal patterns only.
+# Language and framework-specific patterns: https://github.com/github/gitignore
+
+# Agent and Developer Temporary Files
+.tmp/
+
+# Environment and Secrets
+.env
+.env.*
+!.env.example
+
+# OS-Generated Files
+Thumbs.db
+Desktop.ini
+.DS_Store
+._*
+
+# Editor and IDE
+*.swp
+*.swo
+*~
+.idea/
+*.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Build Artifacts
+dist/
+build/
+out/
