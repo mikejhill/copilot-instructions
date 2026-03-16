@@ -57,7 +57,7 @@ Produce PowerShell solutions in two modes: full scripts for persisted automation
 
 **Full Script Structure:**
 
-1. Comment-based help at the top with `.SYNOPSIS`, `.DESCRIPTION`, `.EXAMPLE`, `.NOTES`
+1. Comment-based help at the top with `.SYNOPSIS`, `.DESCRIPTION`, `.PARAMETER` (for each parameter), `.EXAMPLE`, `.NOTES`
 2. Constants (global scope only)
 3. Classes (all business logic)
 4. Helper functions (all except Main)
@@ -106,7 +106,7 @@ Produce PowerShell solutions in two modes: full scripts for persisted automation
 - Validate all parameters with attributes
 - Keep global scope free of procedural logic
 - Define Main last and invoke it once
-- Start with help including `.SYNOPSIS`, `.DESCRIPTION`, `.EXAMPLE`, `.NOTES`
+- Start with help including `.SYNOPSIS`, `.DESCRIPTION`, `.PARAMETER` (for each parameter), `.EXAMPLE`, `.NOTES`
 - Document all classes and methods with `<# #>`
 - Use guard clauses and specific exception types
 - Use error messages with process, error, cause, and solution
@@ -142,7 +142,7 @@ Produce PowerShell solutions in two modes: full scripts for persisted automation
 **Pass Conditions (FullScript):**
 
 - Structure matches the Full Script Structure list
-- Help includes `.SYNOPSIS`, `.DESCRIPTION`, `.EXAMPLE`, `.NOTES`
+- Help includes `.SYNOPSIS`, `.DESCRIPTION`, `.PARAMETER` (for each parameter), `.EXAMPLE`, `.NOTES`
 - Parameters are validated; classes and methods are documented
 - Max nesting depth is 3; strict mode is enabled
 
@@ -174,6 +174,9 @@ Process items under a path.
 
 .DESCRIPTION
 Validates input, executes processing logic, and returns objects for downstream use.
+
+.PARAMETER InputPath
+Path to the items to process.
 
 .EXAMPLE
 .\Example.ps1 -InputPath "C:\\Data"

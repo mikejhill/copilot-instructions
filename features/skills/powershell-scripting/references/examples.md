@@ -38,6 +38,9 @@ Enumerate enabled registry items.
 .DESCRIPTION
 Refactors the procedural enumeration into a parameterized, class-based
 implementation with validation and verbose diagnostics.
+
+.PARAMETER RegistryPath
+Base registry path containing items to scan for enabled entries.
 #>
 [CmdletBinding()]
 param(

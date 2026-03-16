@@ -9,7 +9,7 @@
 
 ## Script Start Requirement
 
-- Full scripts MUST start with comment-based help that includes `.SYNOPSIS`, `.DESCRIPTION`, `.EXAMPLE`, and `.NOTES`.
+- Full scripts MUST start with comment-based help that includes `.SYNOPSIS`, `.DESCRIPTION`, `.PARAMETER` (for each parameter), `.EXAMPLE`, and `.NOTES`.
 - Place the help block before `[CmdletBinding()]` or `param()`.
 
 ## Full Script Structure
@@ -21,6 +21,9 @@ Short summary.
 
 .DESCRIPTION
 Thorough explanation of purpose, behavior, and output.
+
+.PARAMETER ParameterName
+Description of each parameter.
 
 .EXAMPLE
 Example invocation and what it does.
