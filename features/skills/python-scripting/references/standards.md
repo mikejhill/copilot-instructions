@@ -374,16 +374,16 @@ Check `is None` explicitly rather than relying on truthiness.
 
 ## Naming Conventions
 
-| Element           | Convention         | Examples                                |
-| ----------------- | ------------------ | --------------------------------------- |
-| Modules           | snake_case         | `file_processor.py`, `data_models.py`   |
-| Packages          | snake_case         | `my_package`, `data_pipeline`           |
-| Classes           | PascalCase         | `FileProcessor`, `DataModel`            |
-| Functions/Methods | snake_case         | `process_items()`, `validate_input()`   |
-| Variables         | snake_case         | `input_path`, `retry_count`             |
-| Constants         | UPPER_SNAKE_CASE   | `MAX_RETRIES`, `DEFAULT_TIMEOUT`        |
-| Private members   | Leading underscore | `_validate()`, `_cache`                 |
-| Type aliases      | PascalCase         | `PathFilter`, `ItemMap`                 |
+| Element           | Convention         | Examples                              |
+| ----------------- | ------------------ | ------------------------------------- |
+| Modules           | snake_case         | `file_processor.py`, `data_models.py` |
+| Packages          | snake_case         | `my_package`, `data_pipeline`         |
+| Classes           | PascalCase         | `FileProcessor`, `DataModel`          |
+| Functions/Methods | snake_case         | `process_items()`, `validate_input()` |
+| Variables         | snake_case         | `input_path`, `retry_count`           |
+| Constants         | UPPER_SNAKE_CASE   | `MAX_RETRIES`, `DEFAULT_TIMEOUT`      |
+| Private members   | Leading underscore | `_validate()`, `_cache`               |
+| Type aliases      | PascalCase         | `PathFilter`, `ItemMap`               |
 
 ## Nesting and Extraction
 
@@ -560,12 +560,12 @@ Three tools enforce code quality deterministically. All are configured in pyproj
 
 ### Tool Stack
 
-| Tool           | Purpose                          | Command                  |
-| -------------- | -------------------------------- | ------------------------ |
-| **ruff**       | Linting (replaces flake8, isort) | `ruff check .`           |
-| **ruff format**| Formatting (replaces black)      | `ruff format .`          |
-| **mypy**       | Static type checking             | `mypy src/`              |
-| **pytest**     | Test execution                   | `pytest`                 |
+| Tool            | Purpose                          | Command         |
+| --------------- | -------------------------------- | --------------- |
+| **ruff**        | Linting (replaces flake8, isort) | `ruff check .`  |
+| **ruff format** | Formatting (replaces black)      | `ruff format .` |
+| **mypy**        | Static type checking             | `mypy src/`     |
+| **pytest**      | Test execution                   | `pytest`        |
 
 ### Enforcement Rules
 
