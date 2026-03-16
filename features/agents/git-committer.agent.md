@@ -250,6 +250,7 @@ Fixup commits are useful for quickly adding forgotten changes to an already-comm
 4. **Repeat** for remaining concerns until all hunks are committed
 
 5. **Cleanup temporary files**:
+
    ```bash
    Remove-Item temp.patch, concern-a.patch, concern-b.patch, remaining.patch -ErrorAction SilentlyContinue
    ```

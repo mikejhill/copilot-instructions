@@ -350,7 +350,7 @@ Edge cases:
 
 ✅ **Good (Few-shot):**
 
-`````
+````
 Example 1: Simple function without docstring
 
 INPUT:
@@ -444,7 +444,7 @@ OUTPUT:
   }
 }
 ```
-`````
+````
 
 ❌ **Bad:**
 
@@ -454,6 +454,7 @@ Give it some code and it will analyze it.
 ```
 
 **Evaluation checklist:**
+
 - [ ] Includes 1+ examples per major input variation
 - [ ] Shows complete, realistic inputs and outputs
 - [ ] Includes edge cases
@@ -466,28 +467,30 @@ Give it some code and it will analyze it.
 
 Apply these rules when writing or evaluating any prompt:
 
-| Rule | ✅ Do This | ❌ Not This |
-|------|-----------|-------------|
-| **Use imperative voice** | "Validate each input before processing." | "You should probably validate inputs." |
-| **Eliminate vague language** | "Process 10,000 items in under 5 seconds." | "Make the output efficient." |
-| **Prefer lists over prose** | Bulleted requirements list | Paragraph of requirements |
-| **Use explicit conditionals** | "If X, then Y. If not X, then Z." | "Handle X appropriately." |
-| **Ban ambiguous words** | Never use: "appropriate", "nice", "robust", "good", "reasonable", "consider", "might" | Use: measurable criteria, specific thresholds, concrete actions |
-| **Use MUST/MUST NOT/MAY** | "MUST validate", "MUST NOT execute", "MAY cache" | "Should validate", "Try not to execute", "Can cache" |
-| **Be specific about format** | "Return JSON with keys: name, email, phone" | "Return the data in a structured format" |
-| **Define edge cases explicitly** | "If input is empty, return []" | "Handle unusual inputs gracefully" |
+| Rule                             | ✅ Do This                                                                            | ❌ Not This                                                     |
+| -------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| **Use imperative voice**         | "Validate each input before processing."                                              | "You should probably validate inputs."                          |
+| **Eliminate vague language**     | "Process 10,000 items in under 5 seconds."                                            | "Make the output efficient."                                    |
+| **Prefer lists over prose**      | Bulleted requirements list                                                            | Paragraph of requirements                                       |
+| **Use explicit conditionals**    | "If X, then Y. If not X, then Z."                                                     | "Handle X appropriately."                                       |
+| **Ban ambiguous words**          | Never use: "appropriate", "nice", "robust", "good", "reasonable", "consider", "might" | Use: measurable criteria, specific thresholds, concrete actions |
+| **Use MUST/MUST NOT/MAY**        | "MUST validate", "MUST NOT execute", "MAY cache"                                      | "Should validate", "Try not to execute", "Can cache"            |
+| **Be specific about format**     | "Return JSON with keys: name, email, phone"                                           | "Return the data in a structured format"                        |
+| **Define edge cases explicitly** | "If input is empty, return []"                                                        | "Handle unusual inputs gracefully"                              |
 
 ---
 
 ## Personas: When and How
 
 **Include a persona when:**
+
 - The task requires a specific expertise or worldview
 - Different perspectives would make different decisions
 - The persona changes reasoning, not just communication style
 - Security, compliance, or domain expertise is critical
 
 **Persona structure:**
+
 ```markdown
 Persona: [specific identity with experience]
 
@@ -945,7 +948,7 @@ Use this for rapid evaluation:
 - [Prompt Engineering Guide](https://www.promptingguide.ai/)
 - [Anthropic Prompt Engineering](https://docs.anthropic.com/claude/docs/prompt-engineering)
 
-### Advanced Techniques
+### Technique References
 
 - [Chain-of-Thought Prompting](https://www.promptingguide.ai/techniques/cot)
 - [ReAct: Reasoning and Acting](https://www.promptingguide.ai/techniques/react)

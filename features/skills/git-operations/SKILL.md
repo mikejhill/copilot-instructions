@@ -66,6 +66,7 @@ Use fixup commits when:
    - Git automatically references the target commit
 
 4. **Verify fixup commit was created**:
+
    ```bash
    git log --oneline -n 3
    ```
@@ -98,6 +99,7 @@ Use fixup commits when:
    - The target commit is modified to include the fixup changes
 
 3. **Verify rebase succeeded**:
+
    ```bash
    git log --oneline -n 5
    ```
@@ -253,19 +255,23 @@ export GIT_SEQUENCE_EDITOR="/tmp/git-rebase-editor.sh"
 - Or use `git rebase -i --autostash HEAD~N` where N is how many commits back
 - Git will automatically invoke the custom editor script, which inserts a `break` command at the start of the rebase
 - **EXPECTED OUTPUT** (indicates rebase started successfully):
+
   ```text
   Created autostash: <object-hash>
   Stopped at <commit-hash> (<commit-message>)
   ```
+
 - This output means the rebase has **successfully started** and is paused at the `break` command
 - **Locate the todo list file**: `.git/rebase-merge/git-rebase-todo` (relative to repository root)
 - Read the todo list file directly using: `Get-Content .git/rebase-merge/git-rebase-todo` (PowerShell) or `cat .git/rebase-merge/git-rebase-todo` (Bash)
 - The file will contain lines like:
+
   ```text
   break
   pick <hash> <commit message>
   pick <hash> <commit message>
   ```
+
 - Edit the todo list file directly (do NOT use `--edit-todo` or open any editor) to change `pick` to the desired action:
   - `reword` for renaming commit message only
   - `edit` for adding files or modifying content
