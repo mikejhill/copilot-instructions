@@ -23,6 +23,7 @@ The `from __future__ import annotations` import enables postponed evaluation of 
 
 ```text
 project-name/
+├── main.py                   # (Optional) CLI wrapper for running from project root
 ├── pyproject.toml
 ├── README.md
 ├── src/

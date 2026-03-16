@@ -65,10 +65,11 @@ Produce Python solutions in two modes: full projects for persisted, packaged app
 **Full Project Structure:**
 
 1. pyproject.toml with project metadata and dependencies
-2. src/package_name/ with `__init__.py`, `__main__.py`, modules
-3. tests/ with pytest test files
-4. Type annotations on all signatures
-5. Logging configured at entry point
+2. (Optional) main.py CLI wrapper for running from project root for CLI projects
+3. src/package_name/ with `__init__.py`, `__main__.py`, modules
+4. tests/ with pytest test files
+5. Type annotations on all signatures
+6. Logging configured at entry point
 
 **Files produced:**
 
@@ -152,7 +153,7 @@ Produce Python solutions in two modes: full projects for persisted, packaged app
 ## Procedure
 
 1. Select mode using the mode rules.
-2. FullProject: create pyproject.toml (including ruff + mypy config), then src/ package with `__init__.py`, `__main__.py`, domain modules, and tests/.
+2. FullProject: create pyproject.toml (including ruff + mypy config), main.py CLI wrapper (optional), then src/ package with `__init__.py`, `__main__.py`, domain modules, and tests/.
 3. OneOff: build the minimal expression and keep length within limits.
 4. Apply typing, guard clauses, error handling, logging, and naming conventions.
 5. FullProject: verify structure matches the directory layout template.
@@ -163,6 +164,7 @@ Produce Python solutions in two modes: full projects for persisted, packaged app
 **Pass Conditions (FullProject):**
 
 - Structure matches the directory layout in [templates.md](references/templates.md)
+- main.py present at project root for CLI projects, delegates to `package_name.__main__:main`
 - All public functions and methods have type annotations and docstrings
 - `from __future__ import annotations` present in every module
 - pyproject.toml includes `[project]` with name, version, dependencies, `[project.scripts]`, and tool configs for ruff + mypy

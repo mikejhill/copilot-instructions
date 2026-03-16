@@ -57,6 +57,38 @@ warn_unused_ignores = true
 testpaths = ["tests"]
 ```
 
+### main.py
+
+```python
+#!/usr/bin/env python3
+"""CLI wrapper for running the application from the project root.
+
+This convenience script adds src/ to the Python path and delegates to the
+package entry point. Equivalent to running:
+    python -m package_name
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+
+from package_name.__main__ import main  # noqa: E402
+
+if __name__ == "__main__":
+    main()
+```
+
+**Guidelines:**
+
+- Replace `package_name` with the actual package name.
+- This file stays minimal: path setup and delegation only. No business logic.
+- This file can be skipped if not useful, such as for non-CLI projects.
+- The shebang line enables direct execution on Unix (`./main.py`).
+- The `# noqa: E402` comment suppresses the "module-level import not at top of file" lint violation caused by the required `sys.path` insert before the import.
+- Users can alternatively run `python -m package_name` from within `src/` or after installing the package.
+
 ### src/package_name/\_\_init\_\_.py
 
 ```python
