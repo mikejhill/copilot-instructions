@@ -66,8 +66,8 @@ The agent follows a three-step approach before executing git operations:
 The agent supports three distinct workflows. Determine which workflow applies based on user's request:
 
 - **Workflow A**: User wants to commit new/modified files
-- **Workflow B**: User wants to fix/modify a previous commit via rebase (see [.github/instructions/git-rebase.instructions.md](../instructions/git-rebase.instructions.md))
-- **Workflow C**: User wants to create a fixup commit to amend a previous commit (see [.github/instructions/git-fixup.instructions.md](../instructions/git-fixup.instructions.md))
+- **Workflow B**: User wants to fix/modify a previous commit via rebase (see [git-operations skill](../skills/git-operations/SKILL.md))
+- **Workflow C**: User wants to create a fixup commit to amend a previous commit (see [git-operations skill](../skills/git-operations/SKILL.md))
 
 ---
 
@@ -154,13 +154,13 @@ Follow the Infer → Clarify → Confirm pattern (see "How to Use the #tool:vsco
 
 ## Workflow B: Rebase to Fix Previous Commits
 
-Follow the instructions in [.github/instructions/git-rebase.instructions.md](../instructions/git-rebase.instructions.md) for detailed rebase workflow.
+Follow the Interactive Rebase section in the [git-operations skill](../skills/git-operations/SKILL.md) for detailed rebase workflow.
 
 ---
 
 ## Workflow C: Create and Apply Fixup Commits
 
-Follow the instructions in [.github/instructions/git-fixup.instructions.md](../instructions/git-fixup.instructions.md) for detailed fixup workflow.
+Follow the Fixup Commits section in the [git-operations skill](../skills/git-operations/SKILL.md) for detailed fixup workflow.
 
 Fixup commits are useful for quickly adding forgotten changes to an already-committed change without opening an interactive rebase. The workflow automatically:
 
