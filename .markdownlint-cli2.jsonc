@@ -1,0 +1,33 @@
+{
+    // JSON schema enables editor IntelliSense and validation for this file.
+    "$schema": "https://raw.githubusercontent.com/DavidAnson/markdownlint-cli2/main/schema/markdownlint-cli2-config-schema.json",
+
+    // Limit linting to the repository Markdown content we care about.
+    "globs": [
+        "README.md",
+        "features/**/*.md"
+    ],
+
+    // Rule configuration for markdownlint.
+    "config": {
+        // Start from all built-in markdownlint rules enabled.
+        "default": true,
+
+        // Disable hard line-length enforcement for prose-heavy docs.
+        "MD013": false,
+
+        // Allow trailing ':' in headings while still flagging other punctuation.
+        "MD026": {
+            "punctuation": ".,;!?"
+        },
+
+        // Allow bold text used as pseudo-headings in checklist-style content.
+        "MD036": false,
+
+        // Do not require fenced code blocks to declare a language.
+        "MD040": false,
+
+        // Disable strict table pipe-spacing style checks.
+        "MD060": false
+    }
+}
