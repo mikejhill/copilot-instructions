@@ -1,5 +1,5 @@
 ---
-name: gitignore-creation
+name: gitignore-standards
 description: Use for all .gitignore tasks. Apply these standards whenever creating, updating, reviewing, or refactoring .gitignore content.
 ---
 
@@ -11,7 +11,7 @@ Produce and maintain `.gitignore` content with exactly three section groups in t
 
 1. Base template reference
 2. One or more unaltered GitHub gitignore templates
-3. One custom entries section
+3. One project-specific rules section
 
 ## Base .gitignore Template Reference
 
@@ -23,7 +23,7 @@ Use this exact section order and heading format:
 
 ```gitignore
 ### Base Template
-[Base .gitignore Template](./references/base-gitignore-template.gitignore)
+<unaltered content from ./references/base-gitignore-template.gitignore>
 
 ### <Name> Template
 <unaltered content from github/gitignore>
@@ -31,7 +31,7 @@ Use this exact section order and heading format:
 ### <Name> Template
 <unaltered content from github/gitignore>
 
-### Custom Entries
+### Project-Specific Rules
 <custom project patterns>
 ```
 
@@ -41,7 +41,8 @@ This is a concise end-to-end example with multiple template sections and short c
 
 ```gitignore
 ### Base Template
-[Base .gitignore Template](./references/base-gitignore-template.gitignore)
+# Agent and Developer Temporary Files
+.tmp/
 
 ### Python Template
 __pycache__/
@@ -53,7 +54,7 @@ __pycache__/
 *.tfstate
 *.tfstate.*
 
-### Custom Entries
+### Project-Specific Rules
 # Repository-specific additions
 coverage-final/
 terraform.local.tfvars
@@ -63,20 +64,19 @@ terraform.local.tfvars
 ## Rules
 
 - Apply this skill to every `.gitignore` task: create, update, review, and refactor.
-- The base template section MUST reference [Base .gitignore Template](./references/base-gitignore-template.gitignore) and MUST NOT copy that template into the generated output.
+- The base template section MUST copy unaltered content from [Base .gitignore Template](./references/base-gitignore-template.gitignore) into the generated output.
 - Each imported GitHub template section MUST start with exactly one heading line in this format: `### <Name> Template`.
 - Imported GitHub templates MUST remain unaltered from their original source text.
-- There MUST be exactly one `### Custom Entries` section.
-- Put all project-specific additions or overrides in `### Custom Entries`, including re-adding patterns from earlier templates.
+- There MUST be exactly one `### Project-Specific Rules` section.
+- Put all project-specific additions or overrides in `### Project-Specific Rules`, including re-adding any desired patterns ignored by earlier templates.
 - Separate sections with exactly one blank line.
 - Do not add extra section types.
 
 ## Validation Checklist
 
-- Order is Base -> GitHub templates -> Custom Entries.
-- Base template is referenced from [references/base-gitignore-template.gitignore](./references/base-gitignore-template.gitignore), not embedded inline.
+- Order is Base -> GitHub templates -> Project-Specific Rules.
+- Base template content is copied unaltered from [references/base-gitignore-template.gitignore](./references/base-gitignore-template.gitignore) and embedded inline.
 - Every GitHub template has a `### <Name> Template` heading.
 - GitHub template text is unmodified.
-- Only one `### Custom Entries` section exists.
-- Example includes at least one reinclusion entry using `!` for a pattern ignored by templates.
+- Only one `### Project-Specific Rules` section exists.
 - Exactly one blank line separates adjacent sections.
