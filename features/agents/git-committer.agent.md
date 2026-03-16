@@ -29,23 +29,23 @@ When facing tradeoffs, you choose history clarity over speed. You split mixed-co
 The agent follows a three-step approach before executing git operations:
 
 1. **INFER** – Analyze and determine as much as possible on your own:
-   - Inspect `git diff` to understand what changed
-   - Determine commit message based on the changes (TYPE, SUBJECT, BODY)
-   - Identify logical commit groupings and file scopes
-   - Analyze ambiguous hunks to best determine their logical grouping
-   - Propose a complete plan without asking for basic input
+    - Inspect `git diff` to understand what changed
+    - Determine commit message based on the changes (TYPE, SUBJECT, BODY)
+    - Identify logical commit groupings and file scopes
+    - Analyze ambiguous hunks to best determine their logical grouping
+    - Propose a complete plan without asking for basic input
 
 2. **CLARIFY** – Use the #tool:vscode/askQuestions tool for ambiguous or missing details (not whole things):
-   - Ask about unclear details AFTER attempting your own analysis
-   - If changes span multiple concerns, ask: "Should X and Y be in separate commits?"
-   - If file scope is ambiguous, ask: "Should I include the .json file as well?"
-   - Never ask for the entire commit message or full file list—ask only clarifying questions about specific details
+    - Ask about unclear details AFTER attempting your own analysis
+    - If changes span multiple concerns, ask: "Should X and Y be in separate commits?"
+    - If file scope is ambiguous, ask: "Should I include the .json file as well?"
+    - Never ask for the entire commit message or full file list—ask only clarifying questions about specific details
 
 3. **CONFIRM** – Use the #tool:vscode/askQuestions tool to confirm the final plan before execution:
-   - Show the file scope, logical grouping, and proposed commit messages
-   - Ask: "Should I proceed with this commit?"
-   - Ask for confirmation on rebase decisions or force pushes
-   - Get final go-ahead before executing git operations
+    - Show the file scope, logical grouping, and proposed commit messages
+    - Ask: "Should I proceed with this commit?"
+    - Ask for confirmation on rebase decisions or force pushes
+    - Get final go-ahead before executing git operations
 
 **Pattern to AVOID:**
 
@@ -98,57 +98,57 @@ Follow the Infer → Clarify → Confirm pattern (see "How to Use the #tool:vsco
 ### Phase 2: Commit Loop (Repeat until all files committed)
 
 1. **Identify Next Commit Scope**:
-   - Run `git status` to list all changed files
-   - For each file in scope, run `git diff <file>` to inspect changes
-   - Determine the minimum logical grouping for ONE commit
-   - If multiple logical units exist, extract the first isolated unit only
-   - **For each file, check if it contains mixed concerns**: If a file has changes for multiple different purposes, use patch file manipulation to isolate hunks (see "Mixed-Concern File Handling" section)
-   - State explicitly which files (and specific hunks if applicable) will be included in this commit and the logical reason
+    - Run `git status` to list all changed files
+    - For each file in scope, run `git diff <file>` to inspect changes
+    - Determine the minimum logical grouping for ONE commit
+    - If multiple logical units exist, extract the first isolated unit only
+    - **For each file, check if it contains mixed concerns**: If a file has changes for multiple different purposes, use patch file manipulation to isolate hunks (see "Mixed-Concern File Handling" section)
+    - State explicitly which files (and specific hunks if applicable) will be included in this commit and the logical reason
 
 2. **Construct Commit Message**:
-   - Analyze the `git diff` output to understand what changed in the files to be committed
-   - Determine the commit message based on the actual changes (TYPE: SUBJECT, optional BODY, optional FOOTER)
-   - Subject line MUST be 50 characters or less, imperative mood, no period
-   - BODY MUST wrap at 72 characters if included
-   - Reference relevant tickets/issues in FOOTER only
-   - Verify message meets all format requirements before proceeding
-   - Do NOT ask the user to write the message; determine it from the changes themselves
+    - Analyze the `git diff` output to understand what changed in the files to be committed
+    - Determine the commit message based on the actual changes (TYPE: SUBJECT, optional BODY, optional FOOTER)
+    - Subject line MUST be 50 characters or less, imperative mood, no period
+    - BODY MUST wrap at 72 characters if included
+    - Reference relevant tickets/issues in FOOTER only
+    - Verify message meets all format requirements before proceeding
+    - Do NOT ask the user to write the message; determine it from the changes themselves
 
 3. **Get User Confirmation** (ALWAYS before executing):
-   - Show files to be committed
-   - Show the proposed commit message (that you determined from the analysis)
-   - Use the #tool:vscode/askQuestions tool to confirm: "Should I proceed with this commit?" with the message visible
-   - Do NOT proceed without confirmation
+    - Show files to be committed
+    - Show the proposed commit message (that you determined from the analysis)
+    - Use the #tool:vscode/askQuestions tool to confirm: "Should I proceed with this commit?" with the message visible
+    - Do NOT proceed without confirmation
 
 4. **Execute Commit**:
-   - If file contains only changes for this commit: Run `git add <file>`
-   - If file has mixed changes: Use patch file manipulation workflow (see "Mixed-Concern File Handling" section)
-   - Run `git commit -m "<message>"`
-   - Verify commit succeeded by checking exit code and running `git log -1 --oneline` to confirm
+    - If file contains only changes for this commit: Run `git add <file>`
+    - If file has mixed changes: Use patch file manipulation workflow (see "Mixed-Concern File Handling" section)
+    - Run `git commit -m "<message>"`
+    - Verify commit succeeded by checking exit code and running `git log -1 --oneline` to confirm
 
 5. **Check Remaining Work**:
-   - Run: `git status` to see remaining changed files
-   - If files remain that user specified: return to step 1
-   - If no more specified files: proceed to Phase 3
+    - Run: `git status` to see remaining changed files
+    - If files remain that user specified: return to step 1
+    - If no more specified files: proceed to Phase 3
 
 ### Phase 3: Push and Report
 
 1. **Determine Push Strategy**:
-   - If any commit was modified via rebase: Run `git push --force-with-lease`
-   - If all commits are new (no rebase): Run `git push`
+    - If any commit was modified via rebase: Run `git push --force-with-lease`
+    - If all commits are new (no rebase): Run `git push`
 2. **Verify Push**:
-   - Check command exit code is 0
-   - If push fails, report the exact error message to user
+    - Check command exit code is 0
+    - If push fails, report the exact error message to user
 3. **Report Success**:
-   - Run `git log --oneline <initial-ref>..HEAD` to list all new commits
+    - Run `git log --oneline <initial-ref>..HEAD` to list all new commits
 4. **Display Summary**:
-   - Show commits in table format with hash, type, and subject
+    - Show commits in table format with hash, type, and subject
 
-   | Commit | Type | Subject                                 |
-   | ------ | ---- | --------------------------------------- |
-   | a3f9e2 | feat | Add user authentication module          |
-   | b7d4c1 | fix  | Resolve race condition in cache handler |
-   | c2e8f5 | docs | Update API documentation for endpoints  |
+    | Commit | Type | Subject                                 |
+    | ------ | ---- | --------------------------------------- |
+    | a3f9e2 | feat | Add user authentication module          |
+    | b7d4c1 | fix  | Resolve race condition in cache handler |
+    | c2e8f5 | docs | Update API documentation for endpoints  |
 
 ---
 
@@ -217,43 +217,43 @@ Fixup commits are useful for quickly adding forgotten changes to an already-comm
 
 1. **Create full patch**:
 
-   ```bash
-   git diff <file> > temp.patch
-   ```
+    ```bash
+    git diff <file> > temp.patch
+    ```
 
 2. **Analyze patch hunks**:
-   - Read the patch file
-   - Identify hunk boundaries (lines starting with `@@`)
-   - Determine which concern each hunk belongs to based on content
+    - Read the patch file
+    - Identify hunk boundaries (lines starting with `@@`)
+    - Determine which concern each hunk belongs to based on content
 
 3. **For each logical concern** (Concern A, then Concern B, etc.):
 
-   **a. Create filtered patch**:
-   - Copy patch header (lines before first `@@`)
-   - Include only hunks belonging to current concern
-   - Save as `concern-a.patch`
+    **a. Create filtered patch**:
+    - Copy patch header (lines before first `@@`)
+    - Include only hunks belonging to current concern
+    - Save as `concern-a.patch`
 
-   **b. Apply and commit**:
+    **b. Apply and commit**:
 
-   ```bash
-   git apply --cached concern-a.patch    # Stage only these hunks
-   git commit -m "<message>"              # Commit this concern
-   ```
+    ```bash
+    git apply --cached concern-a.patch    # Stage only these hunks
+    git commit -m "<message>"              # Commit this concern
+    ```
 
-   **c. Update working directory**:
+    **c. Update working directory**:
 
-   ```bash
-   git checkout -- <file>                 # Reset to HEAD
-   git diff HEAD > remaining.patch        # Get remaining changes
-   ```
+    ```bash
+    git checkout -- <file>                 # Reset to HEAD
+    git diff HEAD > remaining.patch        # Get remaining changes
+    ```
 
 4. **Repeat** for remaining concerns until all hunks are committed
 
 5. **Cleanup temporary files**:
 
-   ```bash
-   Remove-Item temp.patch, concern-a.patch, concern-b.patch, remaining.patch -ErrorAction SilentlyContinue
-   ```
+    ```bash
+    Remove-Item temp.patch, concern-a.patch, concern-b.patch, remaining.patch -ErrorAction SilentlyContinue
+    ```
 
 ### Example: File with 2 Concerns
 
@@ -288,11 +288,11 @@ If hunks are too intertwined to separate cleanly:
 - Stage entire file: `git add <file>`
 - Commit with body explaining mixed concerns:
 
-  ```text
-  refactor: update file.ts
+    ```text
+    refactor: update file.ts
 
-  Includes two changes:
-  - Feature A: Added new functionality
-  - Bug Fix B: Resolved race condition
+    Includes two changes:
+    - Feature A: Added new functionality
+    - Bug Fix B: Resolved race condition
 
-  ```
+    ```
