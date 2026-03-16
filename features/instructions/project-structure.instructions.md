@@ -1,6 +1,6 @@
 ---
 name: Project Structure
-description: Establish conventions and standards for organizing project files and directories across repositories. Defines the purpose and usage of standard directories and files.
+description: Use when organizing project files and directories to follow established conventions. Defines the purpose and usage of standard directories and files.
 ---
 
 # Project Structure Standards

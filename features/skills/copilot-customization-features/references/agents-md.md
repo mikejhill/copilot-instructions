@@ -1,5 +1,7 @@
 # AGENTS.md
 
+AGENTS.md provides tool-agnostic instructions for all agents in the workspace, designed to work across GitHub Copilot, Claude Code, and other AI assistants. Use this reference to create and configure AGENTS.md files.
+
 ## Overview
 
 - **Purpose:** Provide custom instructions intended for all agents in the workspace. Intended to be tool-agnostic (GitHub Copilot, Claude Code, etc.).

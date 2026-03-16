@@ -1,5 +1,7 @@
 # Custom Agents
 
+Custom Agents define specialist assistants with explicit scope, tool restrictions, and constraints for role-specific workflows. Use this reference to create agent files with handoffs, subagent invocation, and controlled tool access.
+
 ## Overview
 
 - **Purpose:** Define specialist assistants with explicit scope, tools, and constraints.
@@ -88,7 +90,7 @@ handoffs:
     send: false
 ---
 
-# Planner Agent
+## Example: Planner Agent
 
 ## Role
 
@@ -142,7 +144,7 @@ Next: User clicks "Start Implementation" to begin coding
 - File naming: `*.agent.md`
 - All frontmatter fields are optional
 - Configure `user-invocable` and `disable-model-invocation` to control UI visibility and subagent behavior
-- Use minimal tool sets appropriate to the agent's role
+- Use minimal tool sets matched to the agent's specific role
 - Define clear constraints on what the agent should NOT do
 - Handoffs are defined when workflow needs staged steps
 - Avoid circular handoffs without progress criteria

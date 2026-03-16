@@ -1,5 +1,7 @@
 # Agent Skills
 
+Agent Skills provide specialized, reusable capabilities that load on demand when requests match the skill description. Use this reference to create skill folders with bundled scripts, templates, and reference documentation.
+
 ## Overview
 
 - **Purpose:** Provide specialized, reusable capabilities with optional scripts and resources.

@@ -1,5 +1,7 @@
 # Prompt Files
 
+Prompt Files provide explicit, reusable prompts for repeatable tasks that users invoke through slash commands or the command palette. Use this reference to create prompt files with parameterized inputs and consistent execution.
+
 ## Overview
 
 - **Purpose:** Provide explicit, reusable prompts for repeatable tasks.

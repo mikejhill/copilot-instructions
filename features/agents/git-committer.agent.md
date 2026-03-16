@@ -183,7 +183,7 @@ Fixup commits are useful for quickly adding forgotten changes to an already-comm
 - No unrelated changes included (no formatting, refactoring, or scope creep)
 - User confirmed commits when any ambiguity existed
 - For mixed-concern files, user was informed and either handled patch-mode manually or accepted broader commit scope
-- Each staged change belongpatch file manipulation was used to isolate hunks for separate commits
+- Each staged change belongs to a single logical concern; patch file manipulation was used to isolate hunks for separate commits
 - All commits pushed successfully to remote (exit code 0)
 - Force push (if used) received explicit user confirmation
 - During rebase, todo list was edited directly (never used `--edit-todo` or native editor)

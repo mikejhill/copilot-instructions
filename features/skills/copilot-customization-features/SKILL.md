@@ -1,6 +1,6 @@
 ---
 name: copilot-customization-features
-description: Use when creating or modifying any GitHub Copilot customization features in VS Code, including custom instructions, AGENTS.md, agent skills, prompt files, custom agents, agent hooks, or AGENTS.md files. Helps select the correct feature type and create, review, or modify it for optimal performance.
+description: Use when creating or modifying any GitHub Copilot customization features in VS Code, including custom instructions, AGENTS.md, agent skills, prompt files, custom agents, or agent hooks. Helps select the correct feature type and create, review, or modify it for optimal performance.
 ---
 
 # Skill Instructions

@@ -350,14 +350,14 @@ Edge cases:
 
 ✅ **Good (Few-shot):**
 
-````
+`````
 Example 1: Simple function without docstring
 
 INPUT:
 ```python
 def calculate_total(items):
     return sum(items)
-````
+```
 
 OUTPUT:
 
@@ -444,16 +444,14 @@ OUTPUT:
   }
 }
 ```
-
-```
+`````
 
 ❌ **Bad:**
-```
 
+```
 Example:
 Give it some code and it will analyze it.
-
-````
+```
 
 **Evaluation checklist:**
 - [ ] Includes 1+ examples per major input variation
@@ -498,7 +496,7 @@ You prioritize [values] and question [skeptical-of] first.
 
 When facing tradeoffs, you choose [priority]. You distrust [what-you-doubt]
 but trust [what-you-rely-on].
-````
+```
 
 **Example:**
 

@@ -1,5 +1,7 @@
 # Custom Instructions
 
+Custom Instructions define workspace-wide rules, standards, and conventions that apply to every chat request. Use this reference to create and configure the `copilot-instructions.md` file for your workspace.
+
 ## Overview
 
 - **Purpose:** Define workspace-wide rules, standards, and conventions.
