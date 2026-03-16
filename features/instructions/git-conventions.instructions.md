@@ -5,6 +5,8 @@ description: Use when writing git commit messages, performing git commits, or wo
 
 # Git Commit Conventions
 
+Defines the commit message template and formatting rules for all commits. All commit messages must comply with Conventional Commits format to maintain clean, semantically meaningful git history.
+
 ## Commit Message Template
 
 ```text

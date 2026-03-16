@@ -266,7 +266,7 @@ export GIT_SEQUENCE_EDITOR="/tmp/git-rebase-editor.sh"
   pick <hash> <commit message>
   pick <hash> <commit message>
   ```
-- Edit the todo list file directly (do NOT use `--edit-todo` or open any editor) to change `pick` to the appropriate action:
+- Edit the todo list file directly (do NOT use `--edit-todo` or open any editor) to change `pick` to the desired action:
   - `reword` for renaming commit message only
   - `edit` for adding files or modifying content
   - `fixup` or `squash` if combining commits
@@ -307,7 +307,7 @@ export GIT_SEQUENCE_EDITOR="/tmp/git-rebase-editor.sh"
 - Verify all changes are unstaged with `git status`
 - Create multiple commits following standard commit workflow
 - Each new commit MUST follow the commit message template
-- Use `git add -p` to select appropriate hunks for each commit
+- Use `git add -p` to select relevant hunks for each commit
 - After all commits are created, run `git rebase --continue`
 
 #### Phase 3: Verify and Push

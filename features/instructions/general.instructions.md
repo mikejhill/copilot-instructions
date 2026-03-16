@@ -8,7 +8,7 @@ applyTo: "**"
 
 ## Objective
 
-Establish uniform behavior patterns for GitHub Copilot agents across all tasks and prompts, ensuring direct communication, analytical rigor, and appropriate use of interactive tools.
+Establish uniform behavior patterns for GitHub Copilot agents across all tasks and prompts, ensuring direct communication, analytical rigor, and strategic use of interactive tools.
 
 ## Scope
 

@@ -1,5 +1,7 @@
 # Instructions Files
 
+Instructions Files enable scoped guidance for specific files, languages, or folders. Use this reference to create instruction files with pattern-based or semantic activation.
+
 ## Overview
 
 - **Purpose:** Define scoped instructions for specific files, languages, or folders.

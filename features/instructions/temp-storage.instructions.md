@@ -1,6 +1,6 @@
 ---
 name: agent-tmp-directory
-description: Provides instructions on how to use the `.tmp/` directory for temporary agent storage. This should be uesd any time that a task would benefit from temporary storage, such as internal scripts, problem analysis, short-term memory, intermediate agent state, tool outputs, agent coordintaion, and more.
+description: Use when setting up temporary agent storage, intermediate artifacts, or session-specific state in the ``.tmp/`` directory. Covers internal scripts, problem analysis, short-term memory, tool outputs, and agent coordination.
 applyTo: "**"
 ---
 
@@ -10,7 +10,7 @@ Use the `.tmp/` directory liberally to store temporary artifacts in order to ena
 
 ## Purpose
 
-The temporary directory `.tmp/` should be used to store any emphemeral files which are useful for agents. This behaves as a temporary file storage and short-term memory. This supports the following functions:
+The temporary directory `.tmp/` should be used to store any ephemeral files which are useful for agents. This behaves as a temporary file storage and short-term memory. This supports the following functions:
 
 - **Reduce context bloat**: Store various intermediate session-related information to reduce context window usage and reliance.
 - **Store information for future reference**: Reference data for future agent runs, such as inferred repository or research data.

@@ -1,5 +1,7 @@
 # Agent Hooks
 
+Agent Hooks execute custom shell commands at specific agent lifecycle points with deterministic, guaranteed outcomes. Use this reference to create hooks that enforce security policies, run quality checks, or inject context.
+
 ## Overview
 
 - **Purpose:** Execute custom shell commands at key agent lifecycle points with guaranteed outcomes.
@@ -480,5 +482,5 @@ EOF
 - Script outputs valid JSON when needed
 - Exit codes used correctly (0 = success, 2 = blocking error)
 - Input validation present in scripts
-- Timeout set appropriately for long-running operations
+- Timeout set to match expected duration of long-running operations
 - Security review completed for all scripts
