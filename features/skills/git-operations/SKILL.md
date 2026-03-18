@@ -36,13 +36,13 @@ Use fixup commits when:
 
 1. **Display recent history**:
 
-    ```bash
-    git log --oneline -n 10
-    ```
+   ```bash
+   git log --oneline -n 10
+   ```
 
 2. **Identify which commit needs the fix**:
-    - Determine the specific commit hash and subject
-    - Confirm with user if necessary: "Should I create a fixup for commit \[hash: subject\]?"
+   - Determine the specific commit hash and subject
+   - Confirm with user if necessary: "Should I create a fixup for commit \[hash: subject\]?"
 
 #### Phase 2: Stage and Create Fixup Commit
 
@@ -50,83 +50,83 @@ Use fixup commits when:
 
 2. **Stage the changes**:
 
-    ```bash
-    git add <files>
-    # or for selective staging:
-    git add -p <file>
-    ```
+   ```bash
+   git add <files>
+   # or for selective staging:
+   git add -p <file>
+   ```
 
 3. **Create fixup commit** (use the exact target commit hash):
 
-    ```bash
-    git commit --fixup=<TARGET_COMMIT_HASH>
-    ```
+   ```bash
+   git commit --fixup=<TARGET_COMMIT_HASH>
+   ```
 
-    - This creates a commit with message: `fixup! <TARGET_COMMIT_MESSAGE>`
-    - Git automatically references the target commit
+   - This creates a commit with message: `fixup! <TARGET_COMMIT_MESSAGE>`
+   - Git automatically references the target commit
 
 4. **Verify fixup commit was created**:
 
-    ```bash
-    git log --oneline -n 3
-    ```
+   ```bash
+   git log --oneline -n 3
+   ```
 
-    - Should show: `fixup! <target-message>` as the most recent commit
+   - Should show: `fixup! <target-message>` as the most recent commit
 
 #### Phase 3: Apply Fixup via Autosquash Rebase (Non-Interactive)
 
 1. **Execute autosquash rebase** (non-interactive mode):
 
-    ```bash
-    git rebase --autosquash <TARGET_COMMIT_HASH>~1
-    ```
+   ```bash
+   git rebase --autosquash <TARGET_COMMIT_HASH>~1
+   ```
 
-    - Or use: `git rebase --autosquash HEAD~N` where N is how many commits to rebase
-    - The `--autosquash` flag automatically moves fixup commits into position and marks them as `fixup`
-    - Without `-i`, the rebase runs fully automated without requiring any interactive input
+   - Or use: `git rebase --autosquash HEAD~N` where N is how many commits to rebase
+   - The `--autosquash` flag automatically moves fixup commits into position and marks them as `fixup`
+   - Without `-i`, the rebase runs fully automated without requiring any interactive input
 
-    **EXPECTED OUTPUT**:
+   **EXPECTED OUTPUT**:
 
-    ```text
-    Rebasing ...
-    Successfully rebased ...
-    ```
+   ```text
+   Rebasing ...
+   Successfully rebased ...
+   ```
 
 2. **Git automatically reorders and squashes**:
-    - The rebase completes without pausing or user interaction
-    - The fixup commit is merged into its target commit
-    - The fixup commit's message is discarded
-    - The target commit is modified to include the fixup changes
+   - The rebase completes without pausing or user interaction
+   - The fixup commit is merged into its target commit
+   - The fixup commit's message is discarded
+   - The target commit is modified to include the fixup changes
 
 3. **Verify rebase succeeded**:
 
-    ```bash
-    git log --oneline -n 5
-    ```
+   ```bash
+   git log --oneline -n 5
+   ```
 
-    - The fixup commit should no longer appear in history
-    - The target commit should now include the changes
-    - You should see fewer commits than before (target + fixup → target only)
+   - The fixup commit should no longer appear in history
+   - The target commit should now include the changes
+   - You should see fewer commits than before (target + fixup → target only)
 
 #### Phase 4: Verify and Push
 
 1. **Verify the squashed commit contains correct changes**:
 
-    ```bash
-    git show <SQUASHED_COMMIT_HASH>
-    ```
+   ```bash
+   git show <SQUASHED_COMMIT_HASH>
+   ```
 
-    - Verify that both original content and fixup changes are present
+   - Verify that both original content and fixup changes are present
 
 2. **Determine push strategy**:
-    - If commits were NOT previously pushed to remote: `git push`
-    - If commits WERE previously pushed to remote:
-        - Force push is required: `git push --force-with-lease`
-        - Get explicit user confirmation before force pushing
-        - Warn user that collaborators need to reset their branches
+   - If commits were NOT previously pushed to remote: `git push`
+   - If commits WERE previously pushed to remote:
+     - Force push is required: `git push --force-with-lease`
+     - Get explicit user confirmation before force pushing
+     - Warn user that collaborators need to reset their branches
 
 3. **Verify push succeeded**:
-    - Check exit code is 0
+   - Check exit code is 0
 
 ### Multiple Fixups for Different Commits
 
@@ -256,26 +256,26 @@ export GIT_SEQUENCE_EDITOR="/tmp/git-rebase-editor.sh"
 - Git will automatically invoke the custom editor script, which inserts a `break` command at the start of the rebase
 - **EXPECTED OUTPUT** (indicates rebase started successfully):
 
-    ```text
-    Created autostash: <object-hash>
-    Stopped at <commit-hash> (<commit-message>)
-    ```
+  ```text
+  Created autostash: <object-hash>
+  Stopped at <commit-hash> (<commit-message>)
+  ```
 
 - This output means the rebase has **successfully started** and is paused at the `break` command
 - **Locate the todo list file**: `.git/rebase-merge/git-rebase-todo` (relative to repository root)
 - Read the todo list file directly using: `Get-Content .git/rebase-merge/git-rebase-todo` (PowerShell) or `cat .git/rebase-merge/git-rebase-todo` (Bash)
 - The file will contain lines like:
 
-    ```text
-    break
-    pick <hash> <commit message>
-    pick <hash> <commit message>
-    ```
+  ```text
+  break
+  pick <hash> <commit message>
+  pick <hash> <commit message>
+  ```
 
 - Edit the todo list file directly (do NOT use `--edit-todo` or open any editor) to change `pick` to the desired action:
-    - `reword` for renaming commit message only
-    - `edit` for adding files or modifying content
-    - `fixup` or `squash` if combining commits
+  - `reword` for renaming commit message only
+  - `edit` for adding files or modifying content
+  - `fixup` or `squash` if combining commits
 - Run `git rebase --continue` to execute the rebase with your modifications
 
 ##### 3. Execute Fix
@@ -319,22 +319,22 @@ export GIT_SEQUENCE_EDITOR="/tmp/git-rebase-editor.sh"
 #### Phase 3: Verify and Push
 
 1. **Verify Rebase**:
-    - Run `git log --oneline -n 10` to display updated history
-    - Show the updated commit history to user
-    - Confirm with user that commit history is correct before pushing
+   - Run `git log --oneline -n 10` to display updated history
+   - Show the updated commit history to user
+   - Confirm with user that commit history is correct before pushing
 
 2. **Push Changes**:
-    - If commits were NOT previously pushed to remote: Run `git push`
-    - If commits WERE previously pushed to remote:
-        - Explain to user that force push is required because history was rewritten
-        - Warn that collaborators who have pulled these commits will need to reset their branches
-        - Get explicit user confirmation with "Yes" before proceeding
-        - Run `git push --force-with-lease` (safer than `--force`)
-    - Verify push succeeded by checking exit code
+   - If commits were NOT previously pushed to remote: Run `git push`
+   - If commits WERE previously pushed to remote:
+     - Explain to user that force push is required because history was rewritten
+     - Warn that collaborators who have pulled these commits will need to reset their branches
+     - Get explicit user confirmation with "Yes" before proceeding
+     - Run `git push --force-with-lease` (safer than `--force`)
+   - Verify push succeeded by checking exit code
 
 3. **Report**:
-    - Display updated commits in table format
-    - Mark which specific commits were modified during rebase
+   - Display updated commits in table format
+   - Mark which specific commits were modified during rebase
 
 ---
 
