@@ -7,9 +7,9 @@ Agent Hooks execute custom shell commands at specific agent lifecycle points wit
 - **Purpose:** Execute custom shell commands at key agent lifecycle points with guaranteed outcomes.
 - **When to use:** Use for deterministic automation that must enforce security policies, run code quality checks, create audit trails, or inject context.
 - **File location:**
-  - Workspace: `.github/hooks/*.json` (shared with team) - _PREFERRED FOR COPILOT USAGE_
-  - Workspace: `.claude/settings.json` (project hooks)
-  - Workspace: `.claude/settings.local.json` (local hooks, gitignored)
+  - Workspace: `.github/hooks/*.json` (shared with team) — **preferred for Copilot**
+  - Workspace: `.claude/settings.json` (Claude Code compatibility — project hooks)
+  - Workspace: `.claude/settings.local.json` (Claude Code compatibility — local hooks, gitignored)
 - **Selection/activation:** Hooks fire automatically at specific lifecycle events. No manual invocation required.
 - **Format compatibility:** Uses the same format as Claude Code and Copilot CLI for cross-tool compatibility.
 
@@ -437,7 +437,7 @@ EOF
 - Validate and sanitize all input data
 - Quote shell variables: use `"$VAR"` not `$VAR`
 - Block path traversal: check for `..` in paths
-- Use absolute paths with `"$CLAUDE_PROJECT_DIR"` for project-relative scripts
+- Use absolute paths with `"$CLAUDE_PROJECT_DIR"` for project-relative scripts (Claude Code compatibility variable — use workspace-relative paths in `.github/hooks/` for Copilot)
 - Skip sensitive files: avoid `.env`, `.git/`, keys
 
 **VS Code mitigations:**

@@ -28,7 +28,7 @@ You can activate these features in VS Code using either approach:
 - `chat.hookFilesLocations`
 - `chat.agentSkillsLocations`
 
-See the [copilot-customization-features skill](features/skills/copilot-customization-features/SKILL.md) for detailed documentation on each feature type.
+See the [copilot-features skill](features/skills/copilot-features/SKILL.md) for detailed documentation on each feature type.
 
 ## License
 

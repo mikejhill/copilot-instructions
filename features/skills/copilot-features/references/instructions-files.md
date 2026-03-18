@@ -40,7 +40,7 @@ All fields are optional:
 
 ## Body Layout
 
-Use short, testable rules.
+Organize by concern with `##` headings. State rules as imperative commands. Keep rules short, specific, and testable. Include one example per major rule.
 
 ## Examples
 

@@ -35,12 +35,12 @@ All fields are optional:
 - `description`: Brief explanation of what the prompt does (shown in prompt picker)
 - `argument-hint`: User-friendly hint text shown in chat input to guide usage (e.g., "Enter feature name", "Specify file path")
 - `agent`: Which agent runs the prompt (`ask`, `edit`, `agent`, or custom agent name)
-- `tools`: List of tools available when running this prompt (built-in aliases, MCP servers, extension tools)
+- `tools`: List of tools available when running this prompt. See [Custom Agents Tool Aliases](./custom-agents.md#tool-aliases) for built-in alias list. Also accepts MCP server names and extension tool identifiers.
 - `model`: Specific AI model to use (overrides user's selected model)
 
 ## Body Layout
 
-Input → Output → Steps → Example. Use variables like `${selection}` or `${input:variable}` when needed.
+Input → Output → Steps → Example.
 
 ## Examples
 
@@ -87,4 +87,3 @@ Output: Route handler with validation and database insert
 - Stored in `.github/prompts/` folder
 - File naming: `*.prompt.md`
 - All frontmatter fields are optional
-- Uses variables (`${selection}`, `${input:var}`) or tools only when required

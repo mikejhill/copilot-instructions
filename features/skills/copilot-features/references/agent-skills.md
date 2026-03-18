@@ -64,7 +64,26 @@ This is the ONLY text used for skill activation. Include:
 
 ## Body Layout
 
-What the skill accomplishes, step-by-step procedures, and examples.
+Include:
+
+- What the skill accomplishes
+- Step-by-step procedures
+- A **Related Files** index listing supporting files and what each file is used for
+- Examples
+
+### Related Files Index
+
+If the skill includes supporting files (`scripts/`, `references/`, `assets/`), include a section like this in `SKILL.md`:
+
+```markdown
+## Related Files
+
+- `references/api-spec.md`: API contract and field constraints used by this skill.
+- `scripts/generate-tests.js`: Generates baseline test cases before manual refinement.
+- `assets/component-template.tsx`: Starter template used when scaffolding new components.
+```
+
+Keep descriptions concise and action-oriented.
 
 ## Bundled Assets
 
@@ -81,8 +100,10 @@ Skills can include additional files in the same directory:
 Skills load in stages to optimize token usage:
 
 1. **Discovery** (~100 tokens): Agent reads `name` and `description`
-2. **Instructions** (<5000 tokens, ~250 lines max): Loads SKILL.md body when relevant
+2. **Instructions** (<5000 tokens): Loads SKILL.md body when relevant
 3. **Resources**: Additional files load only when referenced
+
+Keep SKILL.md under 500 lines total. The instructions stage loads the body content; move lengthy reference material to separate files to stay within token budgets.
 
 ## Using Skills as Slash Commands
 
@@ -184,6 +205,7 @@ Output: Analysis of workflow failures with suggested fixes
 - Monolithic SKILL.md with everything in one file instead of using reference files
 - Name mismatch between folder name and frontmatter `name` field
 - Missing step-by-step procedures (descriptions without actionable guidance)
+- Missing a Related Files list when the skill depends on additional files
 - Setting both `user-invocable: false` and `disable-model-invocation: true` (disables skill entirely)
 - Using generic `argument-hint` that doesn't help users understand what to provide
 
@@ -192,8 +214,9 @@ Output: Analysis of workflow failures with suggested fixes
 - Stored in `.github/skills/<name>/SKILL.md`
 - Folder name must match `name` field in frontmatter
 - Required fields: `name` and `description` in frontmatter are specific
-- Optional fields used appropriately: `argument-hint`, `user-invocable`, `disable-model-invocation`
+- Optional fields used correctly: `argument-hint`, `user-invocable`, `disable-model-invocation`
 - Keep SKILL.md under 500 lines; use reference files for lengthy content
 - File references should be one level deep from SKILL.md
+- Include a `## Related Files` section in SKILL.md when supporting files exist, with one-line descriptions for each file
 - Body includes what skill accomplishes, when to use, procedures, and examples
 - If using visibility controls, not both set to false (which disables skill entirely)

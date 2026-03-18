@@ -56,6 +56,15 @@ All fields are optional:
   - `prompt`: Pre-filled prompt text for next agent
   - `send`: Auto-submit flag (true/false). Recommended: false for user review.
 
+### Controlling Agent Visibility and Invocation
+
+| Configuration                    | In agent picker? | Subagent invocation? | Use Case                                    |
+| -------------------------------- | ---------------- | -------------------- | ------------------------------------------- |
+| Default (both omitted)           | Yes              | Yes                  | General-purpose agents                      |
+| `user-invocable: false`          | No               | Yes                  | Background agents only invoked as subagents |
+| `disable-model-invocation: true` | Yes              | No                   | Agents only used via direct user selection  |
+| Both set                         | No               | No                   | Disabled agents                             |
+
 ## Tool Aliases
 
 | Alias     | Purpose                           |

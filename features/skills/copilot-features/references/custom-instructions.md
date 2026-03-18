@@ -52,14 +52,14 @@ export const UserProfile = ({ userId }) => {
 
 ## Anti-patterns
 
-- Using both copilot-instructions.md AND AGENTS.md (choose one)
 - Kitchen sink approach (including everything instead of what matters most)
 - Duplicating README or other docs instead of linking to them
 - Adding obvious instructions already enforced by linters/formatters
+- Duplicating the same rules in both copilot-instructions.md and AGENTS.md
 
 ## Validation Checklist
 
 - Stored at `.github/copilot-instructions.md` (workspace root)
 - No YAML frontmatter
 - Rules are specific and testable
-- Do NOT use both copilot-instructions.md AND AGENTS.md (choose one)
+- If AGENTS.md also exists, ensure no duplicate rules between the two files

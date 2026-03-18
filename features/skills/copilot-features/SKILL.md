@@ -1,5 +1,5 @@
 ---
-name: copilot-customization-features
+name: copilot-features
 description: Use when creating or modifying any GitHub Copilot customization features in VS Code, including custom instructions, AGENTS.md, agent skills, prompt files, custom agents, or agent hooks. Helps select the correct feature type and create, review, or modify it for optimal performance.
 ---
 
@@ -12,7 +12,7 @@ GitHub Copilot provides seven customization features that allow you to tailor ho
 This skill helps you:
 
 - Understand the seven feature types and when to use each one
-- Select the appropriate feature based on your requirements
+- Select the correct feature based on your requirements
 - Format and structure each feature type correctly
 - Navigate detailed documentation for implementation
 
@@ -26,15 +26,15 @@ See also the **Global Rules** section for important rules which apply when creat
 
 ## Feature Reference
 
-| Feature                 | Usage                            | Selection/Activation                                 | File Location                                   | Documentation                                              |
-| ----------------------- | -------------------------------- | ---------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------- |
-| **Custom Instructions** | Always-on coding standards       | Auto-applied                                         | `.github/copilot-instructions.md`               | [Custom Instructions](./references/custom-instructions.md) |
-| **Instructions Files**  | File- or task-specific rules     | Auto-applied by `applyTo` or manual attach           | `.github/instructions/*.instructions.md`        | [Instructions Files](./references/instructions-files.md)   |
-| **AGENTS.md**           | Global agent instructions        | Auto-applied                                         | `AGENTS.md` (workspace root or subfolders)      | [AGENTS.md](./references/agents-md.md)                     |
-| **Agent Skills**        | On-demand capabilities           | Auto-loaded by `description` match or slash commands | `.github/skills/<name>/SKILL.md`                | [Agent Skills](./references/agent-skills.md)               |
-| **Prompt Files**        | Explicit, repeatable tasks       | Run explicitly by user via slash commands            | `.github/prompts/<name>.prompt.md`              | [Prompt Files](./references/prompt-files.md)               |
-| **Custom Agents**       | Role-specific tools+instructions | Selected by user or subagent invocation              | `.github/agents/<name>.agent.md`                | [Custom Agents](./references/custom-agents.md)             |
-| **Agent Hooks**         | Lifecycle automation             | Auto-fires at lifecycle events                       | `.github/hooks/*.json`, `.claude/settings.json` | [Agent Hooks](./references/agent-hooks.md)                 |
+| Feature                 | Usage                            | Selection/Activation                                                    | File Location                                   | Documentation                                              |
+| ----------------------- | -------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------- |
+| **Custom Instructions** | Always-on coding standards       | Auto-applied                                                            | `.github/copilot-instructions.md`               | [Custom Instructions](./references/custom-instructions.md) |
+| **Instructions Files**  | File- or task-specific rules     | Auto-applied by `applyTo`, on-demand by `description`, or manual attach | `.github/instructions/*.instructions.md`        | [Instructions Files](./references/instructions-files.md)   |
+| **AGENTS.md**           | Global agent instructions        | Auto-applied                                                            | `AGENTS.md` (workspace root or subfolders)      | [AGENTS.md](./references/agents-md.md)                     |
+| **Agent Skills**        | On-demand capabilities           | Auto-loaded by `description` match or slash commands                    | `.github/skills/<name>/SKILL.md`                | [Agent Skills](./references/agent-skills.md)               |
+| **Prompt Files**        | Explicit, repeatable tasks       | Run explicitly by user via slash commands                               | `.github/prompts/<name>.prompt.md`              | [Prompt Files](./references/prompt-files.md)               |
+| **Custom Agents**       | Role-specific tools+instructions | Selected by user or subagent invocation                                 | `.github/agents/<name>.agent.md`                | [Custom Agents](./references/custom-agents.md)             |
+| **Agent Hooks**         | Lifecycle automation             | Auto-fires at lifecycle events                                          | `.github/hooks/*.json`, `.claude/settings.json` | [Agent Hooks](./references/agent-hooks.md)                 |
 
 ### Feature Purposes
 
@@ -52,17 +52,17 @@ See also the **Global Rules** section for important rules which apply when creat
 
 Use this flow to quickly choose the right feature type:
 
-| Requirement                                                    | Feature Type                                          |
-| -------------------------------------------------------------- | ----------------------------------------------------- |
-| Should this apply to every request in the workspace?           | Custom instructions or AGENTS.md                      |
-| Should this apply only to specific files/folders?              | Instructions files (with `applyTo`)                   |
-| Should this load on-demand when relevant?                      | Instructions files (with `description`), Agent Skills |
-| Is this a single focused task with inputs?                     | Prompt files                                          |
-| Does this need bundled assets (scripts/templates)?             | Agent Skills                                          |
-| Does this need tool restrictions or context isolation?         | Custom agents                                         |
-| Is this a multi-stage workflow with handoffs?                  | Custom agents                                         |
-| Do you need deterministic automation with guaranteed outcomes? | Agent Hooks                                           |
-| Do you need to block/modify tool execution before it happens?  | Agent Hooks (PreToolUse event)                        |
+| Condition                                                    | Feature Type                                          |
+| ------------------------------------------------------------ | ----------------------------------------------------- |
+| Applies to every request in the workspace                    | Custom instructions or AGENTS.md                      |
+| Applies only to specific files/folders                       | Instructions files (with `applyTo`)                   |
+| Loads on-demand when task is relevant                        | Instructions files (with `description`), Agent Skills |
+| Single focused task with parameterized inputs                | Prompt files                                          |
+| Needs bundled assets (scripts/templates)                     | Agent Skills                                          |
+| Needs tool restrictions or context isolation                 | Custom agents                                         |
+| Multi-stage workflow with handoffs                           | Custom agents                                         |
+| Requires deterministic automation with guaranteed outcomes   | Agent Hooks                                           |
+| Requires blocking/modifying tool execution before it happens | Agent Hooks (PreToolUse event)                        |
 
 **Important:** Only **one** slash command can be used at a time. This includes skills and prompt files invoked via slash commands, so you cannot manually select multiple skills/prompts in a single request.
 
@@ -93,7 +93,7 @@ Use these criteria when choosing between similar feature types:
 
 - GitHub Copilot-specific standards? → Custom instructions
 - Tool-agnostic rules for multiple AI assistants? → AGENTS.md
-- Use both when needed; they complement each other.
+- Both can coexist. Use custom instructions for Copilot-specific guidance and AGENTS.md for cross-tool rules. Do not duplicate the same rules in both files.
 
 ### Instructions/Skills vs Agent Hooks
 
@@ -121,8 +121,23 @@ Use these criteria when choosing between similar feature types:
 
 For detailed guidance on phrasing rules, constraints, and instructions, reference the [writing-ai-instructions](../writing-ai-instructions/SKILL.md) skill.
 
+## Feature Interaction & Precedence
+
+When multiple features activate simultaneously with overlapping guidance:
+
+- **Most specific wins.** Instructions files with `applyTo` targeting specific files override broader custom instructions or AGENTS.md guidance.
+- **Explicit over automatic.** User-invoked features (prompt files, slash-command skills) take precedence over auto-applied features.
+- **Later context wins.** When features at the same specificity level conflict, the most recently attached or loaded context takes precedence.
+- **Hooks are independent.** Agent hooks execute deterministically regardless of other features. Hook output does not conflict with instruction-based guidance — hooks control execution, instructions control reasoning.
+
+Minimize conflicts by keeping each feature focused on a distinct concern. Do not duplicate the same rule across multiple features.
+
 ### Validation Checklist
 
 - Name is lowercase and hyphen-separated (skills, prompts, agents)
 - File path matches feature type
+- Required frontmatter fields are present per feature type
+- Description uses "Use when..." pattern (for skills and on-demand instructions)
+- No banned vague language in content ("appropriate", "reasonable", "consider", "might")
 - Examples are included
+- See feature-specific validation checklists in each reference file
