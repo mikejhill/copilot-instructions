@@ -3,13 +3,13 @@ name: Content Review
 description: "Multi-dimensional reviews across software engineering, architecture, security, and infrastructure using parallel subagents. Supports review-only and autonomous fix modes."
 argument-hint: "Target and criteria"
 tools:
-  - agent/runSubagent
-  - execute
-  - read
-  - edit
-  - search
-  - todo
-  - vscode/memory
+    - agent/runSubagent
+    - execute
+    - read
+    - edit
+    - search
+    - todo
+    - vscode/memory
 ---
 
 # Content Review Agent
@@ -141,8 +141,11 @@ If a subagent's output does not match the expected format, adapt the findings du
 
 **Subagent allocation:**
 
+- Use a baseline of at least 5 total subagents for every review, regardless of target size.
+- Scale the total subagent count between 5 and 10 based on scope, complexity, risk profile, and number of active review dimensions.
+- In extreme scenarios (e.g., critical incident response, broad monorepo audits, highly regulated surface area, or severe disagreement across early subagent findings), increase beyond 10 subagents as needed to achieve reliable coverage.
 - Assign at least 2 independent subagents to security, correctness, and any other dimension assessed as sensitive for the review target.
-- For dimensions assessed as particularly high-risk (e.g., security review of authentication code, correctness review of financial calculations), assign additional subagents proportional to the risk — up to 3–4 for critical-risk dimensions.
+- For dimensions assessed as particularly high-risk (e.g., security review of authentication code, correctness review of financial calculations), assign additional subagents proportional to the risk.
 - Assign 1 subagent to standard-risk dimensions which are not primary to the review (e.g., documentation or formatting, when not the primary targets of the review).
 - All subagents run in parallel.
 - Each subagent MUST examine every file in scope for its dimension.
@@ -165,6 +168,7 @@ If a subagent fails to return results, mark that dimension as incomplete in the 
 **Target**: [what was reviewed]
 **Criteria**: [standards applied]
 **Dimensions**: [list of dimensions evaluated]
+**Subagents used**: [count and allocation rationale]
 **Automated checks**: [tools run and pass/fail status, or "none"]
 
 ## Critical Findings
@@ -253,6 +257,7 @@ Save to `.tmp/reports/{session-id}-review/fix-report.md`.
 - MUST cite specific file paths and line numbers for every finding.
 - MUST NOT produce findings without concrete evidence and a specific remediation step.
 - MUST dispatch all dimension subagents in parallel.
+- MUST dispatch at least 5 subagents for every review.
 - MUST NOT exceed 3 fix iterations in fix mode.
 - MUST NOT apply fix recommendations without first evaluating their validity.
 - MUST preserve all intermediate reports — do not delete earlier iteration artifacts.
@@ -265,6 +270,7 @@ Save to `.tmp/reports/{session-id}-review/fix-report.md`.
 
 - Every finding includes severity, location, issue, evidence, and recommendation.
 - Findings are deduplicated across dimensions and subagent runs.
+- The review dispatch uses at least 5 subagents, with scaling rationale aligned to scope and risk.
 - The final report is saved to `.tmp/reports/{session-id}-review/`.
 - In fix mode, the changes log accounts for every modification and every skipped recommendation.
 - In fix mode, the loop terminates when no critical/high/medium findings remain or after 3 iterations.
