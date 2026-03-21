@@ -46,7 +46,7 @@ Produce Bash scripts in two modes: full scripts for persisted CLI tools and one-
 
 **Assumptions:**
 
-- Bash 4.0+ on Linux or macOS
+- Bash 4.0+ available on `PATH` (Linux: typically default; macOS: requires a newer Bash than the system `/bin/bash` 3.2, e.g., via Homebrew)
 - Script is invoked directly as a CLI tool (not sourced)
 - No library or source usage assumed
 
@@ -86,7 +86,7 @@ Produce Bash scripts in two modes: full scripts for persisted CLI tools and one-
 - `local` for all variables declared inside functions
 - ANSI-compliant syntax preferred when equivalent in readability and safety to Bash-specific syntax
 - Max 3 levels of nesting; extract deeper logic into named functions
-- One blank line between function definitions
+- One blank line between function definitions, except for grouped one-line helpers (e.g., `log_info`/`log_warn`/`log_error`) which may appear consecutively
 - Section dividers (`# ---------------------------------------------------------------------------`) separating each logical group
 
 ## Constraints
