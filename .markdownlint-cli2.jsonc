@@ -28,6 +28,11 @@
         "MD040": false,
 
         // Disable strict table pipe-spacing style checks.
-        "MD060": false
+        "MD060": false,
+
+        // Allow hard tabs inside fenced code blocks (e.g., Bash scripts use tab indentation).
+        "MD010": {
+            "code_blocks": false
+        }
     }
 }
