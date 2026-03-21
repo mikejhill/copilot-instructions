@@ -219,7 +219,7 @@ cleanup() {
 	:
 }
 
-_on_exit()      { local c=$?; cleanup; exit "${c}"; }
+_on_exit()      { local c=$?; cleanup || true; exit "${c}"; }
 _on_interrupt() { echo "${SCRIPT_NAME}: interrupted." >&2; exit "${E_INTERRUPT}"; }
 _on_terminate() { echo "${SCRIPT_NAME}: terminated." >&2; exit "${E_TERMINATED}"; }
 
@@ -230,7 +230,7 @@ trap _on_terminate TERM
 
 **Rules:**
 
-- `_on_exit` captures the current exit code (`$?`) before doing anything else.
+- `_on_exit` captures the current exit code (`$?`) before doing anything else and runs cleanup best-effort (`cleanup || true`) so a cleanup failure under `set -e` cannot override the original exit status.
 - `cleanup` must be idempotent (safe to call more than once).
 - Trap registrations go at the top level, after all function definitions, just before `main "$@"`.
 - Use temp files via `mktemp` when needed; record the path in a variable and remove it in `cleanup`.

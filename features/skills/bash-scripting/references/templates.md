@@ -75,7 +75,7 @@ cleanup() {
 	:
 }
 
-_on_exit()      { local c=$?; cleanup; exit "${c}"; }
+_on_exit()      { local c=$?; cleanup || true; exit "${c}"; }
 _on_interrupt() { echo "${SCRIPT_NAME}: interrupted." >&2; exit "${E_INTERRUPT}"; }
 _on_terminate() { echo "${SCRIPT_NAME}: terminated." >&2; exit "${E_TERMINATED}"; }
 
