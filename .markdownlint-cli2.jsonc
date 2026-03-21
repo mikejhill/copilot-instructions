@@ -24,6 +24,11 @@
         // Allow bold text used as pseudo-headings in checklist-style content.
         "MD036": false,
 
+        // Allow hard tabs inside fenced code blocks (e.g., Bash scripts require tab indentation).
+        "MD010": {
+            "code_blocks": false
+        },
+
         // Do not require fenced code blocks to declare a language.
         "MD040": false,
 

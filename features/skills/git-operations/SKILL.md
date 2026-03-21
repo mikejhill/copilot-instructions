@@ -273,9 +273,9 @@ export GIT_SEQUENCE_EDITOR="/tmp/git-rebase-editor.sh"
     ```
 
 - Edit the todo list file directly (do NOT use `--edit-todo` or open any editor) to change `pick` to the desired action:
-    - `reword` for renaming commit message only
-    - `edit` for adding files or modifying content
-    - `fixup` or `squash` if combining commits
+  - `reword` for renaming commit message only
+  - `edit` for adding files or modifying content
+  - `fixup` or `squash` if combining commits
 - Run `git rebase --continue` to execute the rebase with your modifications
 
 ##### 3. Execute Fix
