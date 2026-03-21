@@ -182,7 +182,10 @@ Produce Bash scripts in two modes: full scripts for persisted CLI tools and one-
 **OneOff:**
 
 ```bash
-find . -name "*.log" -mtime +7 -exec rm -f {} +
+# Preview files older than 7 days:
+find . -name "*.log" -mtime +7 -print
+# After reviewing the list, uncomment the next line to delete:
+# find . -name "*.log" -mtime +7 -exec rm -f {} +
 ```
 
 **FullScript (structure overview):**
@@ -200,6 +203,7 @@ find . -name "*.log" -mtime +7 -exec rm -f {} +
 
 set -euo pipefail
 
+readonly E_GENERAL=1
 readonly E_USAGE=2
 readonly E_INTERRUPT=130
 readonly E_TERMINATED=143
@@ -210,7 +214,7 @@ verbose=0
 limit="${DEFAULT_LIMIT}"
 input_dir=""
 
-die()       { echo "${SCRIPT_NAME}: error: $1" >&2; exit "${2:-1}"; }
+die()       { echo "${SCRIPT_NAME}: error: $1" >&2; exit "${2:-${E_GENERAL}}"; }
 log_info()  { echo "${SCRIPT_NAME}: $*" >&2; }
 log_warn()  { echo "${SCRIPT_NAME}: warning: $*" >&2; }
 log_error() { echo "${SCRIPT_NAME}: error: $*" >&2; }

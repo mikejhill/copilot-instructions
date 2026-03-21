@@ -250,7 +250,7 @@ create_script() {
 	[ "${already_exists}" -eq 0 ] && remove_if_unchanged "${script_path}"
 
 	if [ -f "${script_path}" ]; then
-		dos2unix "${script_path}" > /dev/null 2>&1 || true
+		dos2unix "${script_path}" > /dev/null 2>&1 || true  # Best-effort; non-critical
 	fi
 }
 
