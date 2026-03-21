@@ -131,8 +131,8 @@ dos2unix "${scriptPath}" &>/dev/null
 #        create-script -h
 #
 # Changelog:
-#   - 2022-11-04: Conform to latest shell script standards.
 #   - 2025-01-01: Refactor to function-based architecture.
+#   - 2022-11-04: Conform to latest shell script standards.
 
 set -euo pipefail
 
@@ -206,11 +206,10 @@ _on_terminate() { echo "${SCRIPT_NAME}: terminated." >&2; exit "${E_TERMINATED}"
 # ---------------------------------------------------------------------------
 resolve_script_path() {
 	local name="$1"
-	if [ "${name:0:1}" = "/" ]; then
-		echo "${name}"
-	else
-		echo "${SCRIPTS_DIR}/${name}"
-	fi
+	case "${name}" in
+	/*)  echo "${name}" ;;
+	*)   echo "${SCRIPTS_DIR}/${name}" ;;
+	esac
 }
 
 create_from_template() {
