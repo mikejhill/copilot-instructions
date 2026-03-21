@@ -2,10 +2,10 @@
 
 ## Core Principles
 
-1. Function-first: all logic lives in functions; no top-level procedural code.
+1. Function-first: all business logic lives in functions; no top-level procedural code beyond setup (strict mode, constants, state, traps, `main "$@"`).
 2. Guard clauses: validate inputs at function entry before executing any logic.
 3. Fail fast: `set -euo pipefail` ensures any unhandled error terminates the script immediately.
-4. Explicit codes: every `exit` call uses a named `E_`-prefixed constant.
+4. Explicit codes: all non-zero `exit` calls use a named `E_`-prefixed constant; successful exits use `exit 0`.
 5. ANSI-compliant syntax preferred when equivalent in readability and safety to Bash-specific syntax.
 
 ---

@@ -26,7 +26,7 @@ Use these rules when the user does not explicitly choose a mode:
 ## FullScript Guardrails
 
 - Strict structure: header, strict mode, constants, script state, utilities, usage, signal handlers, business logic, `parse_args`, `main`, traps, invocation.
-- All logic inside functions; no top-level procedural code.
+- All business logic inside functions; only minimal top-level setup (strict mode, trap registration, and final `main "$@"` invocation).
 - Guard clauses validate inputs before executing.
 - `set -euo pipefail` always enabled.
 - Traps registered for `EXIT`, `INT`, and `TERM`.

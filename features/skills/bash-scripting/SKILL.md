@@ -109,7 +109,7 @@ Produce Bash scripts in two modes: full scripts for persisted CLI tools and one-
 
 - Write diagnostic, logging, or status output to stdout outside of the primary program output
 - Use undefined variables
-- Ignore non-zero exit codes silently
+- Ignore non-zero exit codes without an explicit comment or log explaining that the failure is non-critical
 
 **FullScript MUST:**
 
@@ -128,8 +128,7 @@ Produce Bash scripts in two modes: full scripts for persisted CLI tools and one-
 **FullScript MUST NOT:**
 
 - Hard-code paths or configurable values (use constants or arguments)
-- Place business logic outside functions
-- Use top-level procedural code (all logic goes in `main` or helper functions)
+- Put business logic at top level; only constants/state declarations, strict mode (`set -euo pipefail`), trap registrations, and the final `main "$@"` invocation belong at top level
 - Call `exit` without an explicit numeric code or named exit code constant
 - Use string booleans (e.g., `TRUE`/`FALSE` string variables) in place of integer flags (`0`/`1`) or function return codes
 
