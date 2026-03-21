@@ -5,19 +5,22 @@
 **List the five largest files in the current directory tree:**
 
 ```bash
-find . -type f -printf '%s %p\n' | sort -rn | head -5
+find . -type f -exec du -k {} + | sort -rn | head -5
 ```
 
 **Count lines of Bash source across a project:**
 
 ```bash
-find . -name "*.sh" -o -name "*.bash" | xargs wc -l | sort -rn | head
+find . -type f \( -name "*.sh" -o -name "*.bash" \) -print0 | xargs -0 wc -l | sort -rn | head
 ```
 
 **Kill all processes matching a name (without using pkill by name):**
 
 ```bash
-ps aux | awk '/my-process/ && !/awk/ {print $2}' | xargs -r kill
+pids=$(ps aux | awk '/my-process/ && !/awk/ {print $2}')
+if [ -n "$pids" ]; then
+  kill $pids
+fi
 ```
 
 ---
@@ -136,7 +139,9 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
+readonly E_GENERAL=1
 readonly E_USAGE=2
+readonly E_NOT_FOUND=3
 readonly E_INTERRUPT=130
 readonly E_TERMINATED=143
 readonly SCRIPT_NAME="$(basename "$0")"
@@ -155,12 +160,12 @@ script_name=""
 # ---------------------------------------------------------------------------
 die() {
 	local message="${1:-An error occurred.}"
-	local exit_code="${2:-1}"
+	local exit_code="${2:-${E_GENERAL}}"
 	echo "${SCRIPT_NAME}: error: ${message}" >&2
 	exit "${exit_code}"
 }
 
-log_info()  { echo "${SCRIPT_NAME}: $*"; }
+log_info()  { echo "${SCRIPT_NAME}: $*" >&2; }
 log_warn()  { echo "${SCRIPT_NAME}: warning: $*" >&2; }
 log_error() { echo "${SCRIPT_NAME}: error: $*" >&2; }
 
@@ -210,7 +215,7 @@ resolve_script_path() {
 
 create_from_template() {
 	local path="$1"
-	[ -f "${SCRIPTS_TEMPLATE}" ] || die "Template not found: ${SCRIPTS_TEMPLATE}"
+	[ -f "${SCRIPTS_TEMPLATE}" ] || die "Template not found: ${SCRIPTS_TEMPLATE}" "${E_NOT_FOUND}"
 	cp "${SCRIPTS_TEMPLATE}" "${path}"
 	chmod u+x "${path}"
 }
@@ -226,7 +231,7 @@ remove_if_unchanged() {
 run_editor() {
 	local tool="$1"
 	local path="$2"
-	command -v "${tool}" > /dev/null 2>&1 || die "Editor not found: ${tool}"
+	command -v "${tool}" > /dev/null 2>&1 || die "Editor not found: ${tool}" "${E_NOT_FOUND}"
 	"${tool}" "${path}"
 }
 

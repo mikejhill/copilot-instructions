@@ -18,7 +18,9 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
+readonly E_GENERAL=1
 readonly E_USAGE=2
+readonly E_NOT_FOUND=3
 readonly E_INTERRUPT=130
 readonly E_TERMINATED=143
 readonly SCRIPT_NAME="$(basename "$0")"
@@ -36,12 +38,12 @@ target=""
 # ---------------------------------------------------------------------------
 die() {
 	local message="${1:-An error occurred.}"
-	local exit_code="${2:-1}"
+	local exit_code="${2:-${E_GENERAL}}"
 	echo "${SCRIPT_NAME}: error: ${message}" >&2
 	exit "${exit_code}"
 }
 
-log_info()  { echo "${SCRIPT_NAME}: $*"; }
+log_info()  { echo "${SCRIPT_NAME}: $*" >&2; }
 log_warn()  { echo "${SCRIPT_NAME}: warning: $*" >&2; }
 log_error() { echo "${SCRIPT_NAME}: error: $*" >&2; }
 
@@ -82,7 +84,7 @@ _on_terminate() { echo "${SCRIPT_NAME}: terminated." >&2; exit "${E_TERMINATED}"
 # ---------------------------------------------------------------------------
 process() {
 	local path="$1"
-	[ -e "${path}" ] || die "Path not found: ${path}"
+	[ -e "${path}" ] || die "Path not found: ${path}" "${E_NOT_FOUND}"
 
 	[ "${verbose}" -eq 1 ] && log_info "Processing: ${path}"
 
@@ -155,7 +157,11 @@ prepare_data() {
 **Find and remove old files:**
 
 ```bash
-find . -name "*.log" -mtime +7 -exec rm -f {} +
+# Preview files that would be removed (dry run):
+find . -name "*.log" -mtime +7 -print
+
+# Remove after confirming the list above:
+# find . -name "*.log" -mtime +7 -exec rm -f {} +
 ```
 
 **Summarize file sizes by extension:**

@@ -87,7 +87,7 @@ Produce Bash scripts in two modes: full scripts for persisted CLI tools and one-
 - ANSI-compliant syntax preferred when equivalent in readability and safety to Bash-specific syntax
 - Max 3 levels of nesting; extract deeper logic into named functions
 - One blank line between function definitions
-- Section dividers (`# ---...`) separating each logical group
+- Section dividers (`# ---------------------------------------------------------------------------`) separating each logical group
 
 ## Constraints
 
@@ -102,12 +102,12 @@ Produce Bash scripts in two modes: full scripts for persisted CLI tools and one-
 **Global MUST:**
 
 - Choose FullScript or OneOff and follow the mode rules
-- Write errors and warnings to stderr; write normal output to stdout
+- Write errors, warnings, and all diagnostic/status output (including `log_info`) to stderr; write primary program output to stdout
 - Validate all required inputs before executing logic
 
 **Global MUST NOT:**
 
-- Write diagnostic or status output to stdout
+- Write diagnostic, logging, or status output to stdout outside of the primary program output
 - Use undefined variables
 - Ignore non-zero exit codes silently
 
@@ -212,7 +212,7 @@ limit="${DEFAULT_LIMIT}"
 input_dir=""
 
 die()       { echo "${SCRIPT_NAME}: error: $1" >&2; exit "${2:-1}"; }
-log_info()  { echo "${SCRIPT_NAME}: $*"; }
+log_info()  { echo "${SCRIPT_NAME}: $*" >&2; }
 log_warn()  { echo "${SCRIPT_NAME}: warning: $*" >&2; }
 log_error() { echo "${SCRIPT_NAME}: error: $*" >&2; }
 

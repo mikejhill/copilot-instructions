@@ -89,6 +89,7 @@ Every FullScript includes a header comment immediately after the shebang:
 Declare named constants for all exit codes used in the script:
 
 ```bash
+readonly E_GENERAL=1      # General/unclassified error
 readonly E_USAGE=2        # Invalid arguments or missing required input
 readonly E_INTERRUPT=130  # SIGINT (Ctrl+C); standard convention: 128 + signal number (2)
 readonly E_TERMINATED=143 # SIGTERM; standard convention: 128 + signal number (15)
@@ -110,12 +111,12 @@ Every FullScript defines these utility functions:
 ```bash
 die() {
 	local message="${1:-An error occurred.}"
-	local exit_code="${2:-1}"
+	local exit_code="${2:-${E_GENERAL}}"
 	echo "${SCRIPT_NAME}: error: ${message}" >&2
 	exit "${exit_code}"
 }
 
-log_info()  { echo "${SCRIPT_NAME}: $*"; }
+log_info()  { echo "${SCRIPT_NAME}: $*" >&2; }
 log_warn()  { echo "${SCRIPT_NAME}: warning: $*" >&2; }
 log_error() { echo "${SCRIPT_NAME}: error: $*" >&2; }
 ```
