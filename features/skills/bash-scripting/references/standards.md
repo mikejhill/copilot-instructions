@@ -134,7 +134,7 @@ log_error "Failed to copy file: ${src}"
 
 ## Usage Function
 
-- Outputs to **stdout** (callers redirect to stderr when used in error context).
+- Outputs to **stdout** by default. In argument-error contexts, `parse_args` redirects to stderr before exiting (see table below).
 - Uses a heredoc for multi-line content.
 - References `${SCRIPT_NAME}` and relevant defaults from constants.
 
@@ -197,6 +197,7 @@ parse_args() {
 	[ $# -lt 1 ] && { usage >&2; exit "${E_USAGE}"; }
 	target="$1"
 	shift
+	[ $# -gt 0 ] && die "Unexpected arguments: $*" "${E_USAGE}"
 }
 ```
 
@@ -230,7 +231,7 @@ trap _on_terminate TERM
 
 **Rules:**
 
-- `_on_exit` captures the current exit code (`$?`) before doing anything else and runs cleanup best-effort (`cleanup || true`) so a cleanup failure under `set -e` cannot override the original exit status.
+- `_on_exit` captures the current exit code (`$?`) before doing anything else and runs cleanup best-effort (`cleanup || true`) so a cleanup failure under `set -e` cannot override the original exit status. It uses the captured `$?` because it fires on any exit and must forward the original exit code; by contrast, `_on_interrupt` and `_on_terminate` use fixed `E_`-prefixed constants because the exit reason is always the signal itself.
 - `cleanup` must be idempotent (safe to call more than once).
 - Trap registrations go at the top level, after all function definitions, just before `main "$@"`.
 - Use temp files via `mktemp` when needed; record the path in a variable and remove it in `cleanup`.

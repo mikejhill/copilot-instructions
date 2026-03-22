@@ -25,7 +25,7 @@ fi
 
 ---
 
-## Full Script Refactor Example
+## FullScript Refactor Example
 
 **Scenario:** Refactor `createscript`, a script that creates an executable CLI script from a template.
 
@@ -236,6 +236,7 @@ run_editor() {
 
 create_script() {
 	local name="$1"
+	[ -n "${name}" ] || die "Script name required." "${E_USAGE}"
 	local script_path
 	script_path="$(resolve_script_path "${name}")"
 
@@ -271,6 +272,7 @@ parse_args() {
 	[ $# -lt 1 ] && { usage >&2; exit "${E_USAGE}"; }
 	script_name="$1"
 	shift
+	[ $# -gt 0 ] && die "Unexpected arguments: $*" "${E_USAGE}"
 }
 
 # ---------------------------------------------------------------------------

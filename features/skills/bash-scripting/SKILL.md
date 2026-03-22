@@ -57,7 +57,7 @@ Produce Bash scripts in two modes: full scripts for persisted CLI tools and one-
 - FullScript: executable script file (no extension)
 - OneOff: snippet (1–5 lines preferred, max 10 lines)
 
-**Full Script Structure:**
+**FullScript Structure:**
 
 1. Shebang: `#!/usr/bin/env bash`
 2. Header comment (description, usage summary, changelog)
@@ -140,7 +140,7 @@ Produce Bash scripts in two modes: full scripts for persisted CLI tools and one-
 
 **OneOff MUST NOT:**
 
-- Create a full script scaffold
+- Create a FullScript scaffold
 - Add long-form comments or headers
 
 ## Procedure
@@ -154,7 +154,7 @@ Produce Bash scripts in two modes: full scripts for persisted CLI tools and one-
 
 **Pass Conditions (FullScript):**
 
-- Structure matches the Full Script Structure list
+- Structure matches the FullScript Structure list
 - `set -euo pipefail` present immediately after the header
 - All constants declared with `readonly`; all in-function variables declared with `local`
 - `die`, `usage`, `parse_args`, and `main` are all defined

@@ -1,6 +1,6 @@
 # Bash Script Templates
 
-## Full Script Skeleton
+## FullScript Skeleton
 
 ```bash
 #!/usr/bin/env bash
@@ -110,6 +110,7 @@ parse_args() {
 	[ $# -lt 1 ] && { usage >&2; exit "${E_USAGE}"; }
 	target="$1"
 	shift
+	[ $# -gt 0 ] && die "Unexpected arguments: $*" "${E_USAGE}"
 }
 
 # ---------------------------------------------------------------------------
