@@ -183,9 +183,9 @@ Produce Bash scripts in two modes: full scripts for persisted CLI tools and one-
 
 ```bash
 # Preview files older than 7 days:
-find . -name "*.log" -mtime +7 -print
+find . -type f -name "*.log" -mtime +7 -print
 # After reviewing the list, uncomment the next line to delete:
-# find . -name "*.log" -mtime +7 -exec rm -f {} +
+# find . -type f -name "*.log" -mtime +7 -exec rm -f {} +
 ```
 
 **FullScript (structure overview):**

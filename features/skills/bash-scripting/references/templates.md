@@ -159,19 +159,19 @@ prepare_data() {
 
 ```bash
 # Preview files that would be removed (dry run):
-find . -name "*.log" -mtime +7 -print
+find . -type f -name "*.log" -mtime +7 -print
 
 # Remove after confirming the list above:
-# find . -name "*.log" -mtime +7 -exec rm -f {} +
+# find . -type f -name "*.log" -mtime +7 -exec rm -f {} +
 ```
 
 **Summarize file sizes by extension:**
 
 ```bash
-find . -type f | sed 's/.*\.//' | sort | uniq -c | sort -rn
+find . -type f | awk -F/ '{print $NF}' | awk -F. 'NF>1 {print $NF} NF==1 {print "[no-ext]"}' | sort | uniq -c | sort -rn
 ```
 
-**Extract unique values from a CSV column:**
+**Extract unique values from a CSV column (simple/unquoted CSV):**
 
 ```bash
 awk -F, 'NR>1 {print $2}' data.csv | sort -u
