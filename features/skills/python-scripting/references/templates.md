@@ -16,7 +16,7 @@ description = "Short description of the project."
 requires-python = ">=3.12"
 dependencies = []
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "mypy>=1.10",
     "pytest>=8.0",
@@ -57,37 +57,15 @@ warn_unused_ignores = true
 testpaths = ["tests"]
 ```
 
-### main.py
+### main.py — REMOVED
 
-```python
-#!/usr/bin/env python3
-"""CLI wrapper for running the application from the project root.
+Do NOT create a `main.py` wrapper at the project root. With uv managing the project:
 
-This convenience script adds src/ to the Python path and delegates to the
-package entry point. Equivalent to running:
-    python -m package_name
-"""
-from __future__ import annotations
+- **Development:** `uv run package-name` (uses `[project.scripts]` entry point)
+- **Direct module execution:** `uv run python -m package_name`
+- **Global install:** `uv tool install .` places the entry point on `PATH`
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
-
-from package_name.__main__ import main  # noqa: E402
-
-if __name__ == "__main__":
-    main()
-```
-
-**Guidelines:**
-
-- Replace `package_name` with the actual package name.
-- This file stays minimal: path setup and delegation only. No business logic.
-- This file can be skipped if not useful, such as for non-CLI projects.
-- The shebang line enables direct execution on Unix (`./main.py`).
-- The `# noqa: E402` comment suppresses the "module-level import not at top of file" lint violation caused by the required `sys.path` insert before the import.
-- Users can alternatively run `python -m package_name` from within `src/` or after installing the package.
+The `main.py` pattern (inserting `src/` into `sys.path`) is unnecessary when uv handles the virtual environment and editable installs.
 
 ### src/package_name/\_\_init\_\_.py
 
@@ -425,3 +403,49 @@ class TestParseArgs:
 from pathlib import Path
 sorted(Path(path).rglob("*"), key=lambda f: f.stat().st_size, reverse=True)[:5]
 ```
+
+## README Installation Section Template
+
+Python project README files should include installation instructions using uv. Use this pattern:
+
+```markdown
+## Installation
+
+### Global install
+
+Install as a global tool using [uv](https://docs.astral.sh/uv/):
+
+\```bash
+uv tool install .
+\```
+
+### Development
+
+Clone the repository and sync the environment:
+
+\```bash
+uv sync
+\```
+
+Run the application:
+
+\```bash
+uv run <entry-point-name>
+\```
+
+Run tests and checks:
+
+\```bash
+uv run pytest
+uv run ruff check .
+uv run mypy src/
+\```
+```
+
+**Guidelines:**
+
+- Always link to [uv documentation](https://docs.astral.sh/uv/) on first mention.
+- Use `uv tool install .` for global CLI tool installation, not `pip install` or `pipx install`.
+- Use `uv sync` for development setup, not `pip install -e ".[dev]"`.
+- Use `uv run` for all command execution, not bare `pytest`, `ruff`, etc.
+- Do not document custom installer scripts, `main.py` wrappers, or `PYTHONPATH` manipulation.

@@ -26,6 +26,9 @@ Use these rules when the user does not explicitly choose a mode:
 ## FullProject Guardrails
 
 - src-layout directory structure with pyproject.toml
+- `.python-version` and `uv.lock` committed to version control
+- `[dependency-groups]` for dev dependencies (NOT `[project.optional-dependencies]`)
+- No `main.py` wrapper at project root — use `uv run <entry-point>`
 - All business logic in classes
 - Strict typing on all signatures (`from __future__ import annotations`)
 - Guard clauses at method entry
@@ -34,4 +37,4 @@ Use these rules when the user does not explicitly choose a mode:
 - pytest tests in tests/ directory
 - Entry point in `__main__.py` calling a `main()` function
 - pyproject.toml includes `[tool.ruff]` and `[tool.mypy]` configuration
-- After generation: run `ruff format .`, `ruff check . --fix`, `mypy src/`, `pytest`
+- After generation: run `uv lock`, `uv sync`, then `uv run ruff format .`, `uv run ruff check . --fix`, `uv run mypy src/`, `uv run pytest`

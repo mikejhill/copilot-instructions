@@ -23,8 +23,9 @@ The `from __future__ import annotations` import enables postponed evaluation of 
 
 ```text
 project-name/
-├── main.py                   # (Optional) CLI wrapper for running from project root
+├── .python-version               # Python version pin for uv (e.g., 3.12)
 ├── pyproject.toml
+├── uv.lock                       # Lock file (always committed)
 ├── README.md
 ├── src/
 │   ├── package_name/
@@ -42,8 +43,10 @@ project-name/
 │   ├── conftest.py           # Shared fixtures
 │   ├── test_core.py
 │   └── test_models.py
-└── .venv/                    # Virtual environment (gitignored)
+└── .venv/                    # Managed by uv (gitignored)
 ```
+
+Do NOT include `main.py` at the project root. Use `uv run <entry-point>` for development and `uv tool install .` for global installation.
 
 Multi-module projects place each package as a sibling under `src/`. Each package has its own `__init__.py`.
 
@@ -128,8 +131,6 @@ The only code outside classes:
 - `__main__.py`: argument parsing, logging setup, class instantiation, `main()` call
 - Module-level: imports, constants, `logger = logging.getLogger(__name__)`
 - `conftest.py`: pytest fixtures (functions by convention)
-
-Everything else is a class method.
 
 ## Typing Rules
 
