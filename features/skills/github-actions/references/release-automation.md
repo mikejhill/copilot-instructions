@@ -70,6 +70,7 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
+          # CHANGELOG.md MUST use LF line endings — sed fails on CRLF
           DATE=$(date -u +%Y-%m-%d)
           sed -i "s/^## \[Unreleased\]$/## [Unreleased]\n\n## [$VERSION] - $DATE/" CHANGELOG.md
           grep -q "## \[$VERSION\]" CHANGELOG.md || {
@@ -90,6 +91,9 @@ jobs:
           git add -A
           git commit -m "chore(release): v$VERSION"
           git tag "v$VERSION"
+          # Push may fail if commits were pushed between checkout and
+          # now (e.g., a PR merged during the release). If this occurs,
+          # re-run the workflow — it will pick up the new commits.
           git push origin HEAD "v$VERSION"
 
       - name: Create GitHub Release

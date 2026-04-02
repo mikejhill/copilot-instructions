@@ -170,7 +170,7 @@ commit messages using `commitlint`.
 | Commit message validation    | YES — validate PR title   | SKIP — validated at PR time |
 | Full test matrix             | YES                       | YES                         |
 | Build artifacts              | Verify build succeeds     | Verify build succeeds       |
-| Code coverage                | Enforce minimum threshold | Record and report           |
+| Code coverage                | Check and report          | Record and report           |
 | Publish / deploy             | NEVER                     | NEVER                       |
 
 See [CI Workflow Examples](./references/ci-workflow-examples.md) for
@@ -238,19 +238,17 @@ procedures.
 
 ### Branch Protection
 
-The release workflow pushes commits and tags to the default branch. If
-branch protection rules require PR reviews or status checks, configure
-a bypass for the `github-actions[bot]` actor or use a GitHub App token
-with bypass permissions. Document this requirement in the repository's
-contributing guide.
+The release workflow pushes commits and tags to the default branch.
+Configure a branch protection bypass for `github-actions[bot]` or use
+a GitHub App token. Document this in the repository's contributing
+guide.
 
 ## Performance Optimization
 
 ### Runner Cost
 
-GitHub-hosted runner billing: Linux 1×, Windows 2×, macOS 10×. Use
-Linux for all jobs unless the project explicitly requires Windows or
-macOS validation.
+GitHub-hosted runner billing: Linux 1×, Windows 2×, macOS 10×. Use Linux
+for all jobs unless the project explicitly requires another OS.
 
 ### Caching
 
@@ -288,7 +286,9 @@ unless no setup action covers your ecosystem.
 - Use `if` conditions for expensive steps that apply only to specific
   matrix entries.
 - Collect code coverage on ONE matrix combination only (typically the
-  latest runtime version on `ubuntu-latest`).
+  latest runtime version on `ubuntu-latest`). Enforce thresholds with
+  ecosystem tools (`--fail-under=80`, `jacocoTestCoverageVerification`,
+  `c8 --check-coverage`).
 - Use `if: always()` on reporting steps so they execute even when
   earlier steps fail.
 
@@ -318,9 +318,10 @@ page. Use `if: always()` so summaries appear even on failure.
 ### Test Reporters
 
 Use `dorny/test-reporter@v1` to render test results as GitHub checks
-with file-level annotations. Configure with JUnit XML paths and the
-appropriate reporter (`java-junit`, `dotnet-trx`, `jest-junit`,
-`mocha-json`). Always gate with `if: always()`.
+with file-level annotations. Verify its maintenance status before
+adopting; if stale, use `$GITHUB_STEP_SUMMARY` markdown tables instead.
+Configure with JUnit XML paths and the appropriate reporter. Always
+gate with `if: always()`.
 
 ### Build Scans (Gradle)
 
