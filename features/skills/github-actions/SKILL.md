@@ -420,7 +420,7 @@ Only use actions that meet ALL of these requirements:
 | Checkout         | `actions/checkout@v4`                           |
 | Artifacts        | `actions/upload-artifact@v4`                    |
 | Artifacts        | `actions/download-artifact@v4`                  |
-| Attestation      | `actions/attest-build-provenance@v4`            |
+| Attestation      | `actions/attest@v4`                             |
 | Cache            | `actions/cache@v4`                              |
 | Java             | `actions/setup-java@v4`                         |
 | Node.js          | `actions/setup-node@v4`                         |

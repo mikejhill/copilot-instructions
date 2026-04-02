@@ -1,13 +1,13 @@
 ---
 name: adversarial-refinement
+description: >-
+  Use when iteratively refining text-based content to production quality through
+  parallel dual-agent research and critique cycles with convergence detection.
 argument-hint: "[content to refine: file path, inline text, or description]"
+disable-model-invocation: true
 ---
 
 # Adversarial Refinement
-
-> **Invocation model**: This skill is user-invocable only. It intentionally omits
-> the `description` frontmatter field so that Copilot cannot auto-discover or
-> auto-activate it. Invoke it explicitly by name.
 
 Iteratively refine any text-based content to the highest achievable quality
 through parallel dual-agent analysis loops. An independent researcher discovers
@@ -29,7 +29,7 @@ improvements until diminishing returns are reached.
   prompts, specifications, architecture decisions, policies, runbooks, templates
 - Multi-iteration improvement through parallel research–critique cycles
 - Convergence detection and automatic termination
-- Domain-adaptive sub-agent prompt construction
+- Domain-contextualized sub-agent prompt construction
 
 ### Out-of-Scope
 
@@ -45,7 +45,7 @@ improvements until diminishing returns are reached.
 
 | Input | Description |
 | --- | --- |
-| **Content** | The text to refine. Provided as inline text, a file path, or an explicit reference to prior output. If a file path, read its full contents before beginning. |
+| **Content** | The text to refine. See Content Resolution for disambiguation rules. |
 | **Domain** | The subject area (e.g., "software testing", "API design", "incident response"). Infer from content if not explicitly stated. |
 
 ### Optional
@@ -55,19 +55,39 @@ improvements until diminishing returns are reached.
 | **Focus areas** | All dimensions equally | Quality dimensions to emphasize (e.g., "clarity and actionability"). |
 | **Max iterations** | 3 | Override the iteration cap. Minimum: 2. Maximum: 5. |
 | **Target audience** | Inferred from content | Who consumes this content. Shapes sub-agent framing. |
-| **Model preference** | Most capable available | Model for sub-agents. MUST be high-capability (Opus-tier or equivalent). |
+| **Model preference** | Most capable available | Model for sub-agents. See Model Selection for the fallback chain. |
+
+### Content Resolution
+
+Parse the user's input to identify the content to refine:
+
+1. If the input contains a recognizable file path (contains path separators and
+   a file extension), attempt to read it.
+   - If the file exists, use its contents as the content to refine.
+   - If the file does not exist, fail immediately with:
+     "File not found: [path]. Provide the content inline or correct the path."
+2. If the input is substantial text (more than 50 words) with no file path,
+   treat it as inline content.
+3. If the input is a short description with no file path and no substantial
+   text, fail with: "Provide the content to refine as a file path or inline
+   text."
+
+Separate any non-content instructions (e.g., "with focus on developer
+experience") from the content reference before processing.
 
 ## Outputs
 
 1. **Refined content** — The final improved version, ready for use or further
    review.
 2. **Refinement log** — Per-iteration summary containing:
-   - Researcher insights applied
-   - Critic findings addressed
-   - Changes made
+   - Researcher insights applied (with novelty rate)
+   - Critic findings addressed (with severity distribution)
+   - Changes made and whether each was clear-cut or a judgment call
    - Remaining concerns (if any)
 3. **Convergence rationale** — Why the process stopped: convergence reached, or
    cap hit with unresolved items flagged.
+4. **Diff summary** — If content originated from a file, a summary of changes
+   between the original and refined versions, presented before any file write.
 
 ## Constraints
 
@@ -93,11 +113,16 @@ orchestrator thinks is strong or weak biases which issues get surfaced.
 
 ### Model Selection — MUST Follow
 
-- Both sub-agents MUST use the most capable model available. For the Copilot
-  CLI, specify the model explicitly (e.g., `claude-opus-4.6` or the current
-  top-tier equivalent). The quality ceiling of refinement is bounded by the
-  reasoning depth of the sub-agents.
+- Both sub-agents MUST use a high-capability model. The quality ceiling of
+  refinement is bounded by the reasoning depth of the sub-agents.
 - Use `general-purpose` agent type for both sub-agents.
+- **Preferred**: Opus-tier or equivalent top-tier model (e.g.,
+  `claude-opus-4.6`).
+- **Acceptable fallback**: If the preferred tier is unavailable (rate-limited,
+  not on the user's plan), use the next-best available model (e.g.,
+  Sonnet-tier). Note the downgrade in the refinement log.
+- **Minimum floor**: Do NOT use models below the Sonnet tier. If no model at or
+  above Sonnet-tier is available, inform the user and do not proceed.
 
 ### Parallel Execution — SHOULD Follow
 
@@ -109,13 +134,45 @@ orchestrator thinks is strong or weak biases which issues get surfaced.
 
 ### Synthesis Discipline — MUST Follow
 
-- Do NOT blindly apply all suggestions. Evaluate each finding for relevance,
-  accuracy, and impact before applying.
-- When researcher and critic findings reinforce the same area, treat that area
-  as high priority.
-- When researcher and critic findings conflict, evaluate on reasoning quality
-  rather than source. Document the conflict and resolution rationale in the
-  refinement log.
+The orchestrator's synthesis step is where the majority of refinement value is
+created or destroyed. Sub-agent quality matters, but the orchestrator's judgment
+in reconciling and applying findings determines the outcome.
+
+**Anti-bias protocol:**
+
+- Process researcher findings FIRST, in isolation. Note which findings suggest
+  genuine gaps or improvements. Then process critic findings independently.
+  Only AFTER evaluating each set in isolation, cross-reference for
+  reinforcement.
+- Document which synthesis decisions were clear-cut (both agents agree, or
+  evidence is unambiguous) vs. judgment calls (orchestrator chose between
+  conflicting or ambiguous signals). This transparency enables the user to
+  audit decisions.
+
+**Anti-pattern avoidance:**
+
+- **Synthesis-by-averaging**: Do NOT take the middle ground between researcher
+  and critic when they conflict. Choose the position with stronger evidence.
+  Averaging dilutes both perspectives and produces mediocre output.
+- **Anchored revision trap**: Do NOT limit changes to line-level edits of the
+  prior version. If findings suggest structural reorganization, section
+  reordering, or section removal, implement those structural changes. Each
+  iteration MUST be willing to make bold changes, not just incremental tweaks.
+
+**Conflict resolution criteria (in priority order):**
+
+When researcher and critic findings conflict, prefer the finding that:
+
+1. Cites a specific, concrete flaw or piece of evidence.
+2. Explains causation (why something fails) rather than correlation (it seems
+   off).
+3. Proposes a testable, verifiable improvement rather than a subjective opinion.
+
+If both findings meet these criteria equally, prefer the critic (the critic has
+evaluated the actual content; the researcher has not).
+
+**Change tracking:**
+
 - Track all changes across iterations. Do NOT regress — never re-introduce
   issues fixed in prior iterations.
 - Apply the most impactful changes first. Minor polish comes last.
@@ -128,29 +185,46 @@ orchestrator thinks is strong or weak biases which issues get surfaced.
 - Maximum iterations: 5 (hard ceiling). Default: 3.
 - If the user supplies a custom maximum, clamp it to the range [2, 5].
 
+### Context Window Awareness — MUST Follow
+
+- Before constructing the critic prompt, estimate whether the full content plus
+  the prompt template plus response headroom fits within the model's context
+  window.
+- If content is too long for a single critic prompt, segment it as described in
+  the Edge Cases section.
+- Use content length in tokens (not lines) as the sizing metric. As a rough
+  heuristic, one line of dense prose is approximately 30–50 tokens.
+
 ## Procedure
 
-### Phase 0 — Preparation
+### Phase 1 — Preparation
 
-1. Read and internalize the content to refine.
-2. Identify: domain, content type, purpose, target audience.
-3. Determine which quality dimensions matter most for this content type:
+1. Resolve the content input using the Content Resolution rules.
+2. Read and internalize the content.
+3. Identify: domain, content type, purpose, target audience.
+4. Determine which quality dimensions matter most for this content type:
    - **Completeness** — All necessary topics covered?
    - **Precision** — Language concrete, specific, unambiguous?
    - **Structure** — Logically organized, easy to navigate?
    - **Correctness** — Claims accurate, internally consistent?
    - **Actionability** — Reader can act without guessing?
    - **Conciseness** — No unnecessary repetition or filler?
-4. Set the iteration counter to 0.
+5. If the user specified focus areas, identify which quality dimensions they
+   map to. Weight those dimensions above others throughout the process.
+6. Set the iteration counter to 0.
 
-### Phase 1 — Dual-Agent Launch
+### Phase 2 — Dual-Agent Launch
 
 Launch both sub-agents simultaneously (parallel). Replace all bracketed
-placeholders with actual values derived from Phase 0.
+placeholders with actual values derived from Phase 1.
 
-#### 1A — Researcher
+When constructing sub-agent prompts, follow the conventions defined by the
+`writing-ai-instructions` skill: imperative voice, no vague language, explicit
+conditionals, MUST/MUST NOT/MAY modality.
 
-Launch a `general-purpose` agent (most capable model available) with a prompt
+#### 2A — Researcher
+
+Launch a `general-purpose` agent (most capable available model) with a prompt
 built from this template:
 
 ~~~text
@@ -172,10 +246,25 @@ Produce a structured report with these sections:
    content type? Why?
 5. OVERLOOKED DIMENSIONS — What aspects or audiences are commonly neglected?
 
-[IF iteration > 0]:
-This is iteration [N]. Prior iterations already addressed fundamentals. Focus
-exclusively on ADVANCED, SUBTLE, and NON-OBVIOUS insights that require deep
-domain expertise to identify.
+[IF focus areas specified]:
+Prioritize the following quality dimensions above all others: [FOCUS AREAS].
+Weight your findings heavily toward these dimensions.
+[END IF]
+
+[IF iteration == 0]:
+Cover both fundamental and advanced aspects of excellence for this content type.
+[END IF]
+
+[IF iteration == 1]:
+Prior research covered fundamentals. Focus exclusively on ADVANCED, SUBTLE, and
+NON-OBVIOUS insights that require deep domain expertise to identify.
+[END IF]
+
+[IF iteration >= 2]:
+Prior research covered fundamentals and advanced practices. Adopt a contrarian
+stance: challenge conventional wisdom about [CONTENT TYPE]. Identify best
+practices that are actually harmful in specific contexts, or unconventional
+approaches that outperform standard ones. Question assumptions.
 [END IF]
 
 Prioritize depth over breadth. Five profound insights outweigh twenty surface
@@ -185,9 +274,15 @@ Report general findings only.
 
 NEVER include the content being refined in the researcher prompt.
 
-#### 1B — Critic
+**Researcher diminishing returns**: The researcher never sees the content, so
+later iterations produce increasingly generic domain knowledge untethered from
+the actual artifact. If the researcher's novelty rate (see Phase 3) drops below
+20% in two consecutive iterations, drop the researcher for subsequent iterations
+and run only the critic.
 
-Launch a `general-purpose` agent (most capable model available) with a prompt
+#### 2B — Critic
+
+Launch a `general-purpose` agent (most capable available model) with a prompt
 built from this template:
 
 ~~~text
@@ -217,6 +312,16 @@ Produce a structured critique with findings sorted by descending severity:
 5. OVERALL VERDICT — One blunt paragraph: current quality level, readiness for
    production use, and the single most impactful improvement remaining.
 
+[IF focus areas specified]:
+Prioritize the following quality dimensions above all others: [FOCUS AREAS].
+Weight your critique heavily toward these dimensions. A flaw in a focus
+dimension is one severity level higher than it would otherwise be.
+[END IF]
+
+[IF iteration == 0]:
+This is the first review. Evaluate comprehensively across all severity levels.
+[END IF]
+
 [IF iteration > 0]:
 This is iteration [N] of refinement. Prior iterations addressed earlier
 feedback. Focus on what REMAINS problematic despite prior changes. If the
@@ -228,74 +333,99 @@ Be ruthless. Do not hedge, soften, or qualify. Prioritize findings by impact —
 the most damaging issues first.
 ~~~
 
-### Phase 2 — Synthesis
+### Phase 3 — Synthesis
 
 1. Collect outputs from both sub-agents.
-2. **Process researcher output**:
-   - For each finding, determine whether the current content already addresses
-     it. If yes, discard. If no, flag as an improvement opportunity.
-   - Rank retained findings by potential impact on the quality dimensions
-     identified in Phase 0.
-3. **Process critic output**:
-   - Record the severity distribution: count of critical / significant /
-     weakness / minor findings.
+2. **Process researcher output** (do this BEFORE reading critic output to
+   prevent the orchestrator from anchoring on the critic's framing):
+   - For each finding, categorize as: **novel** (not addressed in current
+     content), **already addressed**, or **not applicable**.
+   - Calculate the researcher novelty rate: `novel / total findings`.
+   - Rank novel findings by potential impact on the quality dimensions
+     identified in Phase 1 (weight focus-area dimensions 2× if specified).
+3. **Process critic output** (after completing researcher evaluation):
+   - Record the severity distribution: count of critical, significant,
+     weakness, and minor findings.
    - For each critical issue and significant gap, draft a specific change.
    - For weaknesses, draft changes where they align with researcher findings
      (reinforcement signals high priority).
    - Batch minor issues for a single polish pass.
-4. **Apply changes** in priority order:
-   1. Critical issues.
-   2. Significant gaps.
-   3. Weaknesses reinforced by researcher findings.
-   4. Remaining weaknesses.
-   5. Minor issues.
+4. **Cross-reference**: Identify areas where both agents independently flagged
+   the same concern. Treat these as highest priority regardless of individual
+   severity ratings.
+5. **Apply changes** in priority order:
+   1. Cross-referenced findings (both agents independently agree).
+   2. Critical issues from the critic.
+   3. Significant gaps from the critic.
+   4. Novel researcher findings with high impact.
+   5. Weaknesses reinforced by researcher findings.
+   6. Remaining weaknesses.
+   7. Minor issues.
    - After each change, verify it does not regress a fix from a prior iteration.
-5. Increment the iteration counter.
-6. Record the iteration summary for the refinement log.
+   - For each change, note whether it was clear-cut or a judgment call.
+6. Increment the iteration counter.
+7. Record the iteration summary for the refinement log, including:
+   - Severity distribution from the critic
+   - Researcher novelty rate
+   - Count of changes applied vs. findings discarded (with reasons)
 
-### Phase 3 — Convergence Check
+### Phase 4 — Convergence Check
 
-Evaluate whether another iteration is warranted.
+**Minimum iteration gate**: If the iteration counter is less than the minimum
+(default 2), return to Phase 2 unconditionally. Do NOT evaluate stop conditions
+until the minimum is reached.
+
+After the minimum is met, evaluate whether another iteration is warranted.
+
+**Severity score formula:**
+
+```text
+severity_score = (critical × 8) + (significant_gaps × 4) + (weaknesses × 2) + (minor × 1)
+```
+
+The weights reflect that critical issues make content actively harmful (8×),
+significant gaps make it materially incomplete (4×), weaknesses reduce
+effectiveness (2×), and minor issues affect polish only (1×). These weights are
+heuristic — the orchestrator MAY adjust them if domain context warrants it
+(e.g., in safety-critical documentation, weaknesses may warrant 4× weight).
 
 **STOP if ANY of these conditions is true:**
 
 - Iteration counter ≥ maximum (default 3).
-- Critic found 0 critical issues AND 0 significant gaps, AND the researcher
-  surfaced no unaddressed insights.
+- Critic found 0 critical issues AND 0 significant gaps, AND the researcher's
+  novelty rate is below 20%.
 - Critic explicitly assessed the content as strong or excellent without
   manufacturing concerns.
-- Severity-weighted finding count increased from the prior iteration,
-  indicating the synthesis degraded the content. In this case, revert to the
-  prior version, note the degradation in the refinement log, and stop.
-
-Severity weights for the degradation check:
-
-| Severity | Weight |
-| --- | --- |
-| Critical | 8 |
-| Significant gap | 4 |
-| Weakness | 2 |
-| Minor | 1 |
+- **Degradation detected**: The severity score increased compared to the prior
+  iteration. Revert to the version from the prior iteration, record the
+  degradation event in the refinement log, and stop. This check applies only
+  when two or more severity scores exist (the first iteration establishes the
+  baseline; degradation comparison begins from the second iteration onward).
+- **Stagnation detected**: The severity score held steady (within 10%) across
+  two consecutive iterations, indicating the process is not making measurable
+  progress.
 
 **CONTINUE if ALL of these conditions are true:**
 
-- Iteration counter < maximum.
-- Critic found ≥ 1 critical issue or significant gap, OR the researcher
-  surfaced ≥ 1 genuine unaddressed insight.
-- Severity-weighted finding count decreased or held steady compared to the
-  prior iteration.
+- Iteration counter is less than the maximum.
+- Critic found at least 1 critical issue or significant gap, OR the
+  researcher's novelty rate is at or above 20%.
+- Severity score decreased compared to the prior iteration.
 
-If continuing → return to Phase 1 with updated content.
-If stopping → proceed to Phase 4.
+If continuing, return to Phase 2 with the updated content.
+If stopping, proceed to Phase 5.
 
-### Phase 4 — Delivery
+### Phase 5 — Delivery
 
-1. Present the refined content. If the content originated from a file, write
-   the updated version to the file.
-2. Present the refinement log (all iterations).
-3. Present the convergence rationale.
-4. If the process hit the iteration cap with unresolved critical issues, flag
-   them explicitly and recommend further action.
+1. If the content originated from a file:
+   a. Present a diff summary showing the key changes between the original and
+      the refined version.
+   b. Write the updated content to the file.
+2. If the content was provided inline, present the refined content directly.
+3. Present the refinement log (all iterations).
+4. Present the convergence rationale.
+5. If the process hit the iteration cap with unresolved critical issues, flag
+   them explicitly and recommend further action to the user.
 
 ## Validation
 
@@ -311,9 +441,9 @@ If stopping → proceed to Phase 4.
 
 ### Failure Conditions
 
-- Maximum iterations reached with unresolved critical issues → Deliver the best
+- Maximum iterations reached with unresolved critical issues: deliver the best
   version achieved, flag every unresolved issue, and inform the user.
-- A sub-agent fails to produce structured output → Re-prompt once with tighter
+- A sub-agent fails to produce structured output: re-prompt once with tighter
   formatting instructions. If the second attempt also fails, proceed with the
   output from the functioning sub-agent and note reduced confidence in the
   refinement log.
@@ -323,16 +453,14 @@ If stopping → proceed to Phase 4.
 - **Content already excellent** — If the first critic finds no critical issues
   or significant gaps, still complete the minimum 2 iterations. The researcher
   may surface non-obvious improvements the critic would not think to look for.
-- **Researcher and critic fundamentally disagree** — Evaluate both positions on
-  reasoning quality. Choose the better-reasoned position. Document the
+- **Researcher and critic fundamentally disagree** — Apply the conflict
+  resolution criteria from the Synthesis Discipline constraint. Document the
   disagreement and resolution rationale in the refinement log.
-- **Very long content (>2000 lines)** — Segment into logical sections. Refine
-  each section independently, then run one final holistic iteration on the
-  reassembled content.
-- **Degradation detected** — If the severity-weighted finding count increases
-  between consecutive iterations, the synthesis introduced new problems. Revert
-  to the version from the prior iteration, record the degradation event, and
-  stop.
+- **Very long content (estimated over 60K tokens)** — Segment into logical
+  sections. Refine each section independently, then run one final holistic
+  iteration on the reassembled content.
+- **Degradation detected** — See Phase 4. Revert to the version from the prior
+  iteration and stop.
 
 ## Examples
 
@@ -340,41 +468,96 @@ If stopping → proceed to Phase 4.
 
 **User input**: `#adversarial-refinement features/skills/testing-standards/SKILL.md`
 
+**Phase 1 — Preparation**:
+
+- Reads the file (content resolution: path with extension, file exists).
+- Domain = "software testing methodology". Content type = "Copilot agent
+  skill". Audience = "AI coding assistants performing test generation and
+  review."
+- No focus areas specified; all quality dimensions weighted equally.
+
+**Phase 2, Iteration 1 — Dual-Agent Launch**:
+
+Researcher prompt (instantiated):
+
+> You are a world-class expert in software testing methodology with deep
+> knowledge of Copilot agent skill best practices. Your task: independently
+> research and report what constitutes excellence for Copilot agent skills
+> intended for AI coding assistants performing test generation and review.
+> \[Sections 1–5 as defined in template.] Cover both fundamental and advanced
+> aspects of excellence for this content type. Prioritize depth over breadth.
+> Five profound insights outweigh twenty surface observations. Do NOT reference
+> or propose changes to any specific document. Report general findings only.
+
+Critic prompt (instantiated):
+
+> You are a harsh, meticulous, and deeply knowledgeable critic specializing in
+> software testing methodology. You have zero tolerance for mediocrity and an
+> expert eye for Copilot agent skills. Review this Copilot agent skill and
+> identify every flaw, gap, weakness, inconsistency, and missed opportunity:
+> \[full skill content inserted here]. \[Sections 1–5 as defined in template.]
+> This is the first review. Evaluate comprehensively across all severity levels.
+> Be ruthless. Do not hedge, soften, or qualify. Prioritize findings by
+> impact — the most damaging issues first.
+
+**Phase 3, Iteration 1 — Synthesis**:
+
+- Researcher (processed first): 12 findings total. 8 novel (novelty rate: 67%).
+  Highest-impact novel finding: mutation-testing concepts not covered in the
+  skill's anti-pattern catalog.
+- Critic (processed second): 2 critical issues (ambiguous constraint language,
+  missing edge case for framework mocking), 3 significant gaps, 5 weaknesses,
+  4 minor issues. Severity score: (2 × 8) + (3 × 4) + (5 × 2) + (4 × 1) = 42.
+- Cross-reference: Both agents independently flagged the testing-framework
+  mocking gap. Elevated to highest priority.
+- Applied: 2 critical fixes, 3 gap fills, 3 novel researcher findings, 2
+  reinforced weaknesses. Deferred: 3 weaknesses, 4 minor items to next
+  iteration.
+
+**Phase 4, Iteration 1**: Counter = 1, which is less than minimum = 2. Continue
+unconditionally.
+
+**Phase 2, Iteration 2 — Dual-Agent Launch**:
+
+Researcher prompt uses iteration-1 framing: "Focus exclusively on ADVANCED,
+SUBTLE, and NON-OBVIOUS insights." Critic reviews updated content: "Focus on
+what REMAINS problematic despite prior changes."
+
+**Phase 3, Iteration 2 — Synthesis**:
+
+- Researcher: 8 findings total. 2 novel (novelty rate: 25%).
+- Critic: 0 critical, 0 significant gaps, 2 weaknesses, 3 minor.
+  Severity score: (0 × 8) + (0 × 4) + (2 × 2) + (3 × 1) = 7.
+- Applied: deferred weaknesses from iteration 1, 2 new weaknesses, 1 novel
+  researcher finding, 3 minor polish items.
+
+**Phase 4, Iteration 2**: Minimum met. Critic: 0 critical, 0 significant gaps.
+Researcher novelty rate: 25% (above 20%, but borderline). Severity score dropped
+42 to 7. STOP (0 critical + 0 significant gaps + low novelty).
+
+**Phase 5 — Delivery**: Writes updated SKILL.md, presents diff summary,
+refinement log covering both iterations, and convergence rationale.
+
+### Example 2 — Refining API Documentation with Focus Areas
+
+**User input**:
+`#adversarial-refinement docs/api-reference.md -- focus on developer experience`
+
 **Orchestrator behavior**:
 
-1. Reads the skill file. Identifies domain = "software testing methodology",
-   content type = "Copilot agent skill", audience = "AI coding assistants
-   performing test generation and review."
-2. **Iteration 1**:
-   - Launches researcher: "You are a world-class expert in software testing
-     methodology with deep knowledge of Copilot agent skill best
-     practices..."
-   - Launches critic (in parallel): "You are a harsh, meticulous critic
-     specializing in software testing methodology..." followed by the full
-     skill content.
-   - Synthesizes: researcher surfaces advanced mutation-testing concepts not
-     covered; critic flags 2 critical issues (ambiguous constraint language,
-     missing edge case). Orchestrator applies fixes.
-3. **Iteration 2**:
-   - Researcher focuses on advanced/subtle insights; critic reviews updated
-     content.
-   - Critic finds 0 critical issues, 1 weakness. Researcher surfaces one new
-     insight already addressed.
-   - Convergence met → stop.
-4. Writes updated SKILL.md, presents refinement log and convergence rationale.
-
-### Example 2 — Refining API Documentation
-
-**User input**: `#adversarial-refinement Refine docs/api-reference.md with focus
-on developer experience`
-
-**Orchestrator behavior**:
-
-1. Reads the file. Identifies domain = "API documentation", audience =
-   "developers consuming the API", focus areas = "developer experience."
-2. Researcher prompt emphasizes: developer onboarding experience,
-   time-to-first-successful-call, error message clarity, example coverage.
-3. Critic prompt includes the full documentation text.
-4. Synthesis prioritizes findings that affect developer experience over other
-   quality dimensions, per the user-specified focus.
-5. Iterates until convergence, writes result, delivers log.
+1. Content resolution: `docs/api-reference.md` recognized as file path (path
+   separator + extension). File exists. Separate instruction extracted: focus
+   areas = "developer experience".
+2. Domain = "API documentation". Audience = "developers consuming the API".
+   Focus dimensions mapped to: actionability, structure, completeness of
+   examples.
+3. Researcher prompt includes: "Prioritize the following quality dimensions
+   above all others: developer experience — specifically onboarding ease,
+   time-to-first-successful-call, error message clarity, and example quality.
+   Weight your findings heavily toward these dimensions."
+4. Critic prompt includes: "Prioritize the following quality dimensions above
+   all others: developer experience. Weight your critique heavily toward these
+   dimensions. A flaw in a focus dimension is one severity level higher than it
+   would otherwise be."
+5. Synthesis weights focus-area findings 2× in priority ordering.
+6. Iterates until convergence, presents diff, writes result, delivers log.

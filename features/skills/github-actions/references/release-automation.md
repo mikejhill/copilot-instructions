@@ -460,13 +460,14 @@ verifiable record of what was built, by whom, and from which source.
 
 ```yaml
       - name: Attest build provenance
-        uses: actions/attest-build-provenance@v4
+        uses: actions/attest@v4
         with:
           subject-path: dist/*
 ```
 
-Requires `attestations: write` and `id-token: write` in workflow
-permissions. Consumers verify with `gh attestation verify`.
+Requires `attestations: write`, `artifact-metadata: write`, and
+`id-token: write` in workflow permissions. Consumers verify with
+`gh attestation verify`.
 
 ## Artifact Retention
 
