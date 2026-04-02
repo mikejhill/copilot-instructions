@@ -221,6 +221,10 @@ jobs:
             echo "::error::One or more required jobs failed"
             exit 1
           fi
+          if [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "::error::One or more required jobs were cancelled"
+            exit 1
+          fi
 ```
 
 ## Node.js
@@ -328,6 +332,10 @@ jobs:
             echo "::error::One or more required jobs failed"
             exit 1
           fi
+          if [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "::error::One or more required jobs were cancelled"
+            exit 1
+          fi
 ```
 
 ## Go
@@ -425,6 +433,10 @@ jobs:
             echo "::error::One or more required jobs failed"
             exit 1
           fi
+          if [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "::error::One or more required jobs were cancelled"
+            exit 1
+          fi
 ```
 
 ## Rust
@@ -504,6 +516,10 @@ jobs:
         run: |
           if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
             echo "::error::One or more required jobs failed"
+            exit 1
+          fi
+          if [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "::error::One or more required jobs were cancelled"
             exit 1
           fi
 ```
@@ -597,6 +613,10 @@ jobs:
         run: |
           if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
             echo "::error::One or more required jobs failed"
+            exit 1
+          fi
+          if [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "::error::One or more required jobs were cancelled"
             exit 1
           fi
 ```
