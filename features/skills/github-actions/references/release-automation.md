@@ -460,7 +460,7 @@ verifiable record of what was built, by whom, and from which source.
 
 ```yaml
       - name: Attest build provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: dist/*
 ```

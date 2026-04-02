@@ -155,7 +155,7 @@ commit-lint:
   permissions:
     pull-requests: read
   steps:
-    - uses: amannn/action-semantic-pull-request@v5
+    - uses: amannn/action-semantic-pull-request@v6
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -420,7 +420,7 @@ Only use actions that meet ALL of these requirements:
 | Checkout         | `actions/checkout@v4`                           |
 | Artifacts        | `actions/upload-artifact@v4`                    |
 | Artifacts        | `actions/download-artifact@v4`                  |
-| Attestation      | `actions/attest-build-provenance@v2`            |
+| Attestation      | `actions/attest-build-provenance@v4`            |
 | Cache            | `actions/cache@v4`                              |
 | Java             | `actions/setup-java@v4`                         |
 | Node.js          | `actions/setup-node@v4`                         |
@@ -438,7 +438,7 @@ Only use actions that meet ALL of these requirements:
 | Docker login     | `docker/login-action@v3`                        |
 | PyPI publish     | `pypa/gh-action-pypi-publish@release/v1`        |
 | Test reporter    | `dorny/test-reporter@v1`                        |
-| PR title lint    | `amannn/action-semantic-pull-request@v5`        |
+| PR title lint    | `amannn/action-semantic-pull-request@v6`        |
 | Semantic release | `go-semantic-release/action@v1`                 |
 | Markdown lint    | `DavidAnson/markdownlint-cli2-action@v20`       |
 
