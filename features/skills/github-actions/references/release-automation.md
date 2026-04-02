@@ -59,24 +59,35 @@ jobs:
       # These MUST pass before any release artifacts are created.
       # ────────────────────────────────────────────────────────
 
+      - name: Validate CHANGELOG structure
+        run: |
+          grep -q "^## \[Unreleased\]" CHANGELOG.md || {
+            echo "::error::CHANGELOG.md missing [Unreleased] section"
+            exit 1
+          }
+
       - name: Update CHANGELOG.md
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           DATE=$(date -u +%Y-%m-%d)
           sed -i "s/^## \[Unreleased\]$/## [Unreleased]\n\n## [$VERSION] - $DATE/" CHANGELOG.md
+          grep -q "## \[$VERSION\]" CHANGELOG.md || {
+            echo "::error::CHANGELOG.md update failed — version header not found after sed"
+            exit 1
+          }
 
       # ── Build ───────────────────────────────────────────────
       # INSERT: ecosystem-specific build steps here.
       # ────────────────────────────────────────────────────────
 
-      - name: Commit CHANGELOG and push tag
+      - name: Commit release changes and push tag
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md
+          git add -A
           git commit -m "chore(release): v$VERSION"
           git tag "v$VERSION"
           git push origin HEAD "v$VERSION"
@@ -165,13 +176,16 @@ job so permissions are scoped:
           path: "*.tgz"
 
       # ── Publish ──
+      # npm --provenance requires OIDC; add id-token: write to
+      # workflow or job permissions when using provenance.
       - run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
 
-For OIDC-based npm publishing, add `id-token: write` to permissions
-and use `--provenance` which automatically generates build provenance.
+For OIDC-based npm publishing, the workflow MUST include `id-token:
+write` in permissions for `--provenance` to work. Without it, npm
+publish fails at runtime.
 
 ### Gradle (Java/Kotlin)
 
@@ -247,8 +261,12 @@ push step is needed. The tag push in the core template is sufficient.
 
       # ── Build ──
       - name: Set version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          sed -i "s/^version = .*/version = \"${{ steps.version.outputs.version }}\"/" Cargo.toml
+          # Target only the [package] section version to avoid
+          # matching dependency version lines in workspace Cargo.toml
+          sed -i '0,/^version = ".*"/s//version = "'"$VERSION"'"/' Cargo.toml
       - run: cargo build --release
       - uses: actions/upload-artifact@v4
         with:
@@ -289,6 +307,8 @@ push step is needed. The tag push in the core template is sufficient.
 
 ```yaml
       # ── Build and Publish ──
+      - uses: docker/setup-buildx-action@v3
+
       - uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -297,12 +317,26 @@ push step is needed. The tag push in the core template is sufficient.
       - uses: docker/build-push-action@v6
         with:
           push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: |
             ${{ github.repository }}:v${{ steps.version.outputs.version }}
             ${{ github.repository }}:latest
 ```
 
 For multi-platform images, add `platforms: linux/amd64,linux/arm64`.
+The `cache-from`/`cache-to` with `type=gha` uses GitHub Actions cache
+for Docker layer caching, typically providing 5–10× build speedups.
+
+For GHCR (GitHub Container Registry):
+
+```yaml
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+```
 
 ## Deployment Patterns
 
@@ -399,3 +433,73 @@ updates:
 This ensures action version updates are proposed as PRs with
 conventional commit messages (`ci(deps): bump actions/checkout from
 v4.1.0 to v4.2.0`).
+
+## Artifact Attestation
+
+Generate build provenance attestations for release artifacts using
+GitHub's official attestation action. This creates a signed,
+verifiable record of what was built, by whom, and from which source.
+
+```yaml
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/*
+```
+
+Requires `attestations: write` and `id-token: write` in workflow
+permissions. Consumers verify with `gh attestation verify`.
+
+## Artifact Retention
+
+Set explicit retention periods on uploaded artifacts to control storage
+costs:
+
+```yaml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+```
+
+Use short retention (3–7 days) for CI build artifacts and longer
+retention (30–90 days) for release artifacts. The repository default is
+90 days.
+
+## Release Failure Recovery
+
+If the release workflow fails mid-execution:
+
+1. **Failed before tag push** — Safe to re-run. No state has been
+   published externally.
+2. **Failed after tag push but before GitHub Release** — Delete the
+   orphan tag (`git push --delete origin v1.2.3`) and re-run.
+3. **Failed after GitHub Release but before publish** — Delete the
+   GitHub Release and tag, then re-run. Alternatively, manually publish
+   the artifacts from the release.
+4. **Failed during publish** — The tag and release exist. Manually push
+   to the registry using the artifacts from the GitHub Release, or
+   re-run only the publish job if the workflow supports it.
+
+Design release workflows to be idempotent where possible: check whether
+the tag already exists before creating it, and check whether the package
+version already exists before publishing.
+
+## Branch Protection Considerations
+
+The release workflow pushes commits and tags directly to the default
+branch. This conflicts with branch protection rules that require PR
+reviews or status checks.
+
+Options:
+
+1. **Ruleset bypass** — Add the `github-actions[bot]` actor to the
+   bypass list in repository rulesets (preferred).
+2. **GitHub App token** — Use a GitHub App installation token
+   (`actions/create-github-app-token@v1`) with bypass permissions
+   instead of `GITHUB_TOKEN`.
+3. **Deploy key** — Use a deploy key with write access (least
+   preferred; no audit trail per-workflow).
+
+Document the chosen approach in the repository's contributing guide.

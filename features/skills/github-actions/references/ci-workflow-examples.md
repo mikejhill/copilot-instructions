@@ -16,6 +16,7 @@ on:
     paths-ignore: ["*.md", "docs/**", "LICENSE"]
   pull_request:
     branches: [main]
+  merge_group:
 
 permissions:
   contents: read
@@ -106,6 +107,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DavidAnson/markdownlint-cli2-action@v20
+
+  ci-pass:
+    if: always()
+    needs: [commit-lint, lint, test, build, markdown]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify all jobs passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "::error::One or more required jobs failed"
+            exit 1
+          fi
+          if [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "::error::One or more required jobs were cancelled"
+            exit 1
+          fi
 ```
 
 ## Python (UV)
@@ -119,6 +137,7 @@ on:
     paths-ignore: ["*.md", "docs/**", "LICENSE"]
   pull_request:
     branches: [main]
+  merge_group:
 
 permissions:
   contents: read
@@ -168,7 +187,12 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - run: uv python install ${{ matrix.python-version }}
       - run: uv sync --group dev --python ${{ matrix.python-version }}
-      - run: uv run pytest --junit-xml=test-results.xml
+
+      # Single pytest invocation — add --cov flags conditionally
+      - name: Run tests
+        run: >-
+          uv run pytest --junit-xml=test-results.xml
+          ${{ matrix.coverage && '--cov=src --cov-report=xml' || '' }}
 
       - name: Publish test report
         if: always()
@@ -178,16 +202,25 @@ jobs:
           path: test-results.xml
           reporter: java-junit
 
-      - name: Coverage
-        if: matrix.coverage
-        run: uv run pytest --cov=src --cov-report=xml
-
   markdown:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: DavidAnson/markdownlint-cli2-action@v20
+
+  ci-pass:
+    if: always()
+    needs: [commit-lint, lint, test, markdown]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify all jobs passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "::error::One or more required jobs failed"
+            exit 1
+          fi
 ```
 
 ## Node.js
@@ -201,6 +234,7 @@ on:
     paths-ignore: ["*.md", "docs/**", "LICENSE"]
   pull_request:
     branches: [main]
+  merge_group:
 
 permissions:
   contents: read
@@ -254,8 +288,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
       - run: npm ci
-      - run: npm test
 
+      # Requires jest-junit or vitest-junit-reporter configured to
+      # output JUnit XML. Configure in jest.config or vitest.config.
+      - run: npm test -- --reporter=junit --outputFile=test-results.xml
       - name: Publish test report
         if: always()
         uses: dorny/test-reporter@v1
@@ -279,6 +315,19 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+
+  ci-pass:
+    if: always()
+    needs: [commit-lint, lint, test, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify all jobs passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "::error::One or more required jobs failed"
+            exit 1
+          fi
 ```
 
 ## Go
@@ -292,6 +341,7 @@ on:
     paths-ignore: ["*.md", "docs/**", "LICENSE"]
   pull_request:
     branches: [main]
+  merge_group:
 
 permissions:
   contents: read
@@ -323,7 +373,7 @@ jobs:
       - run: go vet ./...
       - uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          version: v1.64
 
   test:
     runs-on: ${{ matrix.os }}
@@ -332,13 +382,21 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            coverage: true
     name: "Test (${{ matrix.os }})"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - run: go test -v -race -coverprofile=coverage.out ./...
+      - run: go test -v -race ./...
+
+      # Coverage only on one matrix entry to save minutes
+      - name: Coverage
+        if: matrix.coverage
+        run: go test -coverprofile=coverage.out ./...
 
       - name: Write summary
         if: always()
@@ -354,6 +412,19 @@ jobs:
         with:
           go-version-file: go.mod
       - run: go build ./...
+
+  ci-pass:
+    if: always()
+    needs: [commit-lint, lint, test, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify all jobs passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "::error::One or more required jobs failed"
+            exit 1
+          fi
 ```
 
 ## Rust
@@ -367,6 +438,7 @@ on:
     paths-ignore: ["*.md", "docs/**", "LICENSE"]
   pull_request:
     branches: [main]
+  merge_group:
 
 permissions:
   contents: read
@@ -421,6 +493,19 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --release
+
+  ci-pass:
+    if: always()
+    needs: [commit-lint, lint, test, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify all jobs passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "::error::One or more required jobs failed"
+            exit 1
+          fi
 ```
 
 ## .NET
@@ -434,6 +519,7 @@ on:
     paths-ignore: ["*.md", "docs/**", "LICENSE"]
   pull_request:
     branches: [main]
+  merge_group:
 
 permissions:
   contents: read
@@ -453,6 +539,16 @@ jobs:
       - uses: amannn/action-semantic-pull-request@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.x
+      - run: dotnet format --verify-no-changes
 
   test:
     runs-on: ${{ matrix.os }}
@@ -490,4 +586,17 @@ jobs:
       - run: dotnet restore
       - run: dotnet build -c Release --no-restore
       - run: dotnet pack -c Release --no-build -o dist/
+
+  ci-pass:
+    if: always()
+    needs: [commit-lint, lint, test, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify all jobs passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "::error::One or more required jobs failed"
+            exit 1
+          fi
 ```

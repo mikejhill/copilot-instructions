@@ -108,14 +108,21 @@ on:
       - "LICENSE"
   pull_request:
     branches: [main]
+  merge_group:
 
 permissions:
   contents: read
+  checks: write
+  pull-requests: read
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 ```
+
+Note: `paths-ignore` is set on `push` only — not on `pull_request` —
+because skipping PR runs can block merge when required status checks
+are configured.
 
 ### Jobs
 
@@ -129,6 +136,12 @@ Run these jobs in parallel (no `needs` unless a true dependency exists):
 4. **Build** — Verify artifacts can be produced (do NOT publish)
 
 Optional: **Markdown lint**, **Security audit**
+
+For branch protection stability, add a **ci-pass** aggregator job that
+`needs` all other jobs and serves as the sole required status check.
+This prevents matrix or job name changes from breaking protection
+rules. See [Advanced Patterns](./references/advanced-patterns.md) for
+the full pattern.
 
 ### Commit Message Validation
 
@@ -165,43 +178,32 @@ complete, production-ready templates for each ecosystem.
 
 ## Release Process
 
-The release workflow is the **only** mechanism for shipping. It uses
-`workflow_dispatch` so a human decides when to release but automation
-handles the execution.
-
-### Inputs
-
-```yaml
-on:
-  workflow_dispatch:
-    inputs:
-      force-patch:
-        description: "Force a patch bump when no feat/fix commits exist"
-        type: boolean
-        default: false
-```
+The release workflow uses `workflow_dispatch` so a human decides when to
+release but automation handles the execution. This is the recommended
+default; teams practicing continuous deployment may trigger releases
+automatically on merge instead.
 
 ### Sequence
 
 Execute these steps strictly in order. If any step fails, the workflow
 halts — no partial releases.
 
-1. **Checkout** — `fetch-depth: 0` for full git history (required for
-   commit analysis)
+1. **Checkout** — `fetch-depth: 0` for full git history
 2. **Determine version** — Analyze conventional commits since the last
    tag; compute the next semantic version via dry-run
-3. **Guard** — Abort with a clear error if no releasable commits exist
-   and `force-patch` is false
-4. **Validate** — Run the full lint and test suite. The release MUST
-   NOT proceed if validation fails.
+3. **Guard** — Abort if no releasable commits exist and `force-patch`
+   is false
+4. **Validate** — Run the full lint and test suite; MUST NOT proceed
+   on failure
 5. **Update CHANGELOG.md** — Promote `[Unreleased]` entries to a new
    versioned section
-6. **Commit** — Commit the CHANGELOG update using the bot identity
+6. **Update version files** — Bump version in ecosystem manifests
+   (`package.json`, `Cargo.toml`, `pyproject.toml`, etc.)
 7. **Build** — Produce release artifacts
-8. **Tag and push** — Create the version tag and push both the commit
-   and tag
-9. **GitHub Release** — Create a GitHub Release with artifacts attached
-   and release notes generated
+8. **Commit and tag** — Commit all changed files, create version tag,
+   push both; use bot identity for the commit
+9. **GitHub Release** — Create release with artifacts and generated
+   release notes
 10. **Publish** — Push to package registries (npm, PyPI, Maven Central,
     crates.io, NuGet, etc.)
 
@@ -212,51 +214,43 @@ for the complete workflow template with full YAML.
 
 | Tool                              | Best For                                          |
 | --------------------------------- | ------------------------------------------------- |
-| `go-semantic-release/action@v1`   | Language-agnostic projects (no runtime dependency) |
 | `semantic-release` (npm package)  | Node.js projects (rich plugin ecosystem)          |
+| `go-semantic-release/action@v1`   | Language-agnostic projects (no runtime dependency) |
 | Custom script                     | Full control over version logic                   |
 
 Run in **dry-run mode** first. Use the computed version for CHANGELOG,
 build, and tag steps.
 
-### CHANGELOG Automation
+### CHANGELOG and Release Automation
 
-```yaml
-- name: Update CHANGELOG.md
-  env:
-    VERSION: ${{ steps.version.outputs.version }}
-  run: |
-    DATE=$(date -u +%Y-%m-%d)
-    sed -i "s/^## \[Unreleased\]$/## [Unreleased]\n\n## [$VERSION] - $DATE/" CHANGELOG.md
-```
+Use `sed` to insert a versioned section header below `[Unreleased]`.
+Validate the CHANGELOG before and after mutation — confirm
+`[Unreleased]` exists before `sed` and the new version header exists
+after. Commit **all** changed files (CHANGELOG, manifests) — not just
+`CHANGELOG.md`. Create the tag and push atomically. Use
+`softprops/action-gh-release@v2` with `generate_release_notes: true`
+for the GitHub Release.
 
-This inserts a versioned section header below `[Unreleased]`. Existing
-unreleased entries become the content of the new version. The
-`[Unreleased]` section resets to empty.
+See [Release Automation Reference](./references/release-automation.md)
+for the complete workflow template with full YAML, ecosystem-specific
+publishing, Docker layer caching, artifact attestation, and recovery
+procedures.
 
-### Tag and GitHub Release
+### Branch Protection
 
-```yaml
-- name: Commit and tag
-  env:
-    VERSION: ${{ steps.version.outputs.version }}
-  run: |
-    git config user.name "github-actions[bot]"
-    git config user.email "github-actions[bot]@users.noreply.github.com"
-    git add CHANGELOG.md
-    git commit -m "chore(release): v$VERSION"
-    git tag "v$VERSION"
-    git push origin HEAD "v$VERSION"
-
-- name: Create GitHub Release
-  uses: softprops/action-gh-release@v2
-  with:
-    tag_name: "v${{ steps.version.outputs.version }}"
-    generate_release_notes: true
-    files: dist/*
-```
+The release workflow pushes commits and tags to the default branch. If
+branch protection rules require PR reviews or status checks, configure
+a bypass for the `github-actions[bot]` actor or use a GitHub App token
+with bypass permissions. Document this requirement in the repository's
+contributing guide.
 
 ## Performance Optimization
+
+### Runner Cost
+
+GitHub-hosted runner billing: Linux 1×, Windows 2×, macOS 10×. Use
+Linux for all jobs unless the project explicitly requires Windows or
+macOS validation.
 
 ### Caching
 
@@ -304,77 +298,39 @@ Set `timeout-minutes` on every job. Use 2–3× the expected duration.
 
 ## Multi-Environment Testing
 
-```yaml
-strategy:
-  fail-fast: false
-  matrix:
-    os: [ubuntu-latest, windows-latest]
-    version: ["17", "21"]
-    exclude:
-      - os: windows-latest
-        version: "17"
-    include:
-      - os: ubuntu-latest
-        version: "21"
-        coverage: true
-```
+Configure matrix strategies with `fail-fast: false` so all combinations
+run to completion. Include only OS/version combinations the project
+actually supports. Use `exclude` to skip unnecessary combinations and
+`include` to attach flags (like `coverage: true`) to a single entry.
+Name jobs descriptively:
+`name: "Test (${{ matrix.os }}, v${{ matrix.version }})"`.
 
-- Set `fail-fast: false` so all matrix jobs run to completion.
-- Include only OS/version combinations the project actually supports.
-- Use `exclude` to skip unnecessary combinations.
-- Use `include` to attach flags (like `coverage: true`) to a single
-  combination.
-- Name jobs descriptively:
-  `name: "Test (${{ matrix.os }}, v${{ matrix.version }})"`.
+See [CI Workflow Examples](./references/ci-workflow-examples.md) for
+matrix patterns in each ecosystem.
 
 ## Presentation
 
 ### Job Summaries
 
-Write Markdown to `$GITHUB_STEP_SUMMARY` for rich output on the
-workflow run page:
-
-```yaml
-- name: Report results
-  if: always()
-  run: |
-    echo "## Test Results :test_tube:" >> $GITHUB_STEP_SUMMARY
-    echo "" >> $GITHUB_STEP_SUMMARY
-    echo "| Suite | Passed | Failed | Skipped |" >> $GITHUB_STEP_SUMMARY
-    echo "|-------|--------|--------|---------|" >> $GITHUB_STEP_SUMMARY
-```
+Write Markdown to `$GITHUB_STEP_SUMMARY` for rich output on the run
+page. Use `if: always()` so summaries appear even on failure.
 
 ### Test Reporters
 
-Render test results as GitHub checks with file-level annotations:
-
-```yaml
-- name: Publish test results
-  uses: dorny/test-reporter@v1
-  if: always()
-  with:
-    name: "Tests (${{ matrix.os }})"
-    path: "**/TEST-*.xml"
-    reporter: java-junit
-```
-
-Supported reporters: `java-junit`, `dotnet-trx`, `dart-json`,
-`mocha-json`, `jest-junit`.
+Use `dorny/test-reporter@v1` to render test results as GitHub checks
+with file-level annotations. Configure with JUnit XML paths and the
+appropriate reporter (`java-junit`, `dotnet-trx`, `jest-junit`,
+`mocha-json`). Always gate with `if: always()`.
 
 ### Build Scans (Gradle)
 
-Use `gradle/actions/setup-gradle@v4` which links build scans in
-workflow output automatically. Add `--scan` to Gradle commands for
-public build scan URLs.
+`gradle/actions/setup-gradle@v4` links build scans in workflow output
+automatically. Add `--scan` to Gradle commands for public URLs.
 
 ### Annotations
 
-Use workflow commands to surface issues inline on files:
-
-```yaml
-echo "::error file=src/auth.ts,line=15::Unvalidated input"
-echo "::warning::Coverage below 80%"
-```
+Use `::error file=path,line=N::message` and `::warning::message`
+workflow commands to surface issues inline on files.
 
 ## Security
 
@@ -383,10 +339,43 @@ echo "::warning::Coverage below 80%"
 Declare explicit permissions in every workflow. Never rely on repository
 defaults. Start from zero and add only what each workflow requires.
 
-- CI: `contents: read` (minimum for checkout)
+- CI: `contents: read`, `checks: write`, `pull-requests: read`
 - Release: `contents: write` (push tags, create releases)
 - OIDC publishing: add `id-token: write`
 - PR interactions: add `pull-requests: write`
+
+### Script Injection Prevention
+
+**Never** interpolate event data directly in `run:` blocks. This is the
+number-one Actions security vulnerability.
+
+```yaml
+# DANGEROUS — attacker-controlled PR title executes as shell code
+run: echo "PR: ${{ github.event.pull_request.title }}"
+
+# SAFE — pass through an environment variable
+env:
+  PR_TITLE: ${{ github.event.pull_request.title }}
+run: echo "PR: $PR_TITLE"
+```
+
+Any `github.event.*` value that originates from user input (PR title,
+branch name, commit message, issue body) MUST be passed via `env:`,
+never via `${{ }}` in `run:`.
+
+### Fork Pull Request Security
+
+Secrets are unavailable and `GITHUB_TOKEN` is read-only on
+`pull_request` from forks. Do NOT use `pull_request_target` as a
+workaround — it runs fork code with write permissions. See
+[Advanced Patterns](./references/advanced-patterns.md) for the safe
+two-workflow pattern.
+
+### GITHUB_TOKEN Scope
+
+`GITHUB_TOKEN` cannot trigger other workflows. If the release workflow
+must trigger a deployment workflow, use a GitHub App installation token
+or a fine-grained PAT with minimum necessary scopes.
 
 ### Authentication
 
@@ -430,6 +419,7 @@ Only use actions that meet ALL of these requirements:
 | Checkout         | `actions/checkout@v4`                           |
 | Artifacts        | `actions/upload-artifact@v4`                    |
 | Artifacts        | `actions/download-artifact@v4`                  |
+| Attestation      | `actions/attest-build-provenance@v2`            |
 | Cache            | `actions/cache@v4`                              |
 | Java             | `actions/setup-java@v4`                         |
 | Node.js          | `actions/setup-node@v4`                         |
@@ -442,6 +432,7 @@ Only use actions that meet ALL of these requirements:
 | Rust cache       | `Swatinem/rust-cache@v2`                        |
 | Go lint          | `golangci/golangci-lint-action@v6`              |
 | GitHub Release   | `softprops/action-gh-release@v2`                |
+| Docker buildx    | `docker/setup-buildx-action@v3`                 |
 | Docker build     | `docker/build-push-action@v6`                   |
 | Docker login     | `docker/login-action@v3`                        |
 | PyPI publish     | `pypa/gh-action-pypi-publish@release/v1`        |
@@ -472,16 +463,26 @@ already covered by official `actions/*` actions.
   section promotion in the release workflow
 - **Mixing CI and release** — CI validates; release ships. Separate
   workflows, separate triggers, separate concerns.
+- **Expression injection** — Using `${{ github.event.*.title }}` or
+  similar user-controlled values directly in `run:` blocks
+- **`pull_request_target` with checkout** — Runs fork code with write
+  token; use the two-workflow pattern instead
+- **`continue-on-error: true`** — Silently hides failures; use
+  `if: always()` on reporting steps instead
+- **`version: latest`** in lint actions — Breaks caching and
+  reproducibility; pin to a specific version
 
 ## Related Files
 
-- `references/release-automation.md`: Complete annotated release
-  workflow template with CHANGELOG automation, version determination,
-  ecosystem-specific publishing patterns, deployment gating, and tag
+- `references/release-automation.md`: Complete release workflow template
+  with CHANGELOG automation, ecosystem-specific publishing, deployment
+  gating, Docker layer caching, artifact attestation, and tag
   protection setup.
 - `references/ci-workflow-examples.md`: Production-ready CI workflow
-  templates for Gradle, Python, Node.js, Go, Rust, and .NET with all
-  best practices applied.
+  templates for Gradle, Python, Node.js, Go, Rust, and .NET.
+- `references/advanced-patterns.md`: Reusable workflows, composite
+  actions, ci-pass aggregator job, release failure recovery,
+  GITHUB_TOKEN scope, fork PR handling, and debugging.
 
 ## Example
 
