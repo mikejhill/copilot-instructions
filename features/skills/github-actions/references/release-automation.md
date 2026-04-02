@@ -171,7 +171,11 @@ job so permissions are scoped:
       - run: npm test
 
       # ── Build ──
-      - run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
+      - name: Set version and build
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          npm version "$VERSION" --no-git-tag-version
       - run: npm run build
       - run: npm pack
       - uses: actions/upload-artifact@v4
@@ -203,7 +207,10 @@ publish fails at runtime.
       - run: ./gradlew check
 
       # ── Build ──
-      - run: ./gradlew build -Pversion="${{ steps.version.outputs.version }}"
+      - name: Build
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: ./gradlew build -Pversion="$VERSION"
       - uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
@@ -214,21 +221,25 @@ For Maven Central publishing:
 
 ```yaml
       # ── Publish (Maven Central) ──
-      - run: ./gradlew publish -Pversion="${{ steps.version.outputs.version }}"
+      - name: Publish to Maven Central
         env:
+          VERSION: ${{ steps.version.outputs.version }}
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: ./gradlew publish -Pversion="$VERSION"
 ```
 
 For JetBrains Marketplace publishing:
 
 ```yaml
       # ── Publish (JetBrains Marketplace) ──
-      - run: ./gradlew publishPlugin -Pversion="${{ steps.version.outputs.version }}"
+      - name: Publish to JetBrains Marketplace
         env:
+          VERSION: ${{ steps.version.outputs.version }}
           PUBLISH_TOKEN: ${{ secrets.JETBRAINS_TOKEN }}
+        run: ./gradlew publishPlugin -Pversion="$VERSION"
 ```
 
 ### Go
@@ -295,9 +306,12 @@ push step is needed. The tag push in the core template is sufficient.
       - run: dotnet test --no-build
 
       # ── Build ──
-      - run: >-
+      - name: Pack
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: >-
           dotnet pack -c Release
-          -p:PackageVersion=${{ steps.version.outputs.version }}
+          -p:PackageVersion=$VERSION
           -o dist/
 
       # ── Publish ──

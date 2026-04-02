@@ -2,7 +2,7 @@
 
 Advanced GitHub Actions patterns for the GitHub Actions skill.
 This reference covers reusable workflows, composite actions, the ci-pass
-aggregator pattern, release failure recovery, GITHUB_TOKEN scope,
+aggregator pattern, GITHUB_TOKEN scope,
 fork pull request handling, and debugging.
 
 ## Reusable Workflows
@@ -346,7 +346,7 @@ jobs:
         package: ${{ fromJSON(needs.discover.outputs.packages) }}
     steps:
       - uses: actions/checkout@v4
-      - run: npm test --prefix ${{ matrix.package }}
+      - run: npm test --prefix "${{ matrix.package }}"
 ```
 
 ## Monorepo Path Filtering

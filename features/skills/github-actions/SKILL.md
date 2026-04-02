@@ -477,13 +477,13 @@ already covered by official `actions/*` actions.
 
 - `references/release-automation.md`: Complete release workflow template
   with CHANGELOG automation, ecosystem-specific publishing, deployment
-  gating, Docker layer caching, artifact attestation, and tag
-  protection setup.
+  gating, Docker layer caching, artifact attestation, release failure
+  recovery, and tag protection setup.
 - `references/ci-workflow-examples.md`: Production-ready CI workflow
   templates for Gradle, Python, Node.js, Go, Rust, and .NET.
 - `references/advanced-patterns.md`: Reusable workflows, composite
-  actions, ci-pass aggregator job, release failure recovery,
-  GITHUB_TOKEN scope, fork PR handling, and debugging.
+  actions, ci-pass aggregator job, GITHUB_TOKEN scope, fork PR
+  handling, and debugging.
 
 ## Example
 
