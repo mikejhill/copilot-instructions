@@ -66,7 +66,7 @@ Parse the user's input to identify the content to refine:
    - If the file exists, use its contents as the content to refine.
    - If the file does not exist, fail immediately with:
      "File not found: [path]. Provide the content inline or correct the path."
-2. If the input is substantial text (more than 50 words) with no file path,
+2. If the input is substantial text (more than 20 words) with no file path,
    treat it as inline content.
 3. If the input is a short description with no file path and no substantial
    text, fail with: "Provide the content to refine as a file path or inline
@@ -152,12 +152,20 @@ in reconciling and applying findings determines the outcome.
 **Anti-pattern avoidance:**
 
 - **Synthesis-by-averaging**: Do NOT take the middle ground between researcher
-  and critic when they conflict. Choose the position with stronger evidence.
-  Averaging dilutes both perspectives and produces mediocre output.
+  and critic when they conflict. Instead, identify the underlying concern behind
+  each recommendation and ask: "Is there a solution that addresses BOTH concerns
+  simultaneously?" Only if genuine synthesis is impossible, choose the position
+  with stronger evidence. Averaging dilutes both perspectives and produces
+  mediocre output. True synthesis creates something that transcends both inputs
+  rather than splitting the difference.
 - **Anchored revision trap**: Do NOT limit changes to line-level edits of the
   prior version. If findings suggest structural reorganization, section
   reordering, or section removal, implement those structural changes. Each
   iteration MUST be willing to make bold changes, not just incremental tweaks.
+- **Semantic drift**: Over multiple iterations, cumulative reinterpretation can
+  cause the artifact to drift from its original intent without any single step
+  being wrong. Re-validate every iteration against the original purpose, target
+  audience, and constraints — not just against the prior iteration's version.
 
 **Conflict resolution criteria (in priority order):**
 
@@ -211,16 +219,28 @@ evaluated the actual content; the researcher has not).
    - **Conciseness** — No unnecessary repetition or filler?
 5. If the user specified focus areas, identify which quality dimensions they
    map to. Weight those dimensions above others throughout the process.
-6. Set the iteration counter to 0.
+6. If the content references external files (e.g., "See ARCHITECTURE.md"),
+   attempt to read them. Include relevant context in the critic's domain
+   framing. Do NOT pass external file contents to the researcher (information
+   barrier).
+7. Record the original purpose statement, audience, and constraints as the
+   **intent anchor**. Re-validate against this anchor every iteration to
+   prevent semantic drift.
+8. Set the iteration counter to 0.
 
 ### Phase 2 — Dual-Agent Launch
 
 Launch both sub-agents simultaneously (parallel). Replace all bracketed
 placeholders with actual values derived from Phase 1.
 
-When constructing sub-agent prompts, follow the conventions defined by the
-`writing-ai-instructions` skill: imperative voice, no vague language, explicit
-conditionals, MUST/MUST NOT/MAY modality.
+If the researcher was dropped due to diminishing returns (see 2A), launch only
+the critic. Skip researcher-dependent steps in Phase 3 (steps 2 and 4) and
+treat the researcher novelty rate as 0% in Phase 4.
+
+When constructing sub-agent prompts, use imperative voice, no vague language,
+explicit conditionals, and MUST/MUST NOT/MAY modality (as defined by the
+`writing-ai-instructions` skill, which is the authoritative reference for the
+full set of prompt construction conventions).
 
 #### 2A — Researcher
 
@@ -264,8 +284,12 @@ NON-OBVIOUS insights that require deep domain expertise to identify.
 Prior research covered fundamentals and advanced practices. Adopt a contrarian
 stance: challenge conventional wisdom about [CONTENT TYPE]. Identify best
 practices that are actually harmful in specific contexts, or unconventional
-approaches that outperform standard ones. Question assumptions.
+approaches that outperform standard ones. Question underlying assumptions.
 [END IF]
+
+For each finding, state your confidence: HIGH (clear evidence), MEDIUM (strong
+inference), or LOW (possible concern). Do not present LOW-confidence findings as
+definitive.
 
 Prioritize depth over breadth. Five profound insights outweigh twenty surface
 observations. Do NOT reference or propose changes to any specific document.
@@ -278,7 +302,9 @@ NEVER include the content being refined in the researcher prompt.
 later iterations produce increasingly generic domain knowledge untethered from
 the actual artifact. If the researcher's novelty rate (see Phase 3) drops below
 20% in two consecutive iterations, drop the researcher for subsequent iterations
-and run only the critic.
+and run only the critic. This optimization primarily applies when max iterations
+is 4 or higher; at the default of 3, the drop rarely triggers because the
+broad iteration-0 prompt nearly always produces high novelty.
 
 #### 2B — Critic
 
@@ -331,13 +357,20 @@ role. Your credibility depends on accuracy, not volume of findings.
 
 Be ruthless. Do not hedge, soften, or qualify. Prioritize findings by impact —
 the most damaging issues first.
+
+If you find no significant issues, explicitly state "No significant issues
+found" rather than inventing minor ones to appear thorough. Your credibility
+depends on accuracy, not volume. For each finding, state your confidence: HIGH
+(clear evidence), MEDIUM (strong inference), or LOW (possible concern).
 ~~~
 
 ### Phase 3 — Synthesis
 
-1. Collect outputs from both sub-agents.
+1. Collect outputs from both sub-agents (or critic only if the researcher was
+   dropped).
 2. **Process researcher output** (do this BEFORE reading critic output to
-   prevent the orchestrator from anchoring on the critic's framing):
+   prevent the orchestrator from anchoring on the critic's framing). Skip this
+   step if the researcher was dropped.
    - For each finding, categorize as: **novel** (not addressed in current
      content), **already addressed**, or **not applicable**.
    - Calculate the researcher novelty rate: `novel / total findings`.
@@ -346,14 +379,21 @@ the most damaging issues first.
 3. **Process critic output** (after completing researcher evaluation):
    - Record the severity distribution: count of critical, significant,
      weakness, and minor findings.
+   - Record per-dimension severity: for each quality dimension from Phase 1,
+     note the count and severity of findings that affect it.
    - For each critical issue and significant gap, draft a specific change.
    - For weaknesses, draft changes where they align with researcher findings
      (reinforcement signals high priority).
    - Batch minor issues for a single polish pass.
-4. **Cross-reference**: Identify areas where both agents independently flagged
-   the same concern. Treat these as highest priority regardless of individual
-   severity ratings.
-5. **Apply changes** in priority order:
+4. **Cross-reference** (skip if researcher was dropped): Identify areas where
+   both agents independently flagged the same concern. Treat these as highest
+   priority regardless of individual severity ratings.
+5. **Re-validate against intent anchor**: Before applying changes, re-read the
+   original purpose statement, audience, and constraints recorded in Phase 1.
+   Verify that the planned changes do not drift from the original intent.
+6. **Retain the current content version** as the rollback target in case
+   degradation is detected in Phase 4.
+7. **Apply changes** in priority order:
    1. Cross-referenced findings (both agents independently agree).
    2. Critical issues from the critic.
    3. Significant gaps from the critic.
@@ -362,11 +402,12 @@ the most damaging issues first.
    6. Remaining weaknesses.
    7. Minor issues.
    - After each change, verify it does not regress a fix from a prior iteration.
+   - Verify no individual quality dimension regressed (per-dimension check).
    - For each change, note whether it was clear-cut or a judgment call.
-6. Increment the iteration counter.
-7. Record the iteration summary for the refinement log, including:
-   - Severity distribution from the critic
-   - Researcher novelty rate
+8. Increment the iteration counter.
+9. Record the iteration summary for the refinement log, including:
+   - Severity distribution from the critic (aggregate and per-dimension)
+   - Researcher novelty rate (or "researcher dropped" if applicable)
    - Count of changes applied vs. findings discarded (with reasons)
 
 ### Phase 4 — Convergence Check
@@ -379,9 +420,9 @@ After the minimum is met, evaluate whether another iteration is warranted.
 
 **Severity score formula:**
 
-```text
+~~~text
 severity_score = (critical × 8) + (significant_gaps × 4) + (weaknesses × 2) + (minor × 1)
-```
+~~~
 
 The weights reflect that critical issues make content actively harmful (8×),
 significant gaps make it materially incomplete (4×), weaknesses reduce
@@ -389,28 +430,38 @@ effectiveness (2×), and minor issues affect polish only (1×). These weights ar
 heuristic — the orchestrator MAY adjust them if domain context warrants it
 (e.g., in safety-critical documentation, weaknesses may warrant 4× weight).
 
+Severity scores are approximate due to model stochasticity — different critic
+invocations may rate identical content differently. Treat degradation and
+stagnation as signals to investigate, not automatic triggers. Inspect the
+specific findings before reverting or stopping.
+
 **STOP if ANY of these conditions is true:**
 
 - Iteration counter ≥ maximum (default 3).
 - Critic found 0 critical issues AND 0 significant gaps, AND the researcher's
-  novelty rate is below 20%.
+  novelty rate is below 20% (or the researcher was dropped).
 - Critic explicitly assessed the content as strong or excellent without
   manufacturing concerns.
 - **Degradation detected**: The severity score increased compared to the prior
-  iteration. Revert to the version from the prior iteration, record the
-  degradation event in the refinement log, and stop. This check applies only
-  when two or more severity scores exist (the first iteration establishes the
-  baseline; degradation comparison begins from the second iteration onward).
-- **Stagnation detected**: The severity score held steady (within 10%) across
-  two consecutive iterations, indicating the process is not making measurable
-  progress.
+  iteration. Inspect the specific findings to confirm real degradation (not
+  stochastic noise). If confirmed, revert to the retained rollback version from
+  Phase 3, record the degradation event in the refinement log, and stop. This
+  check applies only when two or more severity scores exist (the first iteration
+  establishes the baseline).
+- **Stagnation detected**: The severity score did not decrease by more than 10%
+  across two consecutive iterations, indicating the process is not making
+  meaningful progress.
+- **Per-dimension regression**: Any individual quality dimension worsened between
+  iterations without documented justification, even if the aggregate score
+  improved.
 
 **CONTINUE if ALL of these conditions are true:**
 
 - Iteration counter is less than the maximum.
 - Critic found at least 1 critical issue or significant gap, OR the
   researcher's novelty rate is at or above 20%.
-- Severity score decreased compared to the prior iteration.
+- Severity score decreased by more than 10% compared to the prior iteration.
+- No individual quality dimension regressed without justification.
 
 If continuing, return to Phase 2 with the updated content.
 If stopping, proceed to Phase 5.
@@ -420,7 +471,9 @@ If stopping, proceed to Phase 5.
 1. If the content originated from a file:
    a. Present a diff summary showing the key changes between the original and
       the refined version.
-   b. Write the updated content to the file.
+   b. If the host environment supports interactive confirmation, wait for user
+      approval before writing. If not, proceed with the write.
+   c. Write the updated content to the file.
 2. If the content was provided inline, present the refined content directly.
 3. Present the refinement log (all iterations).
 4. Present the convergence rationale.
@@ -441,6 +494,8 @@ If stopping, proceed to Phase 5.
 
 ### Failure Conditions
 
+Failure conditions take precedence over pass conditions when both apply:
+
 - Maximum iterations reached with unresolved critical issues: deliver the best
   version achieved, flag every unresolved issue, and inform the user.
 - A sub-agent fails to produce structured output: re-prompt once with tighter
@@ -457,8 +512,11 @@ If stopping, proceed to Phase 5.
   resolution criteria from the Synthesis Discipline constraint. Document the
   disagreement and resolution rationale in the refinement log.
 - **Very long content (estimated over 60K tokens)** — Segment into logical
-  sections. Refine each section independently, then run one final holistic
-  iteration on the reassembled content.
+  sections. Run a single iteration per segment (no minimum for segments), then
+  reassemble and run a 2-iteration holistic pass on the full content.
+  Inter-section consistency issues (terminology, cross-references) are addressed
+  during the holistic pass. Total sub-agent calls are bounded by:
+  `(segments × 2) + (holistic iterations × 2)`.
 - **Degradation detected** — See Phase 4. Revert to the version from the prior
   iteration and stop.
 
@@ -525,15 +583,16 @@ what REMAINS problematic despite prior changes."
 
 **Phase 3, Iteration 2 — Synthesis**:
 
-- Researcher: 8 findings total. 2 novel (novelty rate: 25%).
+- Researcher: 8 findings total. 1 novel (novelty rate: 12%).
 - Critic: 0 critical, 0 significant gaps, 2 weaknesses, 3 minor.
   Severity score: (0 × 8) + (0 × 4) + (2 × 2) + (3 × 1) = 7.
 - Applied: deferred weaknesses from iteration 1, 2 new weaknesses, 1 novel
   researcher finding, 3 minor polish items.
 
 **Phase 4, Iteration 2**: Minimum met. Critic: 0 critical, 0 significant gaps.
-Researcher novelty rate: 25% (above 20%, but borderline). Severity score dropped
-42 to 7. STOP (0 critical + 0 significant gaps + low novelty).
+Researcher novelty rate: 12% (below 20% threshold). Severity score dropped
+42 to 7 (83% decrease). STOP — 0 critical + 0 significant gaps + researcher
+novelty below 20%.
 
 **Phase 5 — Delivery**: Writes updated SKILL.md, presents diff summary,
 refinement log covering both iterations, and convergence rationale.
@@ -559,5 +618,9 @@ refinement log covering both iterations, and convergence rationale.
    all others: developer experience. Weight your critique heavily toward these
    dimensions. A flaw in a focus dimension is one severity level higher than it
    would otherwise be."
-5. Synthesis weights focus-area findings 2× in priority ordering.
+5. Synthesis weights focus-area findings 2× in priority ordering. For example,
+   if the critic flags a "weakness" in example quality (a focus dimension), it
+   is treated with the same priority as a "significant gap" in a non-focus
+   dimension. If the researcher independently identifies example coverage as a
+   best practice, the cross-reference elevates it to highest priority.
 6. Iterates until convergence, presents diff, writes result, delivers log.
