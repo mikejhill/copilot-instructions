@@ -80,8 +80,25 @@ before creating the commit. Use the project's markdownlint configuration
 if present (`.markdownlint-cli2.yaml` or `.markdownlint.jsonc`).
 
 ```bash
-npx markdownlint-cli2 "**/*.md"
+npx markdownlint-cli2
 ```
 
 Fix any violations before committing. This prevents CI markdown-lint
 failures that would otherwise only surface after pushing.
+
+## Repository-local Git Hooks
+
+Projects MAY include a `.githooks/` directory with executable hook
+scripts (e.g., `.githooks/pre-commit`). These hooks are checked into
+the repo and survive machine wipes.
+
+When starting work on a repository that contains a `.githooks/`
+directory, activate the hooks by running:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+This is a one-time per-clone operation. It sets the repo-local config
+(not global) to use the checked-in hooks instead of the default
+`.git/hooks/` directory.
