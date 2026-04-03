@@ -33,7 +33,8 @@ Use these rules when the user does not explicitly choose a mode:
 - Strict typing on all signatures (`from __future__ import annotations`)
 - Guard clauses at method entry
 - Specific exception types; no bare `except:`
-- Logging via stdlib `logging`; no `print()` for diagnostics
+- Logging via stdlib `logging`; no `print()` for diagnostics or status
+- Program output (user-requested data) uses `print()` to stdout
 - pytest tests in tests/ directory
 - Entry point in `__main__.py` calling a `main()` function
 - pyproject.toml includes `[tool.ruff]` and `[tool.ty]` configuration

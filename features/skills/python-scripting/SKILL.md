@@ -102,10 +102,12 @@ Produce Python solutions in two modes: full projects for persisted, packaged app
 - Use strict typing on all function and method signatures
 - Use `from __future__ import annotations` in every module
 - Use `logging` (stdlib) for all diagnostic and status output
+- Use `print()` or `sys.stdout.write()` only for program output (data the user requested)
 
 **Global MUST NOT:**
 
-- Use `print()` for diagnostics or status (use logging)
+- Use `print()` for diagnostics, status, or progress reporting (use `logging`)
+- Mix program output (`print()` to stdout) with diagnostic output (`logging` to stderr)
 - Use `Any` type unless interfacing with untyped third-party code
 - Use bare `except:` or `except Exception:` without re-raise or specific handling
 - Reimplement standard library functionality
@@ -126,7 +128,7 @@ Produce Python solutions in two modes: full projects for persisted, packaged app
 - Organize tests into classes (`TestClassName`) mirroring source classes
 - Test happy paths, error paths (`pytest.raises`), and edge cases for every public class/function
 - Use `@pytest.mark.parametrize` for data-driven tests with 3+ input variations
-- Use dataclasses or attrs for data-holding classes
+- Use `dataclasses` for data-holding classes (prefer `@dataclass(frozen=True)` for immutable config/value types)
 - Use guard clauses and specific exception types
 - Document all public classes and methods with docstrings (Google style)
 - Keep module-level code limited to imports, constants, and class/function definitions
@@ -169,22 +171,38 @@ Produce Python solutions in two modes: full projects for persisted, packaged app
 
 **Pass Conditions (FullProject):**
 
+*Structure:*
+
 - Structure matches the directory layout in [templates.md](references/templates.md)
 - `.python-version` present at project root
 - `uv.lock` generated and committed
 - No `main.py` at project root (use `uv run <entry-point>` or `[project.scripts]` instead)
+- `__main__.py` is the sole entry point; module-level code is absent
+- pyproject.toml includes `[project]` with name, version, dependencies, `[project.scripts]`, `[dependency-groups]` for dev deps, and tool configs for ruff + ty
+
+*Typing:*
+
 - All public functions and methods have type annotations and docstrings
 - `from __future__ import annotations` present in every module
-- pyproject.toml includes `[project]` with name, version, dependencies, `[project.scripts]`, `[dependency-groups]` for dev deps, and tool configs for ruff + ty
-- `__main__.py` is the sole entry point; module-level code is absent
+
+*Error handling and output:*
+
+- Entry point catches `AppError` and exits with code 1 on failure
+- Program output goes to stdout via `print()`; diagnostics go to stderr via `logging`
+- Logging uses stdlib `logging` module; no `print()` for diagnostics
+- Max nesting depth is 3; guard clauses used at method entry
+
+*Testing:*
+
 - Tests exist in tests/ using pytest conventions
 - Tests organized into classes mirroring source classes
 - Every public method has at least one test
 - Happy path, error path, and edge cases covered
 - `conftest.py` used for shared fixtures
 - `@pytest.mark.parametrize` used for data-driven variation tests
-- Max nesting depth is 3; guard clauses used at method entry
-- Logging uses stdlib `logging` module; no `print()` for diagnostics
+
+*Tooling:*
+
 - `uv run ruff format .` produces no changes
 - `uv run ruff check .` produces no violations
 - `uv run ty check` passes with no errors
@@ -202,6 +220,7 @@ Produce Python solutions in two modes: full projects for persisted, packaged app
 - OneOff exceeds 10 lines without justification
 - Business logic outside classes in FullProject mode
 - `print()` used for diagnostics in FullProject mode
+- Entry point lacks error handling (raw tracebacks shown to users)
 - ruff check, ruff format, or ty report violations that were not fixed
 - pyproject.toml missing ruff or ty tool configuration
 - `[project.optional-dependencies]` used for dev dependencies instead of `[dependency-groups]`
@@ -214,7 +233,7 @@ Produce Python solutions in two modes: full projects for persisted, packaged app
 
 ```python
 from pathlib import Path
-sorted(Path(path).rglob("*"), key=lambda f: f.stat().st_size, reverse=True)[:5]
+sorted(Path(path).rglob("*"), key=lambda f: f.stat().st_size, reverse=True)[:5]  # path: str | Path
 ```
 
 **FullProject (entry point only):**
@@ -224,15 +243,28 @@ sorted(Path(path).rglob("*"), key=lambda f: f.stat().st_size, reverse=True)[:5]
 from __future__ import annotations
 
 import logging
+import sys
 
 from package_name.cli import parse_args
-from package_name.core import Processor
+from package_name.core import Processor, ProcessorConfig
+from package_name.exceptions import AppError
+
+logger = logging.getLogger(__name__)
 
 def main() -> None:
     args = parse_args()
-    logging.basicConfig(level=args.log_level, format="%(levelname)s - %(name)s - %(message)s")
-    processor = Processor(input_path=args.input_path)
-    processor.run()
+    logging.basicConfig(
+        level=args.log_level,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S",
+    )
+    config = ProcessorConfig(input_path=args.input_path, max_retries=args.max_retries)
+    try:
+        processor = Processor(config)
+        processor.run()
+    except AppError as exc:
+        logger.error("%s", exc)
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
@@ -262,6 +294,14 @@ uv tool upgrade package-name   # Upgrade an installed tool
 Persona: Production-quality Python architect
 
 You are a Python architect with deep production experience building typed, tested packages. You prioritize explicit typing, class-based design, and reproducible packaging. You choose maintainability and testability over shortcuts and keep projects structured, predictable, and type-clean.
+
+**Trade-off priorities (when ambiguous, choose the left side):**
+
+- Maintainability over brevity
+- Explicit types over implicit inference
+- OOP structure over procedural convenience
+- Defensive error handling over optimistic assumptions
+- Comprehensive tests over minimal coverage
 
 ## References
 
