@@ -6,7 +6,7 @@
 
 ```python
 from pathlib import Path
-sorted(Path(path).rglob("*"), key=lambda f: f.stat().st_size, reverse=True)[:5]
+sorted(Path(path).rglob("*"), key=lambda f: f.stat().st_size, reverse=True)[:5]  # path: str | Path
 ```
 
 ## One-Off: Filter and Transform
@@ -14,7 +14,7 @@ sorted(Path(path).rglob("*"), key=lambda f: f.stat().st_size, reverse=True)[:5]
 **Scenario:** Extract unique email domains from a list
 
 ```python
-domains = sorted({email.split("@")[1] for email in emails if "@" in email})
+domains = sorted({email.split("@")[1] for email in emails if "@" in email})  # emails: list[str]
 ```
 
 ## One-Off: File Content Search
@@ -51,6 +51,15 @@ for filename in os.listdir(path):
 print(f"Total: {len(results)}")
 ```
 
+**Rules applied in this refactor:**
+
+- Hardcoded `"/data/config"` → `ScannerConfig.search_path` (parameterize everything)
+- `os.listdir` + `os.path.join` → `Path.glob()` (prefer pathlib)
+- `print()` for status → `logger.info()` / `logger.debug()` (structured logging)
+- Bare dict data → `ScanResult` frozen dataclass (typed data models)
+- Procedural loop → `ConfigScanner` class with `_validate()` guard (OOP + guard clauses)
+- No error handling → `try/except` with `logger.warning()` for bad files (fail gracefully)
+
 ### After (Refactored)
 
 #### src/config_scanner/core.py
@@ -63,6 +72,8 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
+
+from config_scanner.exceptions import ConfigurationError
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +105,7 @@ class ConfigScanner:
     def _validate(self) -> None:
         """Guard clause: validate preconditions."""
         if not self._config.search_path.is_dir():
-            raise NotADirectoryError(
+            raise ConfigurationError(
                 f"Search path is not a directory: {self._config.search_path}"
             )
 
@@ -163,6 +174,21 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return args
 ```
 
+#### src/config_scanner/exceptions.py
+
+```python
+"""Config scanner exception hierarchy."""
+from __future__ import annotations
+
+
+class AppError(Exception):
+    """Base exception for config scanner."""
+
+
+class ConfigurationError(AppError):
+    """Raised when scanner configuration is invalid."""
+```
+
 #### src/config_scanner/\_\_main\_\_.py
 
 ```python
@@ -170,9 +196,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 from __future__ import annotations
 
 import logging
+import sys
 
 from config_scanner.cli import parse_args
 from config_scanner.core import ConfigScanner, ScannerConfig
+from config_scanner.exceptions import AppError
+
+logger = logging.getLogger(__name__)
 
 
 def main() -> None:
@@ -188,11 +218,15 @@ def main() -> None:
         pattern=args.pattern,
         required_field=args.field,
     )
-    scanner = ConfigScanner(config)
-    results = scanner.scan()
+    try:
+        scanner = ConfigScanner(config)
+        results = scanner.scan()
+    except AppError as exc:
+        logger.error("%s", exc)
+        sys.exit(1)
 
     for result in results:
-        print(result.path.name)
+        print(result.path.name)  # Program output (user-requested data)
 
 
 if __name__ == "__main__":
@@ -211,6 +245,7 @@ from pathlib import Path
 import pytest
 
 from config_scanner.core import ConfigScanner, ScannerConfig
+from config_scanner.exceptions import ConfigurationError
 
 
 @pytest.fixture
@@ -235,7 +270,7 @@ class TestConfigScanner:
 
     def test_raises_on_invalid_path(self, tmp_path: Path) -> None:
         config = ScannerConfig(search_path=tmp_path / "nonexistent")
-        with pytest.raises(NotADirectoryError):
+        with pytest.raises(ConfigurationError):
             ConfigScanner(config)
 
     def test_skips_invalid_json(self, config_dir: Path) -> None:

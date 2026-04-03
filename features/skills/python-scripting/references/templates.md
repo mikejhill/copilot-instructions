@@ -32,7 +32,7 @@ line-length = 88
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "W", "F", "I", "N", "UP", "B", "SIM", "RUF", "D", "ANN", "PT", "RET", "ARG"]
+select = ["E", "W", "F", "I", "N", "UP", "B", "SIM", "RUF", "D", "ANN", "PT", "RET", "ARG", "FA"]
 # TCH excluded: moving stdlib imports to TYPE_CHECKING blocks reduces readability.
 ignore = ["D100", "D104", "D107"]
 
@@ -66,6 +66,8 @@ The `main.py` pattern (inserting `src/` into `sys.path`) is unnecessary when uv 
 from __future__ import annotations
 ```
 
+For libraries intended for external consumption, add a `py.typed` marker file (PEP 561) at `src/package_name/py.typed` (empty file) so downstream type checkers can see the package's type information.
+
 ### src/package_name/\_\_main\_\_.py
 
 ```python
@@ -73,9 +75,13 @@ from __future__ import annotations
 from __future__ import annotations
 
 import logging
+import sys
 
 from package_name.cli import parse_args
 from package_name.core import Processor, ProcessorConfig
+from package_name.exceptions import AppError
+
+logger = logging.getLogger(__name__)
 
 
 def main() -> None:
@@ -87,8 +93,12 @@ def main() -> None:
         datefmt="%Y-%m-%dT%H:%M:%S",
     )
     config = ProcessorConfig(input_path=args.input_path, max_retries=args.max_retries)
-    processor = Processor(config)
-    processor.run()
+    try:
+        processor = Processor(config)
+        processor.run()
+    except AppError as exc:
+        logger.error("%s", exc)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
@@ -157,6 +167,8 @@ import logging
 from dataclasses import dataclass
 from pathlib import Path
 
+from package_name.exceptions import ProcessingError
+
 logger = logging.getLogger(__name__)
 
 
@@ -198,8 +210,13 @@ class Processor:
         """Apply processing logic to each item."""
         processed: list[Path] = []
         for item in items:
-            if self._should_process(item):
-                processed.append(item)
+            try:
+                if self._should_process(item):
+                    processed.append(item)
+            except OSError as err:
+                raise ProcessingError(
+                    item=str(item), reason=str(err)
+                ) from err
         return processed
 
     def _should_process(self, item: Path) -> bool:
@@ -282,6 +299,7 @@ class ProcessingError(AppError):
 
 ```python
 """Test package."""
+from __future__ import annotations
 ```
 
 ### tests/conftest.py
@@ -301,12 +319,6 @@ def sample_dir(tmp_path: Path) -> Path:
     (tmp_path / "file1.txt").write_text("content")
     (tmp_path / "file2.txt").write_text("content")
     (tmp_path / "subdir").mkdir()
-    return tmp_path
-
-
-@pytest.fixture
-def empty_dir(tmp_path: Path) -> Path:
-    """Create an empty temporary directory."""
     return tmp_path
 ```
 
@@ -387,6 +399,17 @@ class TestParseArgs:
     def test_rejects_missing_path(self) -> None:
         with pytest.raises(SystemExit):
             parse_args(["/nonexistent/path"])
+```
+
+### .gitignore
+
+```text
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
 ```
 
 ## One-Off Template

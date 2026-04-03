@@ -85,34 +85,14 @@ class Processor:
     def _validate(self) -> None:
         """Guard clause: validate preconditions."""
         if not self._config.input_path.exists():
-            raise FileNotFoundError(
-                f"Input path does not exist: {self._config.input_path}"
-            )
+            raise FileNotFoundError(...)
 
     def run(self) -> list[Path]:
         """Execute the processing pipeline."""
-        logger.info("Processing %s", self._config.input_path)
-        items = self._discover_items()
-        results = self._process_items(items)
-        logger.info("Processed %d items", len(results))
-        return results
-
-    def _discover_items(self) -> list[Path]:
-        """Find all items to process."""
-        return list(self._config.input_path.iterdir())
-
-    def _process_items(self, items: list[Path]) -> list[Path]:
-        """Apply processing logic to each item."""
-        processed: list[Path] = []
-        for item in items:
-            if self._should_process(item):
-                processed.append(item)
-        return processed
-
-    def _should_process(self, item: Path) -> bool:
-        """Determine whether an item qualifies for processing."""
-        return item.is_file()
+        ...
 ```
+
+See [templates.md](templates.md) → `core.py` for the complete implementation including all methods.
 
 ### Key OOP Rules
 
@@ -180,55 +160,23 @@ def iter_files(root: Path) -> Iterator[Path]: ...
 Argument parsing lives in a dedicated `cli.py` module, separated from business logic. Use `argparse` from the standard library.
 
 ```python
-"""Command-line interface definition."""
-from __future__ import annotations
-
-import argparse
-import logging
-from pathlib import Path
-
-
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    """Parse and validate command-line arguments.
-
-    Args:
-        argv: Argument list. Defaults to sys.argv[1:] when None.
-
-    Returns:
-        Parsed argument namespace.
-    """
-    parser = argparse.ArgumentParser(
-        description="Process items under a given path.",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument(
-        "input_path",
-        type=Path,
-        help="Path to the input directory.",
-    )
-    parser.add_argument(
-        "--max-retries",
-        type=int,
-        default=3,
-        help="Maximum retry attempts (default: %(default)s).",
-    )
-    parser.add_argument(
-        "--log-level",
-        type=str,
-        default="INFO",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging verbosity (default: %(default)s).",
-    )
+    """Parse and validate command-line arguments."""
+    parser = argparse.ArgumentParser(...)
+    parser.add_argument("input_path", type=Path, ...)
+    parser.add_argument("--max-retries", type=int, default=3, ...)
+    parser.add_argument("--log-level", choices=[...], default="INFO", ...)
 
     args = parser.parse_args(argv)
 
-    # Post-parse validation (guard clause)
     if not args.input_path.exists():
         parser.error(f"Input path does not exist: {args.input_path}")
 
     args.log_level = getattr(logging, args.log_level)
     return args
 ```
+
+See [templates.md](templates.md) → `cli.py` for the complete implementation.
 
 ### Argument Rules
 
@@ -238,7 +186,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 - Use `choices=` for enumerated values
 - Use `default=` with `%(default)s` in help text
 - Perform post-parse validation with `parser.error()` for user-facing errors
-- Return `argparse.Namespace`; convert to domain objects in `__main__.py`
+- Return `argparse.Namespace`; convert to typed domain objects (`ProcessorConfig`, etc.) in `__main__.py` immediately — `Namespace` attributes are untyped at the type-checker level
 
 ## Logging
 
@@ -301,12 +249,14 @@ def process(self, items: list[Path]) -> list[Path]:
     # ... proceed with logic
 ```
 
+**Defense-in-depth validation**: CLI validation (`parser.error()`) catches user errors early with friendly messages. Domain validation (guard clauses in constructors and methods) protects invariants for non-CLI callers (tests, library consumers). Both layers are intentional — do not remove one because the other exists.
+
 ### Exception Rules
 
 - Use specific exception types: `ValueError`, `FileNotFoundError`, `TypeError`, `RuntimeError`
 - Define custom exceptions in `exceptions.py` for domain-specific errors
 - Never use bare `except:` or `except Exception:` without re-raise
-- Include context in error messages: what failed, why, and what to do
+- Include context in error messages: state what failed, what was expected, and what was found (e.g., `"Expected 'version' key in config, found keys: ['name', 'description']"`)
 - Use `raise ... from err` to preserve exception chains
 
 ### Custom Exception Pattern
@@ -386,6 +336,16 @@ Check `is None` explicitly rather than relying on truthiness.
 | Constants         | UPPER_SNAKE_CASE   | `MAX_RETRIES`, `DEFAULT_TIMEOUT`      |
 | Private members   | Leading underscore | `_validate()`, `_cache`               |
 | Type aliases      | PascalCase         | `PathFilter`, `ItemMap`               |
+
+### Public API Surface
+
+For packages intended for external import, define `__all__` in `__init__.py` to control the public API surface:
+
+```python
+__all__ = ["Processor", "ProcessorConfig"]
+```
+
+This makes the importable interface explicit and prevents internal symbols from leaking.
 
 ## Nesting and Extraction
 
@@ -471,7 +431,7 @@ Use `@pytest.mark.parametrize` when the same test logic applies to multiple inpu
     ],
 )
 def test_filter_by_severity(
-    self, sample_log: Path, severity: str, expected_count: int
+    self, tmp_path: Path, severity: str, expected_count: int
 ) -> None:
     # test body using severity and expected_count
     ...
@@ -510,55 +470,11 @@ class TestProcessor:
 
 ### Test Example
 
-```python
-"""Tests for core processing logic."""
-from __future__ import annotations
-
-from pathlib import Path
-
-import pytest
-
-from package_name.core import Processor, ProcessorConfig
-
-
-@pytest.fixture
-def sample_dir(tmp_path: Path) -> Path:
-    """Create a temporary directory with sample files."""
-    (tmp_path / "file1.txt").write_text("content")
-    (tmp_path / "file2.txt").write_text("content")
-    (tmp_path / "subdir").mkdir()
-    return tmp_path
-
-
-class TestProcessor:
-    """Tests for Processor class."""
-
-    def test_run_returns_files(self, sample_dir: Path) -> None:
-        config = ProcessorConfig(input_path=sample_dir)
-        processor = Processor(config)
-        result = processor.run()
-        assert len(result) == 2
-
-    def test_raises_on_missing_path(self, tmp_path: Path) -> None:
-        config = ProcessorConfig(input_path=tmp_path / "nonexistent")
-        with pytest.raises(FileNotFoundError):
-            Processor(config)
-
-    @pytest.mark.parametrize("count", [0, 1, 5])
-    def test_processes_variable_file_counts(
-        self, tmp_path: Path, count: int
-    ) -> None:
-        for i in range(count):
-            (tmp_path / f"file{i}.txt").write_text("data")
-        config = ProcessorConfig(input_path=tmp_path)
-        processor = Processor(config)
-        result = processor.run()
-        assert len(result) == count
-```
+See [templates.md](templates.md) → `test_core.py` for the complete test implementation demonstrating all coverage patterns.
 
 ## Tooling and Verification
 
-Three tools enforce code quality deterministically. All are configured in pyproject.toml and run after code generation. All three are developed by [Astral](https://astral.sh/) and form a cohesive, high-performance Python toolchain.
+Three Astral tools plus pytest enforce code quality deterministically. All are configured in pyproject.toml and run after code generation. The Astral tools (ruff, ty) are developed by [Astral](https://astral.sh/) and form a cohesive, high-performance Rust-based Python toolchain.
 
 ### Tool Stack
 
@@ -581,10 +497,10 @@ Three tools enforce code quality deterministically. All are configured in pyproj
 After generating or modifying code, run these commands in order:
 
 ```bash
-ruff format .              # Auto-fix formatting
-ruff check . --fix         # Auto-fix lint violations
-ty check                   # Type check (must pass clean)
-pytest                     # Tests (must pass)
+uv run ruff format .       # Auto-fix formatting
+uv run ruff check . --fix  # Auto-fix lint violations
+uv run ty check            # Type check (must pass clean)
+uv run pytest              # Tests (must pass)
 ```
 
 If `ruff check` or `ruff format` auto-fixes issues, apply the fixes and continue. If `ty` reports errors, fix the type annotations. If `pytest` fails, fix the failing tests or code.
@@ -613,6 +529,7 @@ select = [
     "PT",    # flake8-pytest-style
     "RET",   # flake8-return
     "ARG",   # flake8-unused-arguments
+    "FA",    # flake8-future-annotations
 ]
 # TCH (flake8-type-checking) excluded: moving stdlib imports into TYPE_CHECKING
 # blocks reduces readability for marginal import-time savings.
@@ -656,6 +573,7 @@ These rules are enforced by automation and MUST NOT be duplicated in instruction
 - **Naming conventions** → ruff (pep8-naming rules)
 - **Docstring format** → ruff (pydocstyle rules with Google convention)
 - **Type annotation presence** → ty + ruff (ANN rules)
+- **`from __future__ import annotations`** → ruff (FA rules)
 
 Instruction-only rules (not enforceable by tooling):
 
@@ -663,7 +581,6 @@ Instruction-only rules (not enforceable by tooling):
 - Guard clause placement
 - Max nesting depth (3 levels)
 - Logging pattern (`getLogger(__name__)`, lazy formatting)
-- `from __future__ import annotations` requirement
 - Business logic encapsulation in classes
 
 ## Packaging and Dependencies
@@ -680,41 +597,19 @@ build-backend = "hatchling.build"
 [project]
 name = "package-name"
 version = "0.1.0"
-description = "Short description of the project."
 requires-python = ">=3.12"
 dependencies = []
 
 [dependency-groups]
-dev = [
-    "pytest>=8.0",
-    "ruff>=0.7",
-    "ty>=0.0.1",
-]
+dev = ["pytest>=8.0", "ruff>=0.7", "ty>=0.0.1"]
 
 [project.scripts]
 package-name = "package_name.__main__:main"
 
-[tool.ruff]
-target-version = "py312"
-line-length = 88
-src = ["src", "tests"]
-
-[tool.ruff.lint]
-select = ["E", "W", "F", "I", "N", "UP", "B", "SIM", "RUF", "D", "ANN", "PT", "RET", "ARG"]
-ignore = ["D100", "D104", "D107"]
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
-
-[tool.ruff.lint.isort]
-known-first-party = ["package_name"]
-
-[tool.ty.environment]
-python-version = "3.12"
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
+# ... ruff, ty, and pytest configuration follows
 ```
+
+See [templates.md](templates.md) → `pyproject.toml` for the complete configuration including all ruff, ty, and pytest settings.
 
 ### Virtual Environment
 
@@ -730,6 +625,8 @@ uv run <command>         # Run commands inside the managed environment
 - All dependencies declared in pyproject.toml `[project.dependencies]`
 - Dev dependencies in `[dependency-groups] dev` (PEP 735), NOT `[project.optional-dependencies]`
 - Pin minimum versions: `"requests>=2.31"`
+- **Libraries** (packages others depend on): use minimum-version pins (`"requests>=2.31"`) to maximize compatibility
+- **Applications** (deployed tools): rely on `uv.lock` for reproducibility; `uv.lock` MUST always be committed
 - Use `uv sync` for development setup, not `pip install`
 - Use `uv run` for all command execution, not bare tool commands
 - `.venv/` directory is gitignored
