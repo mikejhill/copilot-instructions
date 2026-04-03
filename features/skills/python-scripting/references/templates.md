@@ -18,9 +18,9 @@ dependencies = []
 
 [dependency-groups]
 dev = [
-    "mypy>=1.10",
     "pytest>=8.0",
     "ruff>=0.7",
+    "ty>=0.0.1",
 ]
 
 [project.scripts]
@@ -42,16 +42,8 @@ convention = "google"
 [tool.ruff.lint.isort]
 known-first-party = ["package_name"]
 
-[tool.mypy]
-strict = true
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
+[tool.ty.environment]
+python-version = "3.12"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -438,7 +430,7 @@ Run tests and checks:
 \```bash
 uv run pytest
 uv run ruff check .
-uv run mypy src/
+uv run ty check
 \```
 ```
 

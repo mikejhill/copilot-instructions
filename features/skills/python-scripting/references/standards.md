@@ -122,7 +122,7 @@ class Processor:
 - Use regular classes for stateful processing logic.
 - Use `@property` for computed attributes; avoid public attributes on processing classes.
 - Use abstract base classes (`abc.ABC`, `@abstractmethod`) for interfaces when polymorphism is needed.
-- Import symbols from their defining module. mypy strict mode rejects implicit re-exports (e.g., import `ScanConfig` from `models`, not from `core` which happens to import it).
+- Import symbols from their defining module. Type checkers reject implicit re-exports (e.g., import `ScanConfig` from `models`, not from `core` which happens to import it).
 
 ### Minimizing Non-OOP Code
 
@@ -558,23 +558,23 @@ class TestProcessor:
 
 ## Tooling and Verification
 
-Three tools enforce code quality deterministically. All are configured in pyproject.toml and run after code generation.
+Three tools enforce code quality deterministically. All are configured in pyproject.toml and run after code generation. All three are developed by [Astral](https://astral.sh/) and form a cohesive, high-performance Python toolchain.
 
 ### Tool Stack
 
-| Tool            | Purpose                          | Command         |
-| --------------- | -------------------------------- | --------------- |
-| **ruff**        | Linting (replaces flake8, isort) | `ruff check .`  |
-| **ruff format** | Formatting (replaces black)      | `ruff format .` |
-| **mypy**        | Static type checking             | `mypy src/`     |
-| **pytest**      | Test execution                   | `pytest`        |
+| Tool            | Purpose                          | Command           |
+| --------------- | -------------------------------- | ----------------- |
+| **ruff**        | Linting (replaces flake8, isort) | `ruff check .`    |
+| **ruff format** | Formatting (replaces black)      | `ruff format .`   |
+| **ty**          | Static type checking             | `ty check`        |
+| **pytest**      | Test execution                   | `pytest`          |
 
 ### Enforcement Rules
 
-- Ruff and mypy configuration lives in pyproject.toml. Do not use separate config files.
+- Ruff and ty configuration lives in pyproject.toml. Do not use separate config files.
 - All formatting rules are enforced by `ruff format`. Do not add formatting rules to instructions; they are deterministic via tooling.
 - All import ordering is enforced by `ruff check` with isort rules enabled. Do not manually sort imports.
-- All type checking is enforced by `mypy --strict`. Do not rely on instruction-only type rules.
+- All type checking is enforced by `ty check`. Do not rely on instruction-only type rules.
 
 ### Verification Procedure (FullProject)
 
@@ -583,11 +583,11 @@ After generating or modifying code, run these commands in order:
 ```bash
 ruff format .              # Auto-fix formatting
 ruff check . --fix         # Auto-fix lint violations
-mypy src/                  # Type check (must pass clean)
+ty check                   # Type check (must pass clean)
 pytest                     # Tests (must pass)
 ```
 
-If `ruff check` or `ruff format` auto-fixes issues, apply the fixes and continue. If `mypy` reports errors, fix the type annotations. If `pytest` fails, fix the failing tests or code.
+If `ruff check` or `ruff format` auto-fixes issues, apply the fixes and continue. If `ty` reports errors, fix the type annotations. If `pytest` fails, fix the failing tests or code.
 
 ### ruff Configuration
 
@@ -629,19 +629,19 @@ convention = "google"
 known-first-party = ["package_name"]
 ```
 
-### mypy Configuration
+### ty Configuration
 
 ```toml
-[tool.mypy]
-strict = true
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
+[tool.ty.environment]
+python-version = "3.12"
+```
+
+ty auto-discovers source files from the project root and detects `src/` layout automatically. It reads `.python-version` and `project.requires-python` to infer the target Python version, so `[tool.ty.environment]` is an explicit override when needed. Use `[tool.ty.rules]` to adjust specific diagnostic severity:
+
+```toml
+[tool.ty.rules]
+# Example: downgrade a specific diagnostic to warning
+# possibly-unbound = "warning"
 ```
 
 ### What Tooling Replaces
@@ -655,7 +655,7 @@ These rules are enforced by automation and MUST NOT be duplicated in instruction
 - **Unused imports and variables** → ruff (pyflakes rules)
 - **Naming conventions** → ruff (pep8-naming rules)
 - **Docstring format** → ruff (pydocstyle rules with Google convention)
-- **Type annotation presence** → mypy strict + ruff (ANN rules)
+- **Type annotation presence** → ty + ruff (ANN rules)
 
 Instruction-only rules (not enforceable by tooling):
 
@@ -684,11 +684,11 @@ description = "Short description of the project."
 requires-python = ">=3.12"
 dependencies = []
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-    "mypy>=1.10",
     "pytest>=8.0",
     "ruff>=0.7",
+    "ty>=0.0.1",
 ]
 
 [project.scripts]
@@ -709,16 +709,8 @@ convention = "google"
 [tool.ruff.lint.isort]
 known-first-party = ["package_name"]
 
-[tool.mypy]
-strict = true
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
+[tool.ty.environment]
+python-version = "3.12"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -726,17 +718,18 @@ testpaths = ["tests"]
 
 ### Virtual Environment
 
+uv manages the virtual environment automatically. Do not create or activate `.venv` manually:
+
 ```bash
-python -m venv .venv
-source .venv/bin/activate    # Linux/macOS
-.venv\Scripts\activate       # Windows
-pip install -e ".[dev]"
+uv sync                  # Create .venv and install all dependencies
+uv run <command>         # Run commands inside the managed environment
 ```
 
 ### Dependency Rules
 
 - All dependencies declared in pyproject.toml `[project.dependencies]`
-- Dev dependencies in `[project.optional-dependencies.dev]`
+- Dev dependencies in `[dependency-groups] dev` (PEP 735), NOT `[project.optional-dependencies]`
 - Pin minimum versions: `"requests>=2.31"`
-- Use `pip install -e ".[dev]"` for editable install with dev dependencies
+- Use `uv sync` for development setup, not `pip install`
+- Use `uv run` for all command execution, not bare tool commands
 - `.venv/` directory is gitignored

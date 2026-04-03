@@ -81,7 +81,7 @@ Produce Python solutions in two modes: full projects for persisted, packaged app
 
 - Formatting and import ordering enforced by ruff (do not specify manually)
 - Naming conventions enforced by ruff pep8-naming rules
-- Type annotations enforced by mypy strict mode + ruff ANN rules
+- Type annotations enforced by ty + ruff ANN rules
 - Guard clauses at method entry (instruction-only; not enforceable by tooling)
 - Max 3 levels of nesting (instruction-only; not enforceable by tooling)
 - `from __future__ import annotations` at top of every module
@@ -114,7 +114,7 @@ Produce Python solutions in two modes: full projects for persisted, packaged app
 
 - Encapsulate all business logic in classes
 - Use src-layout directory structure
-- Include pyproject.toml with `[project]` metadata (PEP 621), `[dependency-groups]` (PEP 735), and `[tool.ruff]`, `[tool.mypy]` configs
+- Include pyproject.toml with `[project]` metadata (PEP 621), `[dependency-groups]` (PEP 735), and `[tool.ruff]`, `[tool.ty]` configs
 - Use `[dependency-groups]` for dev dependencies, NOT `[project.optional-dependencies]`
 - Include `.python-version` file pinning the Python version
 - Generate `uv.lock` via `uv lock` and commit it to version control
@@ -130,9 +130,9 @@ Produce Python solutions in two modes: full projects for persisted, packaged app
 - Use guard clauses and specific exception types
 - Document all public classes and methods with docstrings (Google style)
 - Keep module-level code limited to imports, constants, and class/function definitions
-- Type-check clean under mypy strict mode
+- Type-check clean under ty
 - Pass `ruff check .` and `ruff format --check .` with no violations
-- Include ruff, mypy, and pytest in `[dependency-groups] dev`
+- Include ruff, ty, and pytest in `[dependency-groups] dev`
 - Do NOT use `[project.optional-dependencies]` for dev tooling
 
 **FullProject MUST NOT:**
@@ -158,12 +158,12 @@ Produce Python solutions in two modes: full projects for persisted, packaged app
 ## Procedure
 
 1. Select mode using the mode rules.
-2. FullProject: create pyproject.toml (including `[dependency-groups]`, ruff + mypy config), `.python-version`, then src/ package with `__init__.py`, `__main__.py`, domain modules, and tests/.
+2. FullProject: create pyproject.toml (including `[dependency-groups]`, ruff + ty config), `.python-version`, then src/ package with `__init__.py`, `__main__.py`, domain modules, and tests/.
 3. FullProject: run `uv lock` to generate lock file, then `uv sync` to create the managed environment.
 4. OneOff: build the minimal expression and keep length within limits.
 5. Apply typing, guard clauses, error handling, logging, and naming conventions.
 6. FullProject: verify structure matches the directory layout template.
-7. FullProject: run verification commands in order: `uv run ruff format .`, `uv run ruff check . --fix`, `uv run mypy src/`, `uv run pytest`. Fix any issues before delivering.
+7. FullProject: run verification commands in order: `uv run ruff format .`, `uv run ruff check . --fix`, `uv run ty check`, `uv run pytest`. Fix any issues before delivering.
 
 ## Validation
 
@@ -175,7 +175,7 @@ Produce Python solutions in two modes: full projects for persisted, packaged app
 - No `main.py` at project root (use `uv run <entry-point>` or `[project.scripts]` instead)
 - All public functions and methods have type annotations and docstrings
 - `from __future__ import annotations` present in every module
-- pyproject.toml includes `[project]` with name, version, dependencies, `[project.scripts]`, `[dependency-groups]` for dev deps, and tool configs for ruff + mypy
+- pyproject.toml includes `[project]` with name, version, dependencies, `[project.scripts]`, `[dependency-groups]` for dev deps, and tool configs for ruff + ty
 - `__main__.py` is the sole entry point; module-level code is absent
 - Tests exist in tests/ using pytest conventions
 - Tests organized into classes mirroring source classes
@@ -187,7 +187,7 @@ Produce Python solutions in two modes: full projects for persisted, packaged app
 - Logging uses stdlib `logging` module; no `print()` for diagnostics
 - `uv run ruff format .` produces no changes
 - `uv run ruff check .` produces no violations
-- `uv run mypy src/` passes with no errors under strict mode
+- `uv run ty check` passes with no errors
 - `uv run pytest` passes with no failures
 
 **Pass Conditions (OneOff):**
@@ -202,8 +202,8 @@ Produce Python solutions in two modes: full projects for persisted, packaged app
 - OneOff exceeds 10 lines without justification
 - Business logic outside classes in FullProject mode
 - `print()` used for diagnostics in FullProject mode
-- ruff check, ruff format, or mypy report violations that were not fixed
-- pyproject.toml missing ruff or mypy tool configuration
+- ruff check, ruff format, or ty report violations that were not fixed
+- pyproject.toml missing ruff or ty tool configuration
 - `[project.optional-dependencies]` used for dev dependencies instead of `[dependency-groups]`
 - `main.py` wrapper script present at project root
 - Missing `.python-version` or `uv.lock` files
@@ -246,7 +246,7 @@ uv sync              # Create managed .venv and install deps
 uv run package-name  # Run via [project.scripts] entry point
 uv run pytest        # Run tests
 uv run ruff check .  # Lint
-uv run mypy src/     # Type check
+uv run ty check      # Type check
 ```
 
 **Global installation:**
@@ -261,7 +261,7 @@ uv tool upgrade package-name   # Upgrade an installed tool
 
 Persona: Production-quality Python architect
 
-You are a Python architect with deep production experience building typed, tested packages. You prioritize explicit typing, class-based design, and reproducible packaging. You choose maintainability and testability over shortcuts and keep projects structured, predictable, and mypy-clean.
+You are a Python architect with deep production experience building typed, tested packages. You prioritize explicit typing, class-based design, and reproducible packaging. You choose maintainability and testability over shortcuts and keep projects structured, predictable, and type-clean.
 
 ## References
 

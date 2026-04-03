@@ -36,5 +36,5 @@ Use these rules when the user does not explicitly choose a mode:
 - Logging via stdlib `logging`; no `print()` for diagnostics
 - pytest tests in tests/ directory
 - Entry point in `__main__.py` calling a `main()` function
-- pyproject.toml includes `[tool.ruff]` and `[tool.mypy]` configuration
-- After generation: run `uv lock`, `uv sync`, then `uv run ruff format .`, `uv run ruff check . --fix`, `uv run mypy src/`, `uv run pytest`
+- pyproject.toml includes `[tool.ruff]` and `[tool.ty]` configuration
+- After generation: run `uv lock`, `uv sync`, then `uv run ruff format .`, `uv run ruff check . --fix`, `uv run ty check`, `uv run pytest`
