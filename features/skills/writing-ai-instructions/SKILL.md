@@ -1,491 +1,619 @@
 ---
 name: writing-ai-instructions
-description: Use when authoring instruction sets for agents, skills, prompts, or custom instruction files. Produces enforceable, unambiguous instructions through 8-section template, conflict resolution clause, personas, and comprehensive examples.
+description: >-
+  Author AI instruction sets (skills, instructions files, prompt files, agents)
+  using structured templates with constraint modality and validation.
+disable-model-invocation: true
 ---
 
 # The Discipline of AI-Oriented Instruction Writing
 
-## Overview
+## Objective
 
-Instructions that work are concrete, specific, and demonstrate expected behavior. An effective instruction set contains eight sections that together force precision: an objective, scope, inputs, outputs, constraints, procedure, validation, and examples with personas.
+Produce enforceable, unambiguous instruction sets for AI agents by applying an
+eight-section template with constraint modality, conflict resolution clauses,
+personas, and comprehensive examples.
 
-**What makes instructions work for models:**
+## Scope
 
-- **Precision over flexibility.** Vague language fails. Models execute literally; ambiguity creates variance.
-- **Examples over explanation.** Showing is more powerful than telling. One complete example teaches format, edge cases, and expectations better than paragraphs of description.
-- **Personas over generic competence.** When the task requires a specific viewpoint, a persona anchors the reasoning. Security reviews, performance optimization, and compliance checks each benefit from a defined perspective.
-- **Constraints as boundaries.** Stating what you MUST NOT do and what you MUST do creates guardrails. Optional behavior uses MAY.
+### In-Scope
 
-**What belongs in instructions:**
+- Instruction writing for any Copilot feature type: agent skills, instructions
+  files, prompt files, and custom agents
+- The 8-section template (objective, scope, inputs, outputs, constraints,
+  procedure, validation, examples) and how to apply it
+- Language precision rules for AI-consumed instructions
+- Constraint modality (MUST / MUST NOT / MAY)
+- Conflict resolution clauses for multi-rule instruction sets
+- Persona design for specialized agent behavior
+- Example strategy selection (zero-shot, one-shot, few-shot) within instruction
+  sets
+- Validation checklists for instruction quality
+- Adapting template depth by feature type and context budget
 
-- **Objectives and decisions.** Specify the outcome, boundaries, and decision points the model must handle.
-- **Non-deterministic judgment.** Capture reasoning that cannot be enforced by automation.
-- **Automation-aware detail.** If a formatter, linter, or hook already enforces a deterministic rule (spacing, ordering, naming), reference the automation and omit the rule from instructions.
-- **Avoid duplication.** Do not repeat rules that are already guaranteed by tooling; redundancy increases inconsistency.
+### Out-of-Scope
 
-An instruction set follows this path: objective → scope → inputs → outputs → constraints → procedure → validation → examples. This order forces logical thinking. Skip any step and instructions become incomplete.
+- Feature type selection — use the
+  [copilot-features](../copilot-features/SKILL.md) skill to choose between
+  skills, instructions files, prompts, agents, and hooks
+- Agent hooks — hooks are JSON configuration, not instruction sets
+- General prompt engineering theory (attention mechanisms, temperature,
+  chain-of-thought reasoning)
+- Chat-style prompting or conversational optimization
+- RAG pipeline design, model fine-tuning, or training data curation
 
-## Writing Effective Language for Models
+## Inputs
 
-Models are literal executors. The language you use determines whether they follow your intent or guess.
+### Required
 
-### Commands, Not Suggestions
+| Input | Description |
+| --- | --- |
+| **Task description** | What the instruction set must accomplish |
+| **Target feature type** | Skill, instructions file, prompt file, or custom agent. If unknown, invoke the [copilot-features](../copilot-features/SKILL.md) skill first. |
+| **Domain** | The subject area the instructions cover (e.g., "testing", "security", "documentation") |
+
+### Optional
+
+| Input | Default | Description |
+| --- | --- | --- |
+| **Target audience** | AI coding assistants | Who consumes the generated instructions |
+| **Focus areas** | All sections equally | Sections or quality dimensions to emphasize |
+| **Context budget** | No limit | Maximum token or line budget for the output |
+
+### Assumptions
+
+- The output will be consumed by an AI agent as part of its system context
+- Markdown is the output format
+- The instruction set may coexist with other instruction sets in the same agent
+  context (skills, instructions files, AGENTS.md)
+
+## Outputs
+
+A complete instruction set in Markdown containing all applicable sections of
+the 8-section template. The output is a single Markdown file (or inline
+Markdown content) ready for use as a Copilot feature.
+
+For agent skills (the most complete form), the output contains:
+
+- Frontmatter (YAML with name, description, and optional flags)
+- Objective (one sentence, verb-first)
+- Scope (in-scope and out-of-scope lists)
+- Inputs (required, optional, assumptions)
+- Outputs (format, artifacts, naming)
+- Constraints (MUST / MUST NOT / MAY rules)
+- Procedure (numbered steps with decision points)
+- Validation (pass conditions and failure modes)
+- Examples (complete input/output demonstrations with optional personas)
+
+For other feature types, see
+[Adapting by Feature Type](#adapting-by-feature-type) for which sections to
+compress or omit.
+
+## Constraints
+
+### Language Precision — MUST Enforce
+
+These rules apply to every generated instruction set. The skill MUST follow
+these rules in its own output, and the generated instruction set MUST
+demonstrate them through its language.
+
+**Imperative voice.** Command action. Do not suggest, recommend, or propose.
 
 - **Use:** "Validate each input before processing."
-- **Avoid:** "You should probably validate inputs."
+- **Do not use:** "You should probably validate inputs."
 - **Use:** "Do not modify the original file."
-- **Avoid:** "Try to avoid modifying the original file."
+- **Do not use:** "Try to avoid modifying the original file."
 
-Models execute commands. Suggestions are optional. Use imperative verbs: validate, generate, extract, verify, compute.
+Use imperative verbs: validate, generate, extract, verify, compute, produce,
+list, declare, number.
 
-### Eliminate Vagueness
-
-Models cannot reason about vague criteria. Replace soft language with concrete thresholds.
+**Eliminate vague language.** Replace soft language with concrete thresholds.
 
 - **Vague:** "Make the output efficient."
-- **Concrete:** "Output must process 10,000 items in under 5 seconds."
+- **Concrete:** "Output MUST process 10,000 items in under 5 seconds."
 - **Vague:** "Provide a reasonable explanation."
-- **Concrete:** "Explain the decision with: threat type, CVSS score, mitigation step."
+- **Concrete:** "Explain the decision with: threat type, CVSS score, mitigation
+  step."
 
-Banned words: "appropriate," "nice," "robust," "good," "reasonable," "consider," "might," "likely." Use measurable criteria instead.
+**Banned words and replacements:**
 
-### Lists Over Prose
+| Banned Word | Replace With |
+| --- | --- |
+| "appropriate" | State the specific criterion |
+| "robust" | State the resilience property (retry count, timeout, fallback) |
+| "nice" / "good" | State the measurable quality (latency, accuracy, coverage) |
+| "reasonable" | State the threshold or range |
+| "consider" | "Evaluate X against Y" or "If X, then Y" |
+| "might" / "likely" | State the condition: "If X occurs, then Y" |
+| "avoid" | "Do not X" |
+| "ensure" | State the specific verification step |
+| "properly" | State the specific correctness criterion |
+| "handle" | State the specific action: log, retry, reject, or escalate |
 
-Prose buries requirements. Lists expose them.
+**Lists over prose.** Prose buries requirements; lists expose them.
 
-- **Prose:** "The system should handle errors gracefully, logging them appropriately and returning a user-friendly message."
-- **Lists:**
+- **Prose:** "The system should handle errors gracefully, logging them
+  appropriately and returning a user-friendly message."
+- **List:**
   - Log all errors to stderr with timestamp and stack trace.
-  - Return HTTP 400 with JSON: `{"error": "invalid_input", "details": "[field name]: [reason]"}`
+  - Return HTTP 400 with JSON:
+    `{"error": "invalid_input", "details": "[field]: [reason]"}`
   - Do not expose internal paths or system details in error messages.
 
-### Explicit Decision Points
-
-When behavior changes based on input, state the condition and action as if/then rules.
+**Explicit decision points.** State conditions and actions as if/then rules.
 
 - **Weak:** "Update the config if needed."
-- **Explicit:** "If existing config contains database URL, reuse it. If not, ask for database URL before proceeding."
+- **Explicit:** "If existing config contains a database URL, reuse it. If not,
+  ask for the database URL before proceeding."
 
-## Procedure: Eight-Section Template
+**Constraint modality.** Mark non-negotiable rules with MUST / MUST NOT. Mark
+optional behavior with MAY. Do not use SHOULD — it implies exceptions without
+specifying when exceptions apply. Decompose SHOULD into conditional MUST
+statements:
+
+- **Weak:** "Functions should have docstrings."
+- **Explicit:** "MUST include a docstring for every public function. MAY omit
+  docstrings for private helper functions under 5 lines."
+
+**Consistent terminology.** Define a term once, then use only that term
+throughout. Do not alternate between synonyms.
+
+**Negative space definition.** Define what something is NOT alongside what it
+IS. Scope requires both in-scope and out-of-scope lists. Constraints require
+both MUST and MUST NOT. Validation requires both pass and fail conditions.
+
+**Generative specificity test.** Every rule in a generated instruction set MUST
+change agent behavior beyond what an unguided agent would produce. If a rule
+restates what the agent already does by default, it wastes context tokens
+without adding value. Test: "Would the agent do this anyway without the rule?"
+If yes, remove the rule.
 
-Execute all eight steps in order. Omitting any step produces incomplete instructions.
-
-1. **Set the objective**
-   - Write exactly one sentence stating the measurable outcome.
-   - The sentence must begin with a verb (e.g., "Implement…", "Generate…", "Validate…").
-2. **Define scope**
-   - List every explicit in-scope item (what IS included).
-   - List every explicit out-of-scope item (what IS NOT included).
-   - Default scope to nothing; add only what you explicitly allow.
-3. **List inputs**
-   - Enumerate required inputs with type and format.
-   - Enumerate optional inputs and describe their effect.
-   - State all assumptions about the environment or prior state.
-4. **Specify outputs**
-   - Prescribe exact output format (JSON, Markdown, file path, etc.).
-   - Name every file or artifact produced.
-   - Include formatting rules only when no automation enforces them; otherwise reference the formatter/linter/hook and omit formatting details.
-5. **State constraints**
-   - Declare safety and security constraints.
-   - Declare style, tone, and formatting constraints.
-   - Declare tool usage, time, and resource constraints.
-   - Use "MUST" and "MUST NOT" for rules; use "MAY" for options.
-6. **Write the procedure**
-   - Number every step sequentially.
-   - Include decision points as explicit if/then rules.
-   - Avoid "consider" or "think about"; instead, command action.
-7. **Define validation**
-   - Specify exactly how to verify correctness.
-   - Include both pass conditions and failure handling.
-   - Name what fails the validation.
-8. **Add examples and personas**
-   - Include a persona if the task requires a specific worldview or decision-making framework.
-   - Provide minimum one example per input variation.
-   - Examples show realistic, complete input and output.
-
-## Language Rules for Instructions
-
-- **Write in imperative voice.** Command action. Do not suggest, recommend, or propose.
-- **Eliminate vague language entirely.** Replace "robust," "appropriate," "nice," "good," and "reasonable" with concrete criteria.
-- **Define conflicts explicitly.** State rule priority: "If X and Y conflict, Y takes precedence."
-- **Specify every edge case.** Do not assume the reader will infer behavior for "unusual" inputs.
-- **Prohibit undesired behavior by name.** Use "Do not X" instead of "Avoid X."
-- **Bind outputs to exact formats.** JSON structure, Markdown heading levels, file paths—be specific.
-- **Defer deterministic formatting to automation.** If tooling enforces formatting, reference it and omit redundant formatting rules.
-- **Use lists, not prose.** Prose hides requirements; lists expose them.
-- **Mark non-negotiable rules with MUST/MUST NOT.** Mark optional behavior with MAY.
-- **Use identical terminology throughout.** Define a term once, then use only that term.
-
-## Personas: Shaping Agent Perspective
-
-**Include a persona whenever the agent's worldview, decision-making framework, or approach to the task should differ materially.**
-
-A persona is an identity that shapes how the agent thinks, what it prioritizes, and how it reasons about problems. It goes beyond listing responsibilities to establishing a point of view.
-
-**Persona format:**
-
-```markdown
-Persona: [identity and background]
-
-You are [specific identity] with [relevant experience]. You approach problems by [characteristic method]. You prioritize [what matters most] and question [what you scrutinize first].
-
-When facing tradeoffs, you choose [decision priority]. You are skeptical of [what you distrust] but trust [what you rely on].
-```
-
-**When to include:**
-
-- The task requires a specific lens or expertise (security first, performance-aware, compliance-driven)
-- The persona questions different assumptions than a generic agent would
-- Different personas would make different tradeoff decisions on the same problem
-
-**When to exclude:**
-
-- The task is independent of perspective or expertise
-- The persona would only change communication style, not reasoning
-- Generic competence is sufficient (no specialized worldview needed)
-
-**Example:**
-
-Persona: Security-first backend architect with 12 years defending OAuth implementations
-
-You are paranoid about token leakage and assume every storage mechanism is under attack until proven otherwise. You approach all design decisions by asking "How is this encrypted at rest, in transit, and when logged?" before considering performance or convenience.
-
-When facing tradeoffs, you choose security hardening over feature velocity. You are skeptical of "we can fix it later" but trust principle-of-least-privilege designs. You demand explicit justification for any decision that touches credentials.
-
-## In-Context Learning Through Examples (Zero/One/Few-Shot Prompting)
-
-Examples teach the agent through demonstration. This is in-context learning (ICL)—showing patterns directly in the prompt so the agent learns from them without retraining.
-
-**Always use examples.** The number and depth of examples determine how precisely the agent follows your task. Select the right "shot" strategy for your task complexity.
-
-### Zero-Shot Prompting (No Examples)
-
-Use zero-shot when the task is unambiguous and relies on the agent's pre-trained knowledge.
-
-**Appropriate for:**
-
-- Simple, well-defined tasks (classification with clear criteria, basic arithmetic, straightforward retrieval)
-- Tasks the agent has frequently encountered during training
-- When you have strict context budget constraints
-
-**Risk:** The agent guesses at format, edge cases, and subtle requirements.
-
-**Example (zero-shot):**
-
-Instruction: Classify this review sentiment as positive, negative, or neutral.
-
-Review: "The product works as advertised."
-
-Expected output: positive
-
-### One-Shot Prompting (Single Example)
-
-Use one-shot to anchor the agent's understanding of your specific task format and style.
-
-**Appropriate for:**
-
-- Tasks requiring specific output format (JSON, Markdown, structured list)
-- Basic classification or extraction where one example clarifies the pattern
-- When the agent struggles with ambiguity but task complexity is low
-- When you need to lock down output style without bloating the prompt
-
-**Effect:** One example dramatically improves format adherence over zero-shot.
-
-**Example (one-shot):**
-
-Instruction: Classify review sentiment as positive, negative, or neutral.
-
-Example:
-
-- Review: "The product broke immediately."
-- Sentiment: negative
-
-Now classify:
-
-- Review: "The product works as advertised."
-- Sentiment: ?
-
-### Few-Shot Prompting (2-5+ Examples)
-
-Use few-shot to establish patterns, demonstrate edge cases, and ensure consistency across varied inputs.
-
-**Appropriate for:**
-
-- Complex tasks with multiple input variations
-- Tasks requiring precise format adherence (JSON structure, specific field order, exact naming)
-- Situations where different inputs need different handling
-- When you need the agent to generalize from patterns
-- Structured information extraction or multi-step transformations
-
-**Effect:** More examples tighten format control and handle edge cases. Diminishing returns after 4-5 examples unless task is very complex.
-
-**Context cost:** Each example consumes tokens. Balance thoroughness against context budget.
-
-**Limitations:** Examples can cause overfitting to shown patterns, especially if examples are too similar or unrepresentative.
-
-**Example (few-shot):**
-
-Instruction: Classify review sentiment as positive, negative, or neutral.
-
-Examples:
-
-- Review: "The product broke immediately." → Sentiment: negative
-- Review: "Works fine, nothing special." → Sentiment: neutral
-- Review: "Best purchase ever!" → Sentiment: positive
-- Review: "Overpriced and slow." → Sentiment: negative
-
-Now classify:
-
-- Review: "The product works as advertised." → Sentiment: ?
-
-### Format Specification with Examples
-
-Examples define output format more reliably than prose descriptions. Use consistent input/output formatting.
-
-**Recommended format structures:**
-
-Short inputs/outputs (one-shot, few-shot):
-
-```markdown
-Input: [value]
-Output: [value]
-```
-
-Or with labels:
-
-```markdown
-Review: "text"
-Sentiment: positive
-```
-
-Longer examples (few-shot information extraction):
-
-```markdown
-INPUT:
-
-[full input content]
-
-OUTPUT:
-
-[full output content]
-```
-
-JSON format specification:
-
-```markdown
-Input: "data"
-Output: {"key": "value"}
-```
-
-### Choosing Your Shot Strategy
-
-| Task Complexity             | Clarity  | Use This       | Why                                                      |
-| --------------------------- | -------- | -------------- | -------------------------------------------------------- |
-| Simple, well-known          | High     | Zero-shot      | No examples needed; agent knows the pattern              |
-| Medium, specific format     | Medium   | One-shot       | One example locks down format expectations               |
-| Complex, varied inputs      | Low      | Few-shot (2-5) | Multiple examples show pattern variations and edge cases |
-| Very complex, many variants | Very low | Few-shot (5+)  | More examples handle edge cases but risk overfitting     |
-
-Example 1: Standard GitHub OAuth flow
-
-INPUT:
-
-Provider: GitHub
-Existing auth: Basic auth in Express middleware
-Environment: staging
-
-OUTPUT:
-
-- Endpoints: POST /auth/oauth/github/callback, GET /auth/login/github
-- Storage: Redis cache, 1-hour TTL
-- Variables: GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_CALLBACK_URL
-
-Example 2: Legacy app, Google OAuth, production
-
-INPUT:
-
-Provider: Google
-Existing auth: None
-Environment: production
-
-OUTPUT:
-
-- Endpoints: POST /auth/oauth/google/callback, GET /auth/login/google
-- Storage: PostgreSQL encrypted column, no TTL (user revocation model)
-- Variables: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CALLBACK_URL
-- Additional: Rate limiting (10 req/min), audit logging, encryption AES-256-GCM
-
-Example 3: Edge case - Azure AD with existing token strategy
-
-INPUT:
-
-Provider: Azure AD
-Existing auth: JWT bearer token in header
-Environment: production
-
-OUTPUT:
-
-- Endpoints: POST /auth/oauth/azure/callback, GET /auth/azure/discovery
-- Storage: In-memory cache with sync to Redis for multi-instance, 30-minute TTL
-- Variables: AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_DISCOVERY_URL
-- Additional: Require refresh token rotation, integrate with existing JWT validation
-
-Now handle this case:
-
-INPUT:
-
-Provider: Okta
-Existing auth: Sessions with cookies
-Environment: staging
-
-OUTPUT:
-
-- Endpoints: POST /auth/oauth/okta/callback, GET /auth/login/okta
-- Storage: In-memory cache, 30-minute TTL (staging), encrypted refresh token only
-- Variables: OKTA_DOMAIN, OKTA_CLIENT_ID, OKTA_CLIENT_SECRET, OKTA_CALLBACK_URL, OKTA_DISCOVERY_URL
-- Additional: Reuse existing session cookies, add logout route to clear session
-
-## Tooling and Environment Constraints
-
-Tooling constraints (part of Step 5: State constraints) define what the agent can and cannot do in terms of tools, files, and commands. These are non-negotiable boundaries that prevent unintended execution or modification.
-
-**Why tooling constraints matter:**
-
-- Models will execute commands if not explicitly forbidden.
-- File modification can cause data loss or corruption if not carefully scoped.
-- Tool access (APIs, libraries, external services) requires explicit authorization.
-- Environment assumptions (database access, credentials, directory structure) must be stated.
-
-**Include tooling constraints when:**
-
-- The task involves any file I/O (read, write, delete, modify)
-- The agent could execute shell commands or system operations
-- Specific tools, APIs, or libraries are available or forbidden
-- Credentials, API keys, or sensitive environment variables are involved
-- The agent must understand the runtime environment
-
-**Deterministic rules belong in automation:**
-
-- If formatting, ordering, or naming is enforced by a formatter, linter, or hook, state that automation in constraints or assumptions and omit the deterministic rule text from instructions.
-
-**Do not include if:**
-
-- The task is pure reasoning or analysis (no tools needed)
-- The agent operates in a standard, fully-available environment
-
-**Structure tooling constraints using MUST and MUST NOT:**
-
-```markdown
+### Conflict Resolution — MUST Include
+
+When the generated instruction set contains rules that could conflict with each
+other or with other instruction sets, include an explicit conflict resolution
+clause.
+
+**Structure:**
+
+1. Declare rule priority within the instruction set:
+   "If rule X and rule Y conflict, Y takes precedence."
+2. Declare precedence relative to external instruction sets:
+   "If this skill's constraints conflict with workspace-level instructions,
+   [specify which wins]."
+3. Declare a default priority hierarchy:
+   Safety constraints > Correctness constraints > Style constraints.
+
+**Include when:**
+
+- The instruction set contains 5+ constraints, or any two constraints could
+  produce contradictory instructions for the same input
+- The instruction set covers a domain where safety and convenience trade off
+  (security, data handling, deployment)
+- The instruction set will coexist with other active instruction sets
+
+**Example conflict resolution clause:**
+
+~~~markdown
+If constraints in this skill conflict with each other, resolve in this order:
+
+1. Safety and security constraints take precedence over all others.
+2. Correctness constraints take precedence over style constraints.
+3. User requirements override defaults unless they violate a safety MUST or
+   MUST NOT rule.
+~~~
+
+**This skill's own conflict resolution:**
+
+If rules in this skill conflict with each other, resolve in this order:
+
+1. Context budget limits take precedence over section completeness — compress or
+   omit lower-priority sections rather than exceeding the budget.
+2. Automation awareness takes precedence over explicit constraints — defer to
+   tooling rather than restating rules.
+3. Generative specificity takes precedence over thoroughness — omit rules the
+   agent already follows without instruction.
+
+### Automation Awareness — MUST Follow
+
+If a formatter, linter, type checker, or hook already enforces a deterministic
+rule (spacing, import ordering, naming conventions), reference the automation
+and omit the rule text from the instruction set.
+
+**Why:** Duplicating automation-enforced rules creates drift. When the
+automation's configuration changes, the instruction text becomes contradictory.
+Every rule in an instruction set MUST require non-deterministic judgment —
+otherwise it belongs in tooling, not instructions.
+
+- MUST reference the automation tool by name: "Formatting enforced by ruff (do
+  not specify manually)."
+- MUST NOT restate rules that tooling already guarantees.
+- MAY note that automation exists in the Assumptions section.
+
+### Context Budget — MUST Follow
+
+Instructions compete for context window space with the agent's actual task.
+Oversized instructions degrade agent performance by crowding out task-relevant
+information.
+
+Target lengths by feature type:
+
+| Feature Type | Target Length | Rationale |
+| --- | --- | --- |
+| Instructions file | Under 100 lines | Always-on; every line costs tokens on every interaction |
+| Prompt file | Under 150 lines | The prompt itself is the task — keep it focused |
+| Agent skill | 200–600 lines | Loaded on demand when invoked |
+| Complex skill with references | 600+ lines permitted | Reference materials in separate files, loaded conditionally |
+
+This skill exceeds the agent skill target because its examples serve as both
+demonstration and reference material. If a skill's examples or reference content
+push it past 600 lines, extract the excess into a `references/` subdirectory
+and load it conditionally. Reference files use relative Markdown links (e.g.,
+`[see reference](references/example.md)`) and are loaded by the agent when it
+follows the link during skill execution.
+
+When a context budget is specified, prioritize sections in this order
+(most essential first): Constraints > Procedure > Validation > Examples >
+Scope > Inputs > Outputs. The Objective is never cut — it is the shortest
+section and anchors everything.
+
+**Non-obvious rationale.** For rules whose purpose is not self-evident, include
+a brief parenthetical or inline explanation. This helps human maintainers
+understand what would break if the rule were removed or modified, without
+affecting agent execution.
+
+## Procedure
+
+### Adapting by Feature Type
+
+Determine the target feature type BEFORE writing any sections. The 8-section
+template is the complete form for agent skills. Different feature types require
+different depth. Use this table to determine which sections to include,
+compress, or omit:
+
+| Section | Agent Skill | Instructions File | Prompt File | Custom Agent |
+| --- | --- | --- | --- | --- |
+| Objective | Full | 1 sentence | 1 sentence | Full |
+| Scope | Full (in/out lists) | Brief or omit | Brief or omit | Full |
+| Inputs | Full | Omit (always-on) | Variables only | Full |
+| Outputs | Full | Omit (modifies behavior) | Full | Full |
+| Constraints | Full | Full — high density | Brief | Full |
+| Procedure | Full (numbered) | Omit or minimal | Numbered steps | Full |
+| Validation | Full (pass/fail) | Checklist format | Brief | Full |
+| Examples | 1–5 complete | 0–1 brief inline | 1–2 with variables | 1–3 |
+
+**Key differences:**
+
+- **Instructions files** are always-on context injected into every request.
+  Maximize constraint density per line. Omit sections that add length without
+  constraining behavior. Every line costs tokens on every interaction.
+- **Prompt files** are user-triggered templates. Focus on the procedure and
+  expected output format. Use variable interpolation (e.g., `${input}`) instead
+  of a formal Inputs section.
+- **Agent skills** are the most complete form. All 8 sections apply.
+- **Custom agents** need identity-defining constraints, tool access
+  declarations, and explicit behavioral boundaries in addition to the standard
+  sections.
+
+Each of the following eight steps produces one section of the output template.
+Execute all eight steps in order. Omitting any step produces incomplete
+instructions. Each step builds on the prior step's output — the sequence is a
+dependency chain, not a suggestion.
+
+Frontmatter (name, description, optional flags) is platform metadata, not a
+template section. Write it after completing the 8 steps. For valid fields and
+platform-specific requirements, see the
+[copilot-features](../copilot-features/SKILL.md) skill.
+
+### Step 1 — Set the Objective
+
+Write exactly one sentence stating the measurable outcome.
+
+- The sentence MUST begin with a verb (e.g., "Produce…", "Generate…",
+  "Validate…", "Implement…").
+- The sentence MUST state what the instruction set achieves, not what the agent
+  does during execution.
+- Do not include implementation details — those belong in the Procedure.
+
+### Step 2 — Define Scope
+
+- List every explicit in-scope item (what IS included).
+- List every explicit out-of-scope item (what IS NOT included).
+- Default scope to nothing; add only what is explicitly allowed.
+- If a related skill or instruction set covers an adjacent topic, reference it
+  in the out-of-scope list: "Feature type selection is out of scope — use the
+  copilot-features skill."
+
+### Step 3 — List Inputs
+
+- Enumerate required inputs with type and format.
+- Enumerate optional inputs with default values and their effect when provided.
+- State all assumptions about the environment, prior state, or available
+  tooling.
+
+### Step 4 — Specify Outputs
+
+- Prescribe exact output format (JSON, Markdown, file path, etc.).
+- Name every file or artifact produced.
+- Include formatting rules only when no automation enforces them; otherwise
+  reference the automation and omit formatting details.
+
+### Step 5 — State Constraints
+
+- Declare safety and security constraints.
+- Declare style, tone, and formatting constraints.
+- Declare tool usage, time, and resource constraints.
+- Use MUST and MUST NOT for rules; use MAY for options.
+- Include a conflict resolution clause when the instruction set contains 5+
+  constraints, any two constraints could conflict, or the skill will coexist
+  with other instruction sets.
+- Separate tooling constraints from behavioral constraints.
+
+**Multi-mode constraints.** If the skill's domain has fundamentally different
+output forms (e.g., a full project scaffold vs. a single-file script, or a
+comprehensive review vs. a quick check), define named modes with separate
+constraint sets for each. Share global constraints across modes; specialize
+per-mode constraints only where behavior differs. Mode selection MUST be an
+explicit input, not inferred by the agent.
+
+**Tooling constraints** define what the agent can and cannot do in terms of
+tools, files, and commands. Include when the task involves file I/O, command
+execution, or tool access.
+
+~~~markdown
 Constraints:
-
-- MUST [action required for safety/correctness]
-- MUST NOT [action strictly forbidden]
-- MAY [action allowed but optional]
-
-Examples:
 
 - MUST NOT modify original source files; only provide diffs or new files.
 - MUST NOT execute commands; provide them as copy-paste blocks.
 - MUST reuse existing utility functions instead of reimplementing.
 - MAY access read-only database backups.
-```
+~~~
 
-**Real example from OAuth Implementation Plan:**
+**Environment assumptions** are declarative, not constraints. State them in the
+Inputs section:
 
-```markdown
-Constraints:
-
-- MUST NOT edit files; only provide code snippets and file changes.
-- MUST NOT run commands; only provide shell commands that could be run.
-- MUST reuse existing auth patterns in the codebase when applicable.
-- MUST include security justification for token storage decisions.
-- MUST specify all environment variables needed for the provider.
-```
-
-**Environment assumptions (declarative, not constraints):**
-
-When the agent needs to know about the environment, state assumptions explicitly in the Inputs section:
-
-```markdown
+~~~markdown
 Assumptions:
 
 - Project uses Express.js (not Django or FastAPI).
 - Secrets are managed via environment variables (not config files).
-- PostgreSQL or similar relational database is available.
 - Runtime has Node.js 18+ installed.
-- Docker is not available for deployment.
-```
+~~~
 
-## Validation Checklist (Apply Before Submitting Instructions)
+### Step 6 — Write the Procedure
+
+Procedure writing is where most instruction sets fail. Vague steps, missing
+decision points, and implicit dependencies produce instructions the agent cannot
+follow reliably.
+
+- Number every step sequentially.
+- Include decision points as explicit if/then rules.
+- Do not use "consider" or "think about" — command action.
+- Reference specific files, functions, or artifacts — not "do the thing."
+- State the dependency between steps: if Step 4 requires output from Step 2,
+  say so.
+- Include the expected outcome of each step (what the agent should have produced
+  after completing it).
+
+**Anti-pattern — The Vague Step:**
+
+- Weak: "3. Set up the database."
+- Strong: "3. Create the `users` table with columns: `id` (UUID primary key),
+  `email` (unique, not null), `created_at` (timestamp). File:
+  `migrations/001_create_users.sql`."
+
+**Procedure template for each step:**
+
+Each step MUST include an action verb, a specific target, and a completion
+indicator. Use the pattern: "[Action verb] [specific target] [in/at location].
+[Expected result or output artifact.]"
+
+### Step 7 — Define Validation
+
+- Specify exactly how to verify correctness.
+- Include both pass conditions and failure handling.
+- Name what fails the validation.
+- Make every check binary (pass/fail), not qualitative ("is it clear enough?").
+
+### Step 8 — Add Examples and Personas
+
+#### Personas
+
+Place the persona after the Constraints section and before the Examples section
+(or, for instruction sets without examples, at the end). The persona is not one
+of the 8 template sections — it is an optional enhancement that modifies how the
+agent interprets the other sections.
+
+Include a persona when the agent's worldview, decision-making framework, or
+approach to the task must differ from generic competence. Test: if two equally
+qualified agents would reach the same conclusion regardless of perspective, a
+persona adds no value.
+
+**Include when:**
+
+- The task requires a specific lens (security-first, performance-aware,
+  compliance-driven)
+- The persona questions different assumptions than a generic agent would
+- Different personas would make different tradeoff decisions on the same problem
+
+**Exclude when:**
+
+- The task is procedural and independent of perspective
+- The persona would only change communication style, not reasoning
+- Generic competence is sufficient
+
+**Persona format:**
+
+~~~markdown
+Persona: [identity and background]
+
+You are [specific identity] with [relevant experience]. You approach problems
+by [characteristic method]. You prioritize [what matters most] and question
+[what you scrutinize first].
+
+When facing tradeoffs, you choose [decision priority]. You are skeptical of
+[what you distrust] but trust [what you rely on].
+~~~
+
+**Example:**
+
+Persona: Security-first backend architect with 12 years defending OAuth
+implementations
+
+You are paranoid about token leakage and assume every storage mechanism is
+under attack until proven otherwise. You approach all design decisions by asking
+"How is this encrypted at rest, in transit, and when logged?" before addressing
+performance or convenience.
+
+When facing tradeoffs, you choose security hardening over feature velocity.
+You are skeptical of "we can fix it later" but trust principle-of-least-
+privilege designs. You demand explicit justification for any decision that
+touches credentials.
+
+Persona details (years, titles) are illustrative; adapt them to the task.
+
+#### Example Strategy
+
+Select the right strategy for the instruction set's complexity:
+
+| Task Complexity | Clarity | Strategy | Why |
+| --- | --- | --- | --- |
+| Simple, well-known | High | Zero-shot (no examples) | Agent knows the pattern; examples waste context |
+| Medium, specific format | Medium | One-shot (1 example) | One example locks down format expectations |
+| Complex, varied inputs | Low | Few-shot (2–5 examples) | Multiple examples show pattern variations and edge cases |
+| Very complex, many variants | Very low | Few-shot (5+) | More examples handle edge cases but risk overfitting |
+
+**Rules for examples:**
+
+- Provide minimum one example per input variation.
+- Examples MUST show realistic, complete input and output — not placeholders or
+  ellipsis.
+- Include at least one edge case or variant.
+- Use consistent input/output formatting across all examples.
+- Each example consumes tokens. Balance thoroughness against context budget.
+- Graduated complexity (simple → medium → edge case) teaches patterns more
+  effectively than random ordering.
+
+## Validation
+
+Apply this checklist before finalizing any instruction set. Items marked
+**CRITICAL** catch errors that make the instruction set unreliable. Items marked
+**IMPORTANT** improve quality. Items marked **POLISH** are refinements.
 
 ### Section Completeness
 
-- [ ] Objective: Single sentence, begins with a verb, states measurable outcome.
-- [ ] Scope: Explicit in-scope list and explicit out-of-scope list (not empty by default).
-- [ ] Inputs: Required inputs with type/format, optional inputs with effects, all assumptions stated.
-- [ ] Outputs: Exact format specified (JSON/Markdown/file path), file names and artifacts named, formatting rules included only when no automation enforces them.
-- [ ] Constraints: Safety, security, style, tone, tool usage, and resource constraints all declared.
-- [ ] Procedure: Steps numbered sequentially, decision points as explicit if/then rules, no vague action verbs.
-- [ ] Validation: Pass conditions, failure handling, and named failure modes specified.
-- [ ] Examples: Minimum one per input variation, complete with actual values, realistic, includes edge cases.
+- **CRITICAL:** Objective exists — single sentence, begins with a verb, states
+  measurable outcome.
+- **CRITICAL:** Scope contains both an in-scope list and an out-of-scope list.
+- **CRITICAL:** Constraints use MUST / MUST NOT for rules and MAY for options.
+- **IMPORTANT:** Inputs enumerate required inputs with type/format, optional
+  inputs with defaults, and all environment assumptions.
+- **IMPORTANT:** Outputs specify exact format, name every artifact, and include
+  formatting rules only when no automation enforces them.
+- **IMPORTANT:** Procedure numbers steps sequentially with decision points as
+  explicit if/then rules — no vague action verbs.
+- **IMPORTANT:** Validation specifies both pass conditions and named failure
+  modes.
+- **IMPORTANT:** Examples include minimum one complete input/output per input
+  variation, with at least one edge case.
 
 ### Language and Precision
 
-- [ ] No vague words remain ("nice," "robust," "appropriate," "consider," "might," "good," "reasonable," "likely").
-- [ ] All action verbs are imperative (validate, generate, extract, compute, not suggest or consider).
-- [ ] Constraints use MUST/MUST NOT for rules, MAY for options.
-- [ ] Threshold-based criteria where required (e.g., "process 10,000 items in under 5 seconds," not "efficient output").
-- [ ] All lists use bullet format; no requirements buried in prose paragraphs.
-- [ ] Decision points use explicit if/then structure ("If X, then Y. If not X, then Z").
-- [ ] Terminology is consistent throughout (same term used same way every time).
+- **CRITICAL:** No banned words remain ("nice," "robust," "appropriate,"
+  "consider," "might," "good," "reasonable," "likely," "avoid").
+- **CRITICAL:** All action verbs are imperative (validate, generate, extract,
+  compute — not suggest, consider, try).
+- **CRITICAL:** Every rule passes the generative specificity test — removing it
+  would change agent behavior. Rules the agent already follows without
+  instruction waste tokens.
+- **IMPORTANT:** Threshold-based criteria where required (e.g., "process 10,000
+  items in under 5 seconds," not "efficient output").
+- **IMPORTANT:** All lists use bullet format — no requirements buried in prose
+  paragraphs.
+- **IMPORTANT:** Decision points use explicit if/then structure.
+- **IMPORTANT:** Terminology is consistent throughout (same term used same way
+  every time).
 
 ### Personas and Examples
 
-- [ ] Personas included if task requires specific worldview or decision-making framework.
-- [ ] Persona format emphasizes identity and perspective, not just role list (includes `You are`, approach, priorities, tradeoffs).
-- [ ] Examples are complete (not placeholders or ellipsis).
-- [ ] Examples show actual values that the agent will encounter.
-- [ ] Examples include at least one edge case or variant.
-- [ ] Few-shot examples used for complex tasks; one-shot for format anchoring; zero-shot only for simple pre-trained tasks.
+- **IMPORTANT:** Personas included if task requires specific worldview or
+  decision-making framework.
+- **IMPORTANT:** Persona format emphasizes identity and perspective, not just
+  role list (includes approach, priorities, tradeoffs).
+- **IMPORTANT:** Examples are complete (not placeholders or ellipsis) with
+  actual values.
+- **POLISH:** Few-shot examples used for complex tasks; one-shot for format
+  anchoring; zero-shot only for simple pre-trained tasks.
 
 ### Constraints and Tooling
 
-- [ ] Tooling constraints declared if task involves file I/O, command execution, or tool access.
-- [ ] Constraints distinguish between MUST NOT (forbidden), MUST (required), and MAY (optional).
-- [ ] Environment assumptions stated in Inputs section, not mixed with constraints.
-- [ ] No rule contradictions (if X is MUST NOT and X also appears as MUST, resolve explicitly).
-- [ ] Conflict resolution clause included if multiple rules could conflict.
-- [ ] Deterministic formatting rules omitted when automation exists; automation referenced instead.
+- **CRITICAL:** Conflict resolution clause included if the instruction set
+  contains 5+ constraints or will coexist with other instruction sets.
+- **IMPORTANT:** Tooling constraints declared if task involves file I/O, command
+  execution, or tool access.
+- **IMPORTANT:** Environment assumptions stated in Inputs section, not mixed
+  with constraints.
+- **IMPORTANT:** No rule contradictions — if X is MUST NOT and X also appears
+  as MUST, resolve explicitly.
+- **POLISH:** Deterministic formatting rules omitted when automation exists;
+  automation referenced instead.
 
 ### Structural Integrity
 
-- [ ] All eight sections present in order: objective → scope → inputs → outputs → constraints → procedure → validation → examples.
-- [ ] No section is missing or empty (except examples can be omitted only if task has single, obvious input).
-- [ ] Procedure references specific files, functions, or artifacts (not generic "do the thing").
-- [ ] Validation includes both pass and fail conditions (not one-sided).
-- [ ] Examples demonstrate the same format/structure shown in Outputs section.
+- **CRITICAL:** All required sections present (see
+  [Adapting by Feature Type](#adapting-by-feature-type) for which sections
+  apply to each type).
+- **CRITICAL:** Every section contains substantive content — no section exists
+  solely to satisfy the template. A section that restates the Objective, echoes
+  the Procedure, or says "N/A" is template-filling, not instruction writing.
+  Either write meaningful content or omit the section per the adaptation table.
+- **IMPORTANT:** Procedure references specific files, functions, or artifacts.
+- **IMPORTANT:** Validation includes both pass and fail conditions.
+- **IMPORTANT:** Every MUST constraint has a corresponding validation check that
+  could confirm compliance.
+- **POLISH:** Examples demonstrate the same format and structure shown in the
+  Outputs section.
 
-## Complete Example: OAuth Implementation Plan
+## Examples
 
-**Objective:** Produce a step-by-step implementation plan for adding OAuth login to an existing Node.js API.
+The following examples demonstrate three feature types. Each shows the template
+adapted to the feature type's depth requirements from the
+[Adapting by Feature Type](#adapting-by-feature-type) table.
 
-**Scope:**
+### Example 1: Agent Skill — OAuth Implementation Plan (Condensed)
+
+This is a condensed overview of the full OAuth example. For the complete
+graduated three-variant demonstration (staging → production → edge-case
+integration), see [references/oauth-example.md](references/oauth-example.md).
+
+~~~~markdown
+---
+name: oauth-implementation-plan
+description: Produce a step-by-step plan for adding OAuth login to a Node.js API.
+---
+
+# OAuth Implementation Plan
+
+## Objective
+
+Produce a step-by-step implementation plan for adding OAuth login to an existing
+Node.js API.
+
+## Scope
 
 In-scope:
 
 - Authentication flow for selected OAuth provider
-- Required endpoints and route definitions
-- Token storage and retrieval strategy
+- Required endpoints, route definitions, token storage strategy
 - Environment configuration and secrets management
 
 Out-of-scope:
 
 - UI/frontend changes
-- Database migrations beyond token storage table
 - Multi-provider OAuth support (one provider only)
 - Refresh token rotation
 
-**Inputs:**
+## Inputs
 
 Required:
 
@@ -495,331 +623,157 @@ Required:
 
 Optional:
 
-- Preferred OAuth library (will suggest default if omitted)
-- Target deployment environment (assumes staging if omitted)
+- Preferred OAuth library (default: suggest one)
+- Target deployment environment (default: staging)
 
-Assumptions:
-
-- Project uses Express.js
-- Secrets are managed via environment variables (not hardcoded)
-- PostgreSQL or similar for persistent token storage
-
-**Outputs:**
-
-Format: Markdown document titled "OAuth Implementation Plan"
-
-Required sections:
-
-- Overview (one paragraph)
-- Endpoints (table with method, path, and purpose)
-- Token storage (design, TTL, encryption)
-- Configuration (environment variables and either sample .env or secrets manager notes)
-- Implementation steps (numbered, with file names)
-- Testing plan (unit and integration tests)
-- Rollback strategy
-
-**Constraints:**
+## Constraints
 
 - MUST NOT edit files; only provide code snippets and file changes.
-- MUST NOT run commands; only provide shell commands that could be run.
 - MUST reuse existing auth patterns in the codebase when applicable.
 - MUST include security justification for token storage decisions.
 - MUST specify all environment variables needed for the provider.
 
-**Procedure:**
+If constraints conflict: security justification > codebase reuse > variable
+completeness.
+
+## Procedure
 
 1. Read existing auth modules and identify extension points.
-2. If an OAuth library is already in package.json, plan around that library; otherwise recommend one.
-3. Identify the selected provider's endpoint URLs and required scopes.
-4. Design token storage: table schema, TTL, and encrypted column strategy.
-5. List all required environment variables and document their values (without secrets).
-6. Write numbered implementation steps, naming specific files and functions.
-7. Outline unit tests for token exchange and integration tests for the full flow.
-8. Include a rollback plan (what to delete, what to revert).
+2. If an OAuth library is already in package.json, plan around it; otherwise
+   recommend one.
+3. Design token storage: table schema, TTL, encrypted column strategy.
+4. List all required environment variables (without secrets).
+5. Write numbered implementation steps, naming specific files and functions.
+6. Outline unit and integration tests.
+7. Include a rollback plan (what to delete, what to revert).
 
-**Validation:**
+## Validation
 
-Pass conditions:
+Pass: Plan includes 5+ implementation steps, all env vars documented, token
+storage includes TTL and encryption, rollback plan is explicit.
 
-- Plan includes at least 5 implementation steps.
-- All environment variables are listed and documented.
-- Token storage design includes TTL and encryption strategy.
-- Rollback plan is explicit and reversible.
-- Testing plan covers both happy path and OAuth error responses.
+Fail: Missing endpoint definitions, missing storage strategy, missing env vars,
+vague rollback.
 
-Failure conditions:
+## Persona
 
-- Plan does not include endpoint definitions.
-- Plan does not specify the storage strategy.
-- Plan does not list required environment variables.
-- Rollback plan is missing or vague.
+Persona: Security-hardened backend architect
 
-**Personas:**
+You are paranoid about token exfiltration. You approach all decisions by asking
+"How does an attacker steal this?" before addressing convenience.
+~~~~
 
-Persona: Security-hardened backend architect with 7 years defending OAuth implementations
+### Example 2: Instructions File — Code Review Standards
 
-You are paranoid about token exfiltration and treat every storage mechanism as potentially compromised until cryptographically proven otherwise. You approach all design decisions by asking "How does an attacker steal this?" and "What forensic trail do we leave?" before considering performance or convenience.
+This example demonstrates the instructions file format: maximum constraint
+density, no procedure, no formal inputs (always-on context).
 
-When facing tradeoffs between encryption overhead and feature velocity, you choose hardening every time. You distrust in-memory caches and convenience but trust hardware-backed key storage and immutable audit logs. You demand explicit threat justification for every decision that touches credentials.
+~~~~markdown
+# Code Review Standards
 
-Persona details (years, titles) are illustrative; adapt them to the task.
+Review every pull request against these standards.
 
-**Examples:**
+## Constraints
 
-This section demonstrates few-shot prompting: each example shows complete input and corresponding output so the agent learns the expected structure through demonstration.
+- MUST check for security vulnerabilities before style issues.
+- MUST flag any function over 50 lines as a candidate for extraction.
+- MUST verify error handling exists for every external call (HTTP, database,
+  file I/O).
+- MUST NOT approve PRs with TODO comments in production code paths.
+- MUST NOT comment on formatting — Prettier enforces formatting.
+- MAY suggest performance improvements when complexity exceeds O(n²).
 
-Example 1: Staging environment, existing Basic auth, GitHub provider
+If security and style constraints conflict, security takes precedence.
 
-INPUT:
+## Validation
 
-- Repository: github.com/company/api-service
-- Existing auth: Basic auth middleware in routes/auth/basic.js
-- Provider: GitHub
-- Environment: staging (non-production)
+- [ ] Every external call has error handling
+- [ ] No unresolved security findings
+- [ ] No TODO comments in production paths
+- [ ] Comments address substance, not formatting
+~~~~
 
-OUTPUT:
+### Example 3: Prompt File — Bug Report Triage
 
-````markdown
-# OAuth Implementation Plan: GitHub
+This example demonstrates the prompt file format: self-contained, variable
+interpolation, focused on procedure and output format.
 
-## Overview
+~~~~markdown
+---
+mode: agent
+description: Triage a bug report and produce a structured analysis.
+---
 
-Add GitHub OAuth to replace Basic auth in staging environment. GitHub provides delegated authentication, reducing credential exposure. Staging environment permits simplified token storage (in-memory cache with persistence).
+# Bug Report Triage
 
-## Endpoints
+Analyze the following bug report and produce a structured triage.
 
-| Method | Path                 | Purpose                  |
-| ------ | -------------------- | ------------------------ |
-| GET    | /auth/login/github   | Initiate OAuth flow      |
-| GET    | /auth/oauth/callback | GitHub callback receiver |
-| POST   | /auth/logout         | Clear session and revoke |
+Bug report: ${input}
 
-## Token Storage
+## Procedure
 
-- **Table**: `oauth_sessions` (new)
-- **Columns**:
-  - `user_id` (foreign key to users)
-  - `provider` (text: "github")
-  - `access_token` (text, encrypted)
-  - `expires_at` (timestamp)
-- **TTL**: 1 hour (auto-cleanup via scheduled job)
-- **Encryption**: AES-256-GCM with `GITHUB_TOKEN_KEY` from environment
-- **Rationale**: Staging environment; production-grade encryption not required, but encrypted at rest follows principle-of-least-surprise
+1. Identify the reported symptom (what the user observed).
+2. Identify the expected behavior (what the user wanted).
+3. Classify severity: P0 (data loss/security), P1 (broken feature), P2
+   (degraded experience), P3 (cosmetic).
+4. List reproduction steps if provided; flag "needs reproduction steps" if not.
+5. Identify the most likely affected component from the codebase.
+6. Recommend immediate next action.
 
-## Environment Variables
+## Output Format
 
-Required in .env:
+| Field | Value |
+| --- | --- |
+| Symptom | [one sentence] |
+| Expected | [one sentence] |
+| Severity | [P0–P3 with justification] |
+| Repro steps | [numbered list or "needs reproduction steps"] |
+| Component | [file or module path] |
+| Next action | [specific action verb + target] |
+~~~~
 
-```bash
-GITHUB_CLIENT_ID=your_client_id
-GITHUB_CLIENT_SECRET=your_client_secret
-GITHUB_CALLBACK_URL='http://localhost:3000/auth/oauth/callback'
-GITHUB_TOKEN_KEY=32-byte-base64-encoded-key
-```
+### Example 4: Custom Agent — Documentation Reviewer
 
-## Implementation Steps
+This example demonstrates the custom agent format: identity-defining
+constraints, tool access declarations, and behavioral boundaries.
 
-1. Create oauth_sessions table: `migrations/20260203_create_oauth_sessions.sql`
-2. Install library: `npm install passport-github2`
-3. Create GitHub strategy: `lib/auth/github-strategy.js`
-4. Add OAuth routes: `routes/auth/github.js`
-5. Update middleware stack in app.js to use Passport authentication
-6. Replace Basic auth header validation with Passport session check
-7. Add .env.example with required variables (no secrets)
-
-## Testing Plan
-
-- Unit: Token encryption/decryption works with `GITHUB_TOKEN_KEY`
-- Integration: GET /auth/login/github → redirect to GitHub → callback → session created → user authenticated
-- Error: Invalid callback code → 401 response
-- Error: Missing `GITHUB_CLIENT_SECRET` → startup fails with clear error
-
-## Rollback Plan
-
-If OAuth causes issues:
-
-1. Restore routes/auth/basic.js from git
-2. Revert app.js middleware changes
-3. Delete oauth_sessions table: `DROP TABLE oauth_sessions;`
-4. Redeploy previous version
-````
-
-Example 2: Production environment, no existing auth, Google provider (conservative approach)
-
-INPUT:
-
-- Repository: internal-tools (private)
-- Existing auth: None
-- Provider: Google
-- Environment: production (must be hardened)
-
-OUTPUT:
-
-````markdown
-# OAuth Implementation Plan: Google
-
-## Overview
-
-Implement Google OAuth as primary authentication for internal tools. Production environment requires encrypted token storage, audit logging, and rate limiting.
-
-## Endpoints
-
-| Method | Path                 | Purpose                           |
-| ------ | -------------------- | --------------------------------- |
-| GET    | /auth/login/google   | Initiate OAuth flow               |
-| GET    | /auth/oauth/callback | Google callback receiver          |
-| POST   | /auth/logout         | Revoke token and clear session    |
-| GET    | /auth/status         | Check current session (debugging) |
-
-## Token Storage
-
-- **Table**: oauth_tokens (production-hardened)
-- **Columns**:
-  - `id` (UUID primary key)
-  - `user_id` (foreign key, with audit logging on access)
-  - `provider` (enum: "google")
-  - `access_token` (encrypted with rotating key)
-  - `refresh_token` (encrypted, stored separately from access_token)
-  - `token_expires_at` (timestamp)
-  - `last_accessed` (timestamp, updated on each request)
-  - `created_at`, `updated_at` (for audit trail)
-- **TTL**: None (user revocation model; manually deleted on logout)
-- **Encryption**: AES-256-GCM with key from AWS KMS (not environment variable)
-- **Audit**: Log all token access (not content, only timestamp/user/action) to separate `audit_log` table
-
-## Environment Variables
-
-Required in production secrets manager:
-
-```bash
-GOOGLE_CLIENT_ID=your-client-id
-GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_CALLBACK_URL='https://internal-tools.company.com/auth/oauth/callback'
-GOOGLE_DISCOVERY_URL='https://accounts.google.com/.well-known/openid-configuration'
-KMS_KEY_ID=arn:aws:kms:us-east-1:123456:key/...
-RATE_LIMIT_TOKENS=10
-RATE_LIMIT_WINDOW_MINUTES=1
-```
-
-## Implementation Steps
-
-1. Create `oauth_tokens` table (with encryption column support): `migrations/20260203_oauth_tokens.sql`
-2. Create `audit_log` table for token access: `migrations/20260203_audit_log.sql`
-3. Install libraries: `npm install passport-google-oauth20 aws-sdk`
-4. Create Google strategy with discovery: `lib/auth/google-strategy.js`
-5. Create token encryption utility: `lib/auth/token-cipher.js` (uses KMS for key rotation)
-6. Create rate limiter middleware: `middleware/rate-limit-oauth.js`
-7. Add OAuth routes with audit logging: `routes/auth/google.js`
-8. Add audit logging on every token access: middleware in auth check
-9. Wire Passport into Express, replacing any existing session handling
-
-## Testing Plan
-
-- Unit: Token encryption with KMS key rotation works
-- Unit: Rate limiter blocks after 10 requests/minute
-- Integration: GET /auth/login/google → redirect → callback → token stored encrypted → user session created
-- Integration: Token access logged to `audit_log` table
-- Error: Invalid `GOOGLE_CLIENT_SECRET` → startup fails immediately
-- Error: KMS key unavailable → 503 Service Unavailable (not 500 Internal Error)
-- Error: Rate limit exceeded → 429 Too Many Requests
-
-## Rollback Plan
-
-If OAuth must be disabled:
-
-1. Set `GOOGLE_CLIENT_ID` to empty string (disables all Google routes)
-2. Revert to previous auth method (or maintenance mode)
-3. DO NOT delete `oauth_tokens` or `audit_log` (retain for forensics)
-4. Export `oauth_tokens` and `audit_log` to S3 backup
-5. Notify security team of rollback and audit log status
-````
-
-Example 3: Edge case—Okta with existing JWT token strategy (multi-tenant, complex)
-
-INPUT:
-
-- Repository: internal-api (existing Express with JWT middleware)
-- Existing auth: JWT bearer tokens in Authorization header
-- Provider: Okta
-- Environment: production (must integrate with existing JWT flow)
-
-OUTPUT:
-
-````markdown
-# OAuth Implementation Plan: Okta
-
-## Overview
-
-Integrate Okta as OAuth provider without breaking existing JWT token flow. Okta will issue JWT tokens; application continues to validate existing JWT schema. This enables gradual migration from custom auth to Okta-managed auth.
-
-## Endpoints
-
-| Method | Path                 | Purpose                             |
-| ------ | -------------------- | ----------------------------------- |
-| GET    | /auth/login/okta     | Initiate Okta OAuth flow            |
-| GET    | /auth/oauth/callback | Okta callback receiver              |
-| POST   | /auth/logout         | Revoke Okta token and clear session |
-| GET    | /auth/discovery      | Okta OIDC discovery endpoint        |
-
-## Token Storage
-
-- **Table**: `oauth_sessions` (minimal; Okta tokens live in Okta, not our database)
-- **Columns**:
-  - `user_id`
-  - `provider` (text: "okta")
-  - `okta_user_id` (external reference)
-  - `refresh_token` (encrypted, short-lived)
-  - `session_created_at`
-- **TTL**: 30 minutes (sessions only; Okta manages token lifetime)
-- **Encryption**: AES-256-GCM (refresh token only; access tokens validated server-side only)
-- **Rationale**: Okta as authority; we validate tokens, not store them. Reduce token storage attack surface.
-
-## Environment Variables
-
-Required:
-
-```bash
-OKTA_DOMAIN=company.okta.com
-OKTA_CLIENT_ID=your-client-id
-OKTA_CLIENT_SECRET=your-client-secret
-OKTA_CALLBACK_URL='https://api.company.com/auth/oauth/callback'
-OKTA_DISCOVERY_URL='https://company.okta.com/.well-known/openid-configuration'
-```
-
-## Implementation Steps
-
-1. Create `oauth_sessions` table (minimal schema): `migrations/20260203_oauth_sessions.sql`
-2. Install: `npm install @okta/okta-sdk-nodejs passport-openidconnect`
-3. Create Okta OIDC strategy: `lib/auth/okta-oidc-strategy.js`
-4. Create token validator (validates Okta-issued tokens): `lib/auth/okta-token-validator.js`
-5. Update JWT middleware to accept Okta-issued JWTs: `middleware/jwt-validator.js`
-6. Add Okta OAuth routes: `routes/auth/okta.js`
-7. Add discovery endpoint that returns Okta's OIDC metadata: `routes/auth/discovery.js`
-8. Test existing JWT tokens still work (backward compatibility)
-
-## Testing Plan
-
-- Unit: Token validator accepts valid Okta JWTs
-- Unit: Token validator rejects expired tokens
-- Integration: Existing JWT tokens continue to authenticate
-- Integration: GET /auth/login/okta → redirect to Okta → callback → Okta JWT validated → session created
-- Integration: /auth/discovery returns Okta's OIDC metadata
-- Error: Okta issues token but secret invalid → 401 Unauthorized
-- Error: Okta unreachable (network failure) → 503 Service Unavailable, session stale
-- Compatibility: Old app clients using JWT still work (no breaking change)
-
-## Rollback Plan
-
-If Okta integration must be removed:
-
-1. Comment out Okta routes in routes/auth/okta.js
-2. Remove Okta token validator from JWT middleware (revert to old logic)
-3. Okta sessions and tokens become orphaned but harmless
-4. Existing JWT tokens continue to work (backward compatible)
-5. No database changes needed (`oauth_sessions` just unused)
-````
+~~~~markdown
+---
+name: doc-reviewer
+description: Reviews documentation for accuracy and completeness.
+tools:
+  - name: grep
+  - name: view
+  - name: glob
+---
+
+# Documentation Reviewer
+
+You are a meticulous documentation reviewer who prioritizes technical accuracy
+over stylistic polish. You verify claims against the actual codebase.
+
+## Constraints
+
+- MUST verify every code reference (file path, function name, CLI command)
+  exists in the codebase before approving.
+- MUST flag outdated version numbers or deprecated API references.
+- MUST NOT modify documentation files — report findings only.
+- MUST NOT review code quality; focus exclusively on documentation accuracy.
+- MAY suggest structural improvements when documentation is misleading.
+
+## Behavioral Boundaries
+
+- Respond with a structured findings list, not prose.
+- If a referenced file does not exist, classify as ERROR, not WARNING.
+- If no issues are found, state "No issues found" — do not invent findings.
+~~~~
 
 ## Additional References
 
-- [OpenAI Prompt Engineering Guide](https://platform.openai.com/docs/guides/prompt-engineering)
-- [OpenAI GPT-5 Prompting Guide](https://cookbook.openai.com/examples/gpt-5/gpt-5_prompting_guide)
+- [references/oauth-example.md](references/oauth-example.md) — Complete OAuth
+  agent skill with three graduated input/output variants (staging, production,
+  edge-case integration).
+- [OpenAI Prompt Engineering Guide](https://platform.openai.com/docs/guides/prompt-engineering) —
+  Foundational prompt engineering concepts and best practices.
+- [OpenAI GPT-5 Prompting Guide](https://cookbook.openai.com/examples/gpt-5/gpt-5_prompting_guide) —
+  Model-specific prompting strategies and optimization techniques.
