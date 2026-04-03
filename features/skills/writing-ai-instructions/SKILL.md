@@ -194,14 +194,14 @@ clause.
 
 **Example conflict resolution clause:**
 
-~~~markdown
+```markdown
 If constraints in this skill conflict with each other, resolve in this order:
 
 1. Safety and security constraints take precedence over all others.
 2. Correctness constraints take precedence over style constraints.
 3. User requirements override defaults unless they violate a safety MUST or
    MUST NOT rule.
-~~~
+```
 
 **This skill's own conflict resolution:**
 
@@ -360,25 +360,25 @@ explicit input, not inferred by the agent.
 tools, files, and commands. Include when the task involves file I/O, command
 execution, or tool access.
 
-~~~markdown
+```markdown
 Constraints:
 
 - MUST NOT modify original source files; only provide diffs or new files.
 - MUST NOT execute commands; provide them as copy-paste blocks.
 - MUST reuse existing utility functions instead of reimplementing.
 - MAY access read-only database backups.
-~~~
+```
 
 **Environment assumptions** are declarative, not constraints. State them in the
 Inputs section:
 
-~~~markdown
+```markdown
 Assumptions:
 
 - Project uses Express.js (not Django or FastAPI).
 - Secrets are managed via environment variables (not config files).
 - Runtime has Node.js 18+ installed.
-~~~
+```
 
 ### Step 6 — Write the Procedure
 
@@ -444,7 +444,7 @@ persona adds no value.
 
 **Persona format:**
 
-~~~markdown
+```markdown
 Persona: [identity and background]
 
 You are [specific identity] with [relevant experience]. You approach problems
@@ -453,7 +453,7 @@ by [characteristic method]. You prioritize [what matters most] and question
 
 When facing tradeoffs, you choose [decision priority]. You are skeptical of
 [what you distrust] but trust [what you rely on].
-~~~
+```
 
 **Example:**
 
@@ -586,7 +586,7 @@ This is a condensed overview of the full OAuth example. For the complete
 graduated three-variant demonstration (staging → production → edge-case
 integration), see [references/oauth-example.md](references/oauth-example.md).
 
-~~~~markdown
+````markdown
 ---
 name: oauth-implementation-plan
 description: Produce a step-by-step plan for adding OAuth login to a Node.js API.
@@ -661,14 +661,14 @@ Persona: Security-hardened backend architect
 
 You are paranoid about token exfiltration. You approach all decisions by asking
 "How does an attacker steal this?" before addressing convenience.
-~~~~
+````
 
 ### Example 2: Instructions File — Code Review Standards
 
 This example demonstrates the instructions file format: maximum constraint
 density, no procedure, no formal inputs (always-on context).
 
-~~~~markdown
+````markdown
 # Code Review Standards
 
 Review every pull request against these standards.
@@ -691,14 +691,14 @@ If security and style constraints conflict, security takes precedence.
 - [ ] No unresolved security findings
 - [ ] No TODO comments in production paths
 - [ ] Comments address substance, not formatting
-~~~~
+````
 
 ### Example 3: Prompt File — Bug Report Triage
 
 This example demonstrates the prompt file format: self-contained, variable
 interpolation, focused on procedure and output format.
 
-~~~~markdown
+````markdown
 ---
 mode: agent
 description: Triage a bug report and produce a structured analysis.
@@ -730,14 +730,14 @@ Bug report: ${input}
 | Repro steps | [numbered list or "needs reproduction steps"] |
 | Component | [file or module path] |
 | Next action | [specific action verb + target] |
-~~~~
+````
 
 ### Example 4: Custom Agent — Documentation Reviewer
 
 This example demonstrates the custom agent format: identity-defining
 constraints, tool access declarations, and behavioral boundaries.
 
-~~~~markdown
+````markdown
 ---
 name: doc-reviewer
 description: Reviews documentation for accuracy and completeness.
@@ -766,7 +766,7 @@ over stylistic polish. You verify claims against the actual codebase.
 - Respond with a structured findings list, not prose.
 - If a referenced file does not exist, classify as ERROR, not WARNING.
 - If no issues are found, state "No issues found" — do not invent findings.
-~~~~
+````
 
 ## Additional References
 

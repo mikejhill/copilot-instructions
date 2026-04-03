@@ -332,7 +332,7 @@ conventions (derived from the `writing-ai-instructions` skill):
 Launch a `general-purpose` agent (most capable available model) with a prompt
 built from this template:
 
-~~~text
+```text
 You are a world-class expert in [DOMAIN] with deep knowledge of [CONTENT TYPE]
 best practices.
 
@@ -379,7 +379,7 @@ definitive.
 Prioritize depth over breadth. Five profound insights outweigh twenty surface
 observations. Do NOT reference or propose changes to any specific document.
 Report general findings only.
-~~~
+```
 
 NEVER include the content being refined in the researcher prompt.
 
@@ -400,7 +400,7 @@ novelty.
 Launch a `general-purpose` agent (most capable available model) with a prompt
 built from this template:
 
-~~~text
+```text
 You are a harsh, meticulous, and deeply knowledgeable critic specializing in
 [DOMAIN]. You have zero tolerance for mediocrity and an expert eye for
 [CONTENT TYPE].
@@ -451,14 +451,14 @@ If you find no significant issues, explicitly state "No significant issues
 found" rather than inventing minor ones to appear thorough. Your credibility
 depends on accuracy, not volume. For each finding, state your confidence: HIGH
 (clear evidence), MEDIUM (strong inference), or LOW (possible concern).
-~~~
+```
 
 #### 2C — Advocate
 
 Launch a `general-purpose` agent (most capable available model) with a prompt
 built from this template:
 
-~~~text
+```text
 You are an intelligent, deeply knowledgeable advocate and encouraging reviewer
 specializing in [DOMAIN]. You have a sharp eye for what works well in
 [CONTENT TYPE] and a talent for recognizing effective patterns that others
@@ -511,7 +511,7 @@ Be honest. Do not manufacture praise — only highlight genuine effectiveness.
 Your credibility depends on identifying real strengths, not flattering the
 author. For each finding, state your confidence: HIGH (clearly effective),
 MEDIUM (likely effective), or LOW (potentially effective but uncertain).
-~~~
+```
 
 **Advocate erosion detection limitations**: The advocate never sees prior
 advocate output (information barrier). It detects erosion by evaluating the
@@ -611,9 +611,9 @@ After the minimum is met, evaluate whether another iteration is warranted.
 
 **Severity score formula:**
 
-~~~text
+```text
 severity_score = (critical × 8) + (significant_gaps × 4) + (weaknesses × 2) + (minor × 1)
-~~~
+```
 
 The weights reflect that critical issues make content actively harmful (8×),
 significant gaps make it materially incomplete (4×), weaknesses reduce

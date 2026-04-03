@@ -32,6 +32,11 @@
         // Do not require fenced code blocks to declare a language.
         "MD040": false,
 
+        // Enforce backtick code fences (no tildes).
+        "MD048": {
+            "style": "backtick"
+        },
+
         // Disable strict table pipe-spacing style checks.
         "MD060": false
     }

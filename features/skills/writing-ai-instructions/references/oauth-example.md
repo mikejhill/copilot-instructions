@@ -134,7 +134,7 @@ INPUT:
 
 OUTPUT:
 
-~~~~markdown
+````markdown
 # OAuth Implementation Plan: GitHub
 
 ## Overview
@@ -202,7 +202,7 @@ If OAuth causes issues:
 2. Revert app.js middleware changes
 3. Delete oauth_sessions table: `DROP TABLE oauth_sessions;`
 4. Redeploy previous version
-~~~~
+````
 
 Example 2: Production environment, no existing auth, Google provider
 (conservative approach)
@@ -216,7 +216,7 @@ INPUT:
 
 OUTPUT:
 
-~~~~markdown
+````markdown
 # OAuth Implementation Plan: Google
 
 ## Overview
@@ -299,7 +299,7 @@ If OAuth must be disabled:
 3. DO NOT delete `oauth_tokens` or `audit_log` (retain for forensics)
 4. Export `oauth_tokens` and `audit_log` to S3 backup
 5. Notify security team of rollback and audit log status
-~~~~
+````
 
 Example 3: Edge case—Okta with existing JWT token strategy (multi-tenant,
 complex)
@@ -313,7 +313,7 @@ INPUT:
 
 OUTPUT:
 
-~~~~markdown
+````markdown
 # OAuth Implementation Plan: Okta
 
 ## Overview
@@ -396,4 +396,4 @@ If Okta integration must be removed:
 3. Okta sessions and tokens become orphaned but harmless
 4. Existing JWT tokens continue to work (backward compatible)
 5. No database changes needed (`oauth_sessions` just unused)
-~~~~
+````

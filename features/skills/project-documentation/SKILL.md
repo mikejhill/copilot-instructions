@@ -77,7 +77,7 @@ Organize the body with `##` and `###` headings. Apply these rules:
 - **One topic per section.** Each `##` section covers a single concept, procedure, or reference item.
 - **Use lists over prose.** Bullet points and numbered lists are easier to scan than paragraphs.
 - **Use numbered lists for sequential steps.** When order matters (procedures, setup instructions), number the steps.
-- **Use code blocks with language identifiers.** Fence code with triple backticks and specify the language (e.g., ` ```bash `, ` ```typescript `).
+- **Use code blocks with language identifiers.** Fence code with triple backticks and specify the language (e.g., ` ```bash `, ` ```typescript `). Always use backticks, never tildes. When a code block contains inner triple-backtick fences, use four backticks for the outer fence.
 - **Use tables for structured comparisons.** When presenting options, configurations, or field definitions, use Markdown tables.
 - **Link to related docs.** Use relative links to other documentation files rather than duplicating content.
 
