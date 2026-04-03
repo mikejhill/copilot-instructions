@@ -1,25 +1,29 @@
 ---
-name: adversarial-refinement
+name: refinement-tribunal
 description: >-
   Use when iteratively refining text-based content to production quality through
-  parallel dual-agent research and critique cycles with convergence detection.
+  a parallel three-agent tribunal: harsh critic, advocate, and neutral researcher,
+  with convergence detection.
 argument-hint: "[content to refine: file path, inline text, or description]"
 disable-model-invocation: true
 ---
 
-# Adversarial Refinement
+# Refinement Tribunal
 
 Iteratively refine any text-based content to the highest achievable quality
-through parallel dual-agent analysis loops. An independent researcher discovers
-what excellence looks like while an independent critic identifies what falls
-short. The orchestrating agent synthesizes both perspectives and improves the
+through a parallel three-agent tribunal. A harsh critic identifies flaws and
+areas for improvement. An advocate identifies and bolsters effective
+patterns for retention and amplification. A neutral researcher independently
+discovers what excellence looks like, unanchored by the existing text. The
+orchestrating agent synthesizes the tribunal's perspectives and improves the
 content between each cycle.
 
 ## Objective
 
 Bring text-based content to production-ready quality by repeatedly subjecting it
-to independent research and harsh critique, synthesizing findings, and applying
-improvements until diminishing returns are reached.
+to a tribunal of three independent agents — harsh critique, friendly advocacy,
+and neutral research — synthesizing their findings, and applying improvements
+until diminishing returns are reached.
 
 ## Scope
 
@@ -27,9 +31,10 @@ improvements until diminishing returns are reached.
 
 - Refinement of any text-based content: documentation, skills, instructions,
   prompts, specifications, architecture decisions, policies, runbooks, templates
-- Multi-iteration improvement through parallel research–critique cycles
+- Multi-iteration improvement through parallel tribunal cycles
 - Convergence detection and automatic termination
 - Domain-contextualized sub-agent prompt construction
+- Protection of effective elements from erosion across iterations
 
 ### Out-of-Scope
 
@@ -61,14 +66,15 @@ improvements until diminishing returns are reached.
 
 Parse the user's input to identify the content to refine:
 
-1. If the input contains a recognizable file path (contains path separators and
-   a file extension), attempt to read it.
+1. If the input contains a recognizable file reference (has a file extension,
+   with or without path separators), attempt to read it. A bare filename like
+   `README.md` is treated as a file in the current directory.
    - If the file exists, use its contents as the content to refine.
    - If the file does not exist, fail immediately with:
      "File not found: [path]. Provide the content inline or correct the path."
-2. If the input is substantial text (more than 20 words) with no file path,
-   treat it as inline content.
-3. If the input is a short description with no file path and no substantial
+2. If the input is substantial text (approximately 20 or more words) with no
+   file reference, treat it as inline content. Use judgment near the threshold.
+3. If the input is a short description with no file reference and no substantial
    text, fail with: "Provide the content to refine as a file path or inline
    text."
 
@@ -81,7 +87,9 @@ experience") from the content reference before processing.
    review.
 2. **Refinement log** — Per-iteration summary containing:
    - Researcher insights applied (with novelty rate)
-   - Critic findings addressed (with severity distribution)
+   - Harsh critic findings addressed (with severity distribution)
+   - Advocate findings: strengths protected, amplifications applied,
+     advocate-critic conflicts and resolutions
    - Changes made and whether each was clear-cut or a judgment call
    - Remaining concerns (if any)
 3. **Convergence rationale** — Why the process stopped: convergence reached, or
@@ -93,29 +101,36 @@ experience") from the content reference before processing.
 
 ### Information Barriers — MUST Enforce
 
-These barriers are the mechanism that makes dual-agent refinement produce
-stronger results than self-review. Violating them collapses the technique into a
-weaker single-perspective analysis.
+These barriers are the mechanism that makes tribunal refinement produce stronger
+results than self-review. Violating them collapses the technique into a weaker
+single-perspective analysis.
 
 | Agent | MUST receive | MUST NOT receive |
 | --- | --- | --- |
-| Researcher | Topic, domain, content type, target audience, iteration number | Existing content, orchestrator's opinions, critic's output |
-| Critic | Current content version, domain context, iteration number | Orchestrator's self-assessment, improvement plans, researcher's output |
+| Researcher | Topic, domain, content type, target audience, iteration number | Existing content, orchestrator's opinions, other agents' output |
+| Harsh Critic | Current content version, domain context, iteration number | Orchestrator's self-assessment, improvement plans, other agents' output |
+| Advocate | Current content version, domain context, iteration number | Orchestrator's self-assessment, improvement plans, other agents' output |
 
 **Why the researcher never sees the content**: The researcher's value comes from
 independently discovering what excellence looks like, unanchored by the existing
 text. Showing the content causes anchoring bias — the researcher gravitates
 toward confirming what already exists rather than imagining what could exist.
 
-**Why the critic never sees the orchestrator's framing**: The critic's value
-comes from evaluating the content on its own merits. Knowing what the
+**Why the harsh critic never sees the orchestrator's framing**: The critic's
+value comes from evaluating the content on its own merits. Knowing what the
 orchestrator thinks is strong or weak biases which issues get surfaced.
+
+**Why the advocate never sees the orchestrator's framing**: The advocate must
+independently assess what is effective. If the advocate knows which elements the
+orchestrator already values, the advocate's assessment collapses into
+confirmation of the orchestrator's existing beliefs rather than independent
+validation.
 
 ### Model Selection — MUST Follow
 
-- Both sub-agents MUST use a high-capability model. The quality ceiling of
+- All three sub-agents MUST use a high-capability model. The quality ceiling of
   refinement is bounded by the reasoning depth of the sub-agents.
-- Use `general-purpose` agent type for both sub-agents.
+- Use `general-purpose` agent type for all three sub-agents.
 - **Preferred**: Opus-tier or equivalent top-tier model (e.g.,
   `claude-opus-4.6`).
 - **Acceptable fallback**: If the preferred tier is unavailable (rate-limited,
@@ -126,7 +141,7 @@ orchestrator thinks is strong or weak biases which issues get surfaced.
 
 ### Parallel Execution — SHOULD Follow
 
-- The researcher and critic within each iteration are independent by design
+- All three tribunal agents within each iteration are independent by design
   (information barriers guarantee this). Launch them in parallel to minimize
   wall-clock time.
 - Do NOT parallelize across iterations. Each iteration's synthesis MUST complete
@@ -138,25 +153,62 @@ The orchestrator's synthesis step is where the majority of refinement value is
 created or destroyed. Sub-agent quality matters, but the orchestrator's judgment
 in reconciling and applying findings determines the outcome.
 
+**Processing order:**
+
+Process each agent's output in this specific order to prevent cognitive
+anchoring:
+
+1. **Researcher first** — Provides unanchored domain knowledge. Note which
+   findings suggest genuine gaps or improvements.
+2. **Advocate second** — Establishes which elements are effective. Build the
+   **protection list** (standout strengths that MUST be preserved) and the
+   **amplification list** (high-impact elements to push further). Reading the
+   advocate before the harsh critic prevents the orchestrator from entering a
+   "fix everything" mindset that erodes effective elements.
+3. **Harsh critic third** — With the protection list in mind, evaluate each
+   finding. Flag any finding that targets a protected element for conflict
+   resolution.
+
+Only AFTER evaluating each agent's output in isolation, cross-reference for
+reinforcement and conflicts.
+
+**Why the advocate exists in the tribunal:**
+
+Without the advocate, iterative harsh critique systematically strips
+personality, voice, and effective unconventional choices from content — a form
+of regression to the mean. The advocate identifies what works so the
+orchestrator can protect it. This is not optional: the advocate is a structural
+corrective to the harsh critic's erosive pressure.
+
+**Advocate-critic conflict resolution:**
+
+When the harsh critic recommends changing an element the advocate identified as
+a standout strength:
+
+- If the critic's finding is CRITICAL (severity 8): the orchestrator MUST find
+  a way to fix the critical issue while preserving the strength. If preservation
+  is impossible, document why and accept the strength loss.
+- If the critic's finding is below CRITICAL (significant gap, weakness, or
+  minor): the burden of proof is on
+  the critic. Prefer the advocate's assessment unless the critic's evidence is
+  compelling and specific. Protected elements are sticky — they require strong
+  evidence to weaken.
+
 **Anti-bias protocol:**
 
-- Process researcher findings FIRST, in isolation. Note which findings suggest
-  genuine gaps or improvements. Then process critic findings independently.
-  Only AFTER evaluating each set in isolation, cross-reference for
-  reinforcement.
-- Document which synthesis decisions were clear-cut (both agents agree, or
+- Document which synthesis decisions were clear-cut (multiple agents agree, or
   evidence is unambiguous) vs. judgment calls (orchestrator chose between
   conflicting or ambiguous signals). This transparency enables the user to
   audit decisions.
 
 **Anti-pattern avoidance:**
 
-- **Synthesis-by-averaging**: Do NOT take the middle ground between researcher
-  and critic when they conflict. Instead, identify the underlying concern behind
-  each recommendation and ask: "Is there a solution that addresses BOTH concerns
+- **Synthesis-by-averaging**: Do NOT take the middle ground between agents when
+  they conflict. Instead, identify the underlying concern behind each
+  recommendation and ask: "Is there a solution that addresses ALL concerns
   simultaneously?" Only if genuine synthesis is impossible, choose the position
-  with stronger evidence. Averaging dilutes both perspectives and produces
-  mediocre output. True synthesis creates something that transcends both inputs
+  with stronger evidence. Averaging dilutes all perspectives and produces
+  mediocre output. True synthesis creates something that transcends all inputs
   rather than splitting the difference.
 - **Anchored revision trap**: Do NOT limit changes to line-level edits of the
   prior version. If findings suggest structural reorganization, section
@@ -166,23 +218,31 @@ in reconciling and applying findings determines the outcome.
   cause the artifact to drift from its original intent without any single step
   being wrong. Re-validate every iteration against the original purpose, target
   audience, and constraints — not just against the prior iteration's version.
+- **Strength erosion**: Over multiple iterations, the harsh critic's pressure
+  can systematically erode effective unconventional elements until the content
+  becomes bland and generic. Use the advocate's protection list to resist this
+  force. If a protected element survives multiple iterations of harsh critique
+  unscathed, it is likely genuinely effective.
 
 **Conflict resolution criteria (in priority order):**
 
-When researcher and critic findings conflict, prefer the finding that:
+When agents' findings conflict, prefer the finding that:
 
 1. Cites a specific, concrete flaw or piece of evidence.
-2. Explains causation (why something fails) rather than correlation (it seems
-   off).
+2. Explains causation (why something fails or succeeds) rather than correlation
+   (it seems off / it seems good).
 3. Proposes a testable, verifiable improvement rather than a subjective opinion.
 
-If both findings meet these criteria equally, prefer the critic (the critic has
-evaluated the actual content; the researcher has not).
+If multiple findings meet these criteria equally, prefer the finding from the
+agent with the most relevant perspective: the critic for content flaws, the
+advocate for content strengths, the researcher for domain practices.
 
 **Change tracking:**
 
 - Track all changes across iterations. Do NOT regress — never re-introduce
   issues fixed in prior iterations.
+- Do NOT weaken or remove elements identified as standout strengths by the
+  advocate unless a CRITICAL issue requires it.
 - Apply the most impactful changes first. Minor polish comes last.
 
 ### Iteration Limits — MUST Follow
@@ -190,18 +250,37 @@ evaluated the actual content; the researcher has not).
 - Minimum iterations: 2. The first iteration nearly always surfaces substantial
   improvements; the second catches issues introduced by the first round of
   changes.
-- Maximum iterations: 5 (hard ceiling). Default: 3.
+- Maximum iterations: 5 (hard ceiling). Default: 3. Beyond 5 iterations,
+  diminishing returns are consistently observed and cumulative context pressure
+  increases the risk of synthesis errors.
 - If the user supplies a custom maximum, clamp it to the range [2, 5].
 
 ### Context Window Awareness — MUST Follow
 
-- Before constructing the critic prompt, estimate whether the full content plus
-  the prompt template plus response headroom fits within the model's context
-  window.
-- If content is too long for a single critic prompt, segment it as described in
-  the Edge Cases section.
+- Before constructing the critic and advocate prompts, estimate whether the
+  full content plus the prompt template plus response headroom fits within the
+  model's context window.
+- If content is too long for a single prompt, segment it as described in the
+  Edge Cases section.
+- Monitor the orchestrator's own context consumption across iterations. The
+  orchestrator holds full content, all three sub-agent outputs, synthesis notes,
+  protection lists, change tracking, and iteration history simultaneously. If
+  orchestrator context pressure becomes a concern, summarize prior iteration
+  details before proceeding.
 - Use content length in tokens (not lines) as the sizing metric. As a rough
   heuristic, one line of dense prose is approximately 30–50 tokens.
+
+### Resource Awareness — SHOULD Follow
+
+- A single invocation generates 3 sub-agent calls per iteration (or 2 if the
+  researcher is dropped). At the default of 3 iterations, expect 7–9 Opus-tier
+  sub-agent calls. With segmented content, the total is:
+  `(segments × 3) + (holistic iterations × 3)`.
+- Before starting the first iteration, briefly inform the user of the expected
+  scope: number of iterations, agents per iteration, and estimated total
+  sub-agent calls.
+- If resource constraints are a concern, the user MAY specify a lower max
+  iterations (minimum 2) or a lower-tier model preference to reduce cost.
 
 ## Procedure
 
@@ -220,27 +299,33 @@ evaluated the actual content; the researcher has not).
 5. If the user specified focus areas, identify which quality dimensions they
    map to. Weight those dimensions above others throughout the process.
 6. If the content references external files (e.g., "See ARCHITECTURE.md"),
-   attempt to read them. Include relevant context in the critic's domain
-   framing. Do NOT pass external file contents to the researcher (information
-   barrier).
+   attempt to read them. Include relevant context in the critic's and
+   advocate's domain framing. Do NOT pass external file contents to the
+   researcher (information barrier).
 7. Record the original purpose statement, audience, and constraints as the
    **intent anchor**. Re-validate against this anchor every iteration to
    prevent semantic drift.
 8. Set the iteration counter to 0.
 
-### Phase 2 — Dual-Agent Launch
+### Phase 2 — Tribunal Launch
 
-Launch both sub-agents simultaneously (parallel). Replace all bracketed
+Launch all three sub-agents simultaneously (parallel). Replace all bracketed
 placeholders with actual values derived from Phase 1.
 
 If the researcher was dropped due to diminishing returns (see 2A), launch only
-the critic. Skip researcher-dependent steps in Phase 3 (steps 2 and 4) and
-treat the researcher novelty rate as 0% in Phase 4.
+the harsh critic and advocate. Skip researcher-dependent steps in Phase 3
+(steps 2 and 5) and treat the researcher novelty rate as 0% in Phase 4.
 
-When constructing sub-agent prompts, use imperative voice, no vague language,
-explicit conditionals, and MUST/MUST NOT/MAY modality (as defined by the
-`writing-ai-instructions` skill, which is the authoritative reference for the
-full set of prompt construction conventions).
+When constructing sub-agent prompts, follow these prompt construction
+conventions (derived from the `writing-ai-instructions` skill):
+
+- Use imperative voice ("Evaluate X" not "You should evaluate X").
+- Ban vague language ("improve", "better", "appropriate") — replace with
+  specific, measurable terms.
+- Use explicit conditionals with clear structure: `[IF condition]: ... [END IF]`.
+- Use MUST/MUST NOT/MAY modality to signal rule strength.
+- Every instruction should be independently testable — an observer should be
+  able to determine whether the agent followed it.
 
 #### 2A — Researcher
 
@@ -300,13 +385,17 @@ NEVER include the content being refined in the researcher prompt.
 
 **Researcher diminishing returns**: The researcher never sees the content, so
 later iterations produce increasingly generic domain knowledge untethered from
-the actual artifact. If the researcher's novelty rate (see Phase 3) drops below
+the actual artifact. This is an inherent tradeoff of the information barrier —
+allowing the researcher to see content would increase relevance but destroy
+independence. The novelty rate mechanism detects the diminishing returns
+downstream. If the researcher's novelty rate (see Phase 3) drops below
 20% in two consecutive iterations, drop the researcher for subsequent iterations
-and run only the critic. This optimization primarily applies when max iterations
-is 4 or higher; at the default of 3, the drop rarely triggers because the
-broad iteration-0 prompt nearly always produces high novelty.
+and run only the harsh critic and advocate. This optimization primarily applies
+when max iterations is 4 or higher; at the default of 3, the drop rarely
+triggers because the broad iteration-0 prompt nearly always produces high
+novelty.
 
-#### 2B — Critic
+#### 2B — Harsh Critic
 
 Launch a `general-purpose` agent (most capable available model) with a prompt
 built from this template:
@@ -364,51 +453,153 @@ depends on accuracy, not volume. For each finding, state your confidence: HIGH
 (clear evidence), MEDIUM (strong inference), or LOW (possible concern).
 ~~~
 
+#### 2C — Advocate
+
+Launch a `general-purpose` agent (most capable available model) with a prompt
+built from this template:
+
+~~~text
+You are an intelligent, deeply knowledgeable advocate and encouraging reviewer
+specializing in [DOMAIN]. You have a sharp eye for what works well in
+[CONTENT TYPE] and a talent for recognizing effective patterns that others
+overlook.
+
+Review this [CONTENT TYPE] with an honest but positive lens. Your role is NOT
+to ignore problems — it is to identify and champion what is genuinely effective:
+
+---
+[INSERT FULL CURRENT CONTENT]
+---
+
+Produce a structured assessment:
+
+1. STANDOUT STRENGTHS — Elements that are exceptionally well-executed and MUST
+   be preserved during any revision. For each: state what works, WHY it works
+   (the underlying principle that makes it effective), and how important it is
+   to preserve this element.
+2. HIGH-IMPACT ELEMENTS — Strong elements that could be pushed even further for
+   greater effect. For each: state what is already working and specifically how
+   to amplify it without breaking what makes it work.
+3. EFFECTIVE PATTERNS — Recurring approaches, structures, or techniques in the
+   content that work well. For each: identify the pattern, explain why it
+   succeeds, and note where it could be applied more broadly in the content.
+4. UNDERAPPRECIATED QUALITIES — Subtle strengths the author may not realize are
+   effective. For each: explain the quality and why it matters to the audience.
+5. OVERALL ASSESSMENT — An honest positive evaluation: what is genuinely
+   excellent about this content, and what is its single greatest asset that MUST
+   be preserved above all else?
+
+[IF focus areas specified]:
+Prioritize the following quality dimensions above all others: [FOCUS AREAS].
+Weight your assessment heavily toward strengths in these dimensions.
+[END IF]
+
+[IF iteration == 0]:
+This is the first review. Evaluate comprehensively — identify both broad and
+subtle strengths across the full content.
+[END IF]
+
+[IF iteration > 0]:
+This is iteration [N] of refinement. Prior iterations may have changed the
+content. Evaluate the CURRENT version on its own merits. If previously
+identified strengths have been weakened or removed, flag this explicitly as
+"STRENGTH EROSION" with HIGH severity. If new strengths emerged from prior
+revisions, note them as new additions.
+[END IF]
+
+Be honest. Do not manufacture praise — only highlight genuine effectiveness.
+Your credibility depends on identifying real strengths, not flattering the
+author. For each finding, state your confidence: HIGH (clearly effective),
+MEDIUM (likely effective), or LOW (potentially effective but uncertain).
+~~~
+
+**Advocate erosion detection limitations**: The advocate never sees prior
+advocate output (information barrier). It detects erosion by evaluating the
+current version independently — missing or obviously weakened elements are
+detectable, but subtle degradation of nuanced qualities may not be. This is an
+inherent tradeoff. The orchestrator SHOULD cross-reference the current
+advocate's protection list with prior iterations' protection lists to catch
+subtle erosion that the advocate alone might miss.
+
 ### Phase 3 — Synthesis
 
-1. Collect outputs from both sub-agents (or critic only if the researcher was
-   dropped).
-2. **Process researcher output** (do this BEFORE reading critic output to
-   prevent the orchestrator from anchoring on the critic's framing). Skip this
-   step if the researcher was dropped.
+1. Collect outputs from all three sub-agents (or harsh critic and advocate only
+   if the researcher was dropped).
+2. **Process researcher output** (do this FIRST to prevent anchoring on content
+   evaluations). Skip this step if the researcher was dropped.
    - For each finding, categorize as: **novel** (not addressed in current
      content), **already addressed**, or **not applicable**.
    - Calculate the researcher novelty rate: `novel / total findings`.
    - Rank novel findings by potential impact on the quality dimensions
      identified in Phase 1 (weight focus-area dimensions 2× if specified).
-3. **Process critic output** (after completing researcher evaluation):
+3. **Process advocate output** (do this SECOND to establish the protection and
+   amplification lists before reading the harsh critique):
+   - Build the **protection list**: all STANDOUT STRENGTHS with HIGH or MEDIUM
+     confidence. These elements MUST NOT be weakened or removed unless a
+     CRITICAL issue from the harsh critic requires it.
+   - Build the **amplification list**: all HIGH-IMPACT ELEMENTS with HIGH or
+     MEDIUM confidence. These are positive change candidates.
+   - Record EFFECTIVE PATTERNS for application elsewhere in the content.
+   - If iteration > 0, check for STRENGTH EROSION flags. If the advocate
+     reports previously identified strengths were weakened, treat as a
+     per-dimension regression signal.
+4. **Process harsh critic output** (do this THIRD, with the protection list in
+   mind):
    - Record the severity distribution: count of critical, significant,
      weakness, and minor findings.
    - Record per-dimension severity: for each quality dimension from Phase 1,
-     note the count and severity of findings that affect it.
-   - For each critical issue and significant gap, draft a specific change.
+     note the count and severity of findings that affect it. When a finding
+     spans multiple dimensions, assign it to the dimension it most directly
+     impacts. If ambiguous, assign to all affected dimensions at the finding's
+     stated severity.
+   - For each finding, check whether it targets a protected element. If so,
+     flag it for advocate-critic conflict resolution (see Synthesis Discipline).
+   - For each critical issue and significant gap NOT targeting a protected
+     element, draft a specific change.
    - For weaknesses, draft changes where they align with researcher findings
      (reinforcement signals high priority).
    - Batch minor issues for a single polish pass.
-4. **Cross-reference** (skip if researcher was dropped): Identify areas where
-   both agents independently flagged the same concern. Treat these as highest
-   priority regardless of individual severity ratings.
-5. **Re-validate against intent anchor**: Before applying changes, re-read the
+5. **Cross-reference** (skip researcher portion if researcher was dropped):
+   Identify areas where multiple agents independently flagged the same concern
+   or strength. Treat findings flagged by all three agents as highest priority.
+   Note the specific combinations:
+   - All three agents agree → highest priority.
+   - Harsh critic + researcher agree → strong signal for a gap or flaw.
+   - Advocate + researcher agree → strong signal for an effective pattern.
+   - Harsh critic + advocate agree on the same element → the element has both
+     strengths and flaws; handle with surgical precision to fix the flaw
+     without destroying the strength.
+6. **Resolve advocate-critic conflicts**: For each flagged conflict from step 4,
+   apply the advocate-critic conflict resolution protocol from the Synthesis
+   Discipline constraint.
+7. **Re-validate against intent anchor**: Before applying changes, re-read the
    original purpose statement, audience, and constraints recorded in Phase 1.
    Verify that the planned changes do not drift from the original intent.
-6. **Retain the current content version** as the rollback target in case
+8. **Retain the current content version** as the rollback target in case
    degradation is detected in Phase 4.
-7. **Apply changes** in priority order:
-   1. Cross-referenced findings (both agents independently agree).
-   2. Critical issues from the critic.
-   3. Significant gaps from the critic.
-   4. Novel researcher findings with high impact.
-   5. Weaknesses reinforced by researcher findings.
-   6. Remaining weaknesses.
-   7. Minor issues.
+9. **Apply changes** in priority order:
+   1. Cross-referenced findings (all three agents independently agree).
+   2. Critical issues from the harsh critic (not targeting protected elements).
+   3. Resolved advocate-critic conflicts (preserving strength where possible).
+   4. Significant gaps from the harsh critic.
+   5. Novel researcher findings with high impact.
+   6. Amplification of advocate's high-impact elements.
+   7. Weaknesses reinforced by researcher findings.
+   8. Application of advocate's effective patterns to new areas.
+   9. Remaining weaknesses.
+   10. Minor issues.
    - After each change, verify it does not regress a fix from a prior iteration.
+   - After each change, verify it does not weaken a protected element.
    - Verify no individual quality dimension regressed (per-dimension check).
    - For each change, note whether it was clear-cut or a judgment call.
-8. Increment the iteration counter.
-9. Record the iteration summary for the refinement log, including:
-   - Severity distribution from the critic (aggregate and per-dimension)
-   - Researcher novelty rate (or "researcher dropped" if applicable)
-   - Count of changes applied vs. findings discarded (with reasons)
+10. Increment the iteration counter.
+11. Record the iteration summary for the refinement log, including:
+    - Severity distribution from the harsh critic (aggregate and per-dimension)
+    - Researcher novelty rate (or "researcher dropped" if applicable)
+    - Advocate findings: strengths protected count, amplifications applied,
+      strength erosion flags (if any)
+    - Advocate-critic conflicts and their resolutions
+    - Count of changes applied vs. findings discarded (with reasons)
 
 ### Phase 4 — Convergence Check
 
@@ -438,9 +629,9 @@ specific findings before reverting or stopping.
 **STOP if ANY of these conditions is true:**
 
 - Iteration counter ≥ maximum (default 3).
-- Critic found 0 critical issues AND 0 significant gaps, AND the researcher's
-  novelty rate is below 20% (or the researcher was dropped).
-- Critic explicitly assessed the content as strong or excellent without
+- Harsh critic found 0 critical issues AND 0 significant gaps, AND the
+  researcher's novelty rate is below 20% (or the researcher was dropped).
+- Harsh critic explicitly assessed the content as strong or excellent without
   manufacturing concerns.
 - **Degradation detected**: The severity score increased compared to the prior
   iteration. Inspect the specific findings to confirm real degradation (not
@@ -448,6 +639,14 @@ specific findings before reverting or stopping.
   Phase 3, record the degradation event in the refinement log, and stop. This
   check applies only when two or more severity scores exist (the first iteration
   establishes the baseline).
+- **Strength erosion detected**: The advocate flagged STRENGTH EROSION in the
+  current iteration — previously identified standout strengths were weakened or
+  removed. Inspect the specific erosion findings. If confirmed, revert to the
+  retained rollback version, record the erosion event, and stop.
+- **Oscillation detected**: Changes applied in this iteration revert changes
+  from a prior iteration. This indicates the process is cycling between
+  competing solutions rather than converging. Stop and present both versions to
+  the user with an explanation of the competing perspectives.
 - **Stagnation detected**: The severity score did not decrease by more than 10%
   across two consecutive iterations, indicating the process is not making
   meaningful progress.
@@ -458,10 +657,17 @@ specific findings before reverting or stopping.
 **CONTINUE if ALL of these conditions are true:**
 
 - Iteration counter is less than the maximum.
-- Critic found at least 1 critical issue or significant gap, OR the
+- Harsh critic found at least 1 critical issue or significant gap, OR the
   researcher's novelty rate is at or above 20%.
 - Severity score decreased by more than 10% compared to the prior iteration.
 - No individual quality dimension regressed without justification.
+- No unresolved strength erosion flags from the advocate.
+
+**DEFAULT**: If neither all STOP conditions are false nor all CONTINUE conditions
+are true (e.g., severity score decreased but by less than 10% on a single
+iteration), treat this as a **soft stagnation signal**. Record it. If the next
+iteration also triggers this default, stagnation is confirmed and STOP applies.
+On the first occurrence, continue to Phase 2.
 
 If continuing, return to Phase 2 with the updated content.
 If stopping, proceed to Phase 5.
@@ -487,7 +693,9 @@ If stopping, proceed to Phase 5.
 - Minimum 2 iterations completed.
 - All critical issues identified across all iterations were either resolved or
   explicitly justified as not applicable (with rationale documented).
-- Final critic assessment contains 0 critical issues and 0 significant gaps.
+- Final harsh critic assessment contains 0 critical issues and 0 significant
+  gaps.
+- No unresolved strength erosion flags from the advocate.
 - Content is internally consistent — no contradictions introduced by merging
   feedback from different iterations.
 - Information barriers were maintained throughout every iteration.
@@ -500,23 +708,42 @@ Failure conditions take precedence over pass conditions when both apply:
   version achieved, flag every unresolved issue, and inform the user.
 - A sub-agent fails to produce structured output: re-prompt once with tighter
   formatting instructions. If the second attempt also fails, proceed with the
-  output from the functioning sub-agent and note reduced confidence in the
+  output from the functioning sub-agents and note reduced confidence in the
   refinement log.
 
 ### Edge Cases
 
-- **Content already excellent** — If the first critic finds no critical issues
-  or significant gaps, still complete the minimum 2 iterations. The researcher
-  may surface non-obvious improvements the critic would not think to look for.
-- **Researcher and critic fundamentally disagree** — Apply the conflict
-  resolution criteria from the Synthesis Discipline constraint. Document the
-  disagreement and resolution rationale in the refinement log.
+- **Content already excellent** — If the first harsh critic finds no critical
+  issues or significant gaps, still complete the minimum 2 iterations. The
+  researcher may surface non-obvious improvements, and the advocate may identify
+  amplification opportunities the critic would not think to look for.
+- **Agents fundamentally disagree** — Apply the conflict resolution criteria
+  from the Synthesis Discipline constraint. Document the disagreement and
+  resolution rationale in the refinement log.
+- **Advocate and harsh critic target the same element** — This is the most
+  informative signal in the tribunal: the element is simultaneously strong and
+  flawed. Apply surgical precision — fix the flaw without destroying the
+  strength. Document the resolution.
 - **Very long content (estimated over 60K tokens)** — Segment into logical
   sections. Run a single iteration per segment (no minimum for segments), then
   reassemble and run a 2-iteration holistic pass on the full content.
   Inter-section consistency issues (terminology, cross-references) are addressed
   during the holistic pass. Total sub-agent calls are bounded by:
-  `(segments × 2) + (holistic iterations × 2)`.
+  `(segments × 3) + (holistic iterations × 3)`.
+- **Embedded code in text content** — Code blocks (YAML frontmatter, JSON
+  examples, shell commands) embedded in text content are in-scope for refinement
+  of their surrounding documentation but out-of-scope for execution or
+  compilation verification. The critic MAY flag obviously incorrect code syntax;
+  the advocate MAY champion effective code examples. Treat code correctness
+  findings at MEDIUM confidence unless the agent provides specific evidence.
+- **Content size growth** — If the refined content exceeds 150% of the original
+  size without corresponding quality improvement, flag this in the refinement
+  log and recommend the user review whether the growth is justified.
+- **Partial rollback** — When degradation is detected (Phase 4), full reversion
+  is the default. However, if the orchestrator can clearly identify that
+  specific changes caused the degradation while others were beneficial, it MAY
+  perform a partial rollback: revert the harmful changes while preserving the
+  beneficial ones. Document the rationale for partial vs. full rollback.
 - **Degradation detected** — See Phase 4. Revert to the version from the prior
   iteration and stop.
 
@@ -524,7 +751,7 @@ Failure conditions take precedence over pass conditions when both apply:
 
 ### Example 1 — Refining a Copilot Agent Skill
 
-**User input**: `#adversarial-refinement features/skills/testing-standards/SKILL.md`
+**User input**: `#refinement-tribunal features/skills/testing-standards/SKILL.md`
 
 **Phase 1 — Preparation**:
 
@@ -534,7 +761,7 @@ Failure conditions take precedence over pass conditions when both apply:
   review."
 - No focus areas specified; all quality dimensions weighted equally.
 
-**Phase 2, Iteration 1 — Dual-Agent Launch**:
+**Phase 2, Iteration 1 — Tribunal Launch**:
 
 Researcher prompt (instantiated):
 
@@ -547,7 +774,7 @@ Researcher prompt (instantiated):
 > Five profound insights outweigh twenty surface observations. Do NOT reference
 > or propose changes to any specific document. Report general findings only.
 
-Critic prompt (instantiated):
+Harsh critic prompt (instantiated):
 
 > You are a harsh, meticulous, and deeply knowledgeable critic specializing in
 > software testing methodology. You have zero tolerance for mediocrity and an
@@ -555,44 +782,67 @@ Critic prompt (instantiated):
 > identify every flaw, gap, weakness, inconsistency, and missed opportunity:
 > \[full skill content inserted here]. \[Sections 1–5 as defined in template.]
 > This is the first review. Evaluate comprehensively across all severity levels.
-> Be ruthless. Do not hedge, soften, or qualify. Prioritize findings by
-> impact — the most damaging issues first.
+> Be ruthless. Do not hedge, soften, or qualify.
+
+Advocate prompt (instantiated):
+
+> You are an intelligent, deeply knowledgeable, and encouraging reviewer
+> specializing in software testing methodology. You have a sharp eye for what
+> works well in Copilot agent skills. Review this Copilot agent skill with an
+> honest but positive lens. \[full skill content inserted here]. \[Sections 1–5
+> as defined in template.] This is the first review. Evaluate
+> comprehensively — identify both broad and subtle strengths across the full
+> content. Be honest. Do not manufacture praise.
 
 **Phase 3, Iteration 1 — Synthesis**:
 
 - Researcher (processed first): 12 findings total. 8 novel (novelty rate: 67%).
   Highest-impact novel finding: mutation-testing concepts not covered in the
   skill's anti-pattern catalog.
-- Critic (processed second): 2 critical issues (ambiguous constraint language,
-  missing edge case for framework mocking), 3 significant gaps, 5 weaknesses,
-  4 minor issues. Severity score: (2 × 8) + (3 × 4) + (5 × 2) + (4 × 1) = 42.
-- Cross-reference: Both agents independently flagged the testing-framework
+- Advocate (processed second): 4 standout strengths (protection list built), 3
+  high-impact elements (amplification list built), 5 effective patterns
+  identified. Greatest asset: the skill's constraint-driven structure forces
+  consistent test quality.
+- Harsh critic (processed third): 2 critical issues (ambiguous constraint
+  language, missing edge case for framework mocking), 3 significant gaps, 5
+  weaknesses, 4 minor issues. Severity score: (2 × 8) + (3 × 4) + (5 × 2) +
+  (4 × 1) = 42. One significant gap targets a protected element — flagged for
+  conflict resolution.
+- Cross-reference: All three agents independently flagged the testing-framework
   mocking gap. Elevated to highest priority.
-- Applied: 2 critical fixes, 3 gap fills, 3 novel researcher findings, 2
-  reinforced weaknesses. Deferred: 3 weaknesses, 4 minor items to next
-  iteration.
+- Advocate-critic conflict: Harsh critic flagged "constraint language is too
+  rigid" in a section the advocate identified as a standout strength
+  ("constraint-driven structure"). Resolution: softened specific constraint
+  language while preserving the structural pattern the advocate championed.
+- Applied: 2 critical fixes, 3 gap fills, 3 novel researcher findings, 1
+  advocate amplification, 2 reinforced weaknesses. Deferred: 3 weaknesses, 4
+  minor items to next iteration.
 
 **Phase 4, Iteration 1**: Counter = 1, which is less than minimum = 2. Continue
 unconditionally.
 
-**Phase 2, Iteration 2 — Dual-Agent Launch**:
+**Phase 2, Iteration 2 — Tribunal Launch**:
 
 Researcher prompt uses iteration-1 framing: "Focus exclusively on ADVANCED,
-SUBTLE, and NON-OBVIOUS insights." Critic reviews updated content: "Focus on
-what REMAINS problematic despite prior changes."
+SUBTLE, and NON-OBVIOUS insights." Harsh critic reviews updated content: "Focus
+on what REMAINS problematic despite prior changes." Advocate reviews updated
+content: "If previously identified strengths have been weakened or removed, flag
+this explicitly as STRENGTH EROSION."
 
 **Phase 3, Iteration 2 — Synthesis**:
 
 - Researcher: 8 findings total. 1 novel (novelty rate: 12%).
-- Critic: 0 critical, 0 significant gaps, 2 weaknesses, 3 minor.
+- Advocate: All 4 previously identified standout strengths preserved. 1 new
+  strength emerged from prior revisions. 0 strength erosion flags.
+- Harsh critic: 0 critical, 0 significant gaps, 2 weaknesses, 3 minor.
   Severity score: (0 × 8) + (0 × 4) + (2 × 2) + (3 × 1) = 7.
-- Applied: deferred weaknesses from iteration 1, 2 new weaknesses, 1 novel
-  researcher finding, 3 minor polish items.
+- Applied: deferred weaknesses from iteration 1, 2 new weaknesses, 1
+  amplification from advocate, 1 novel researcher finding, 3 minor polish.
 
-**Phase 4, Iteration 2**: Minimum met. Critic: 0 critical, 0 significant gaps.
-Researcher novelty rate: 12% (below 20% threshold). Severity score dropped
-42 to 7 (83% decrease). STOP — 0 critical + 0 significant gaps + researcher
-novelty below 20%.
+**Phase 4, Iteration 2**: Minimum met. Harsh critic: 0 critical, 0 significant
+gaps. Researcher novelty rate: 12% (below 20% threshold). No strength erosion.
+Severity score dropped 42 to 7 (83% decrease). STOP — 0 critical + 0
+significant gaps + researcher novelty below 20%.
 
 **Phase 5 — Delivery**: Writes updated SKILL.md, presents diff summary,
 refinement log covering both iterations, and convergence rationale.
@@ -600,7 +850,7 @@ refinement log covering both iterations, and convergence rationale.
 ### Example 2 — Refining API Documentation with Focus Areas
 
 **User input**:
-`#adversarial-refinement docs/api-reference.md -- focus on developer experience`
+`#refinement-tribunal docs/api-reference.md -- focus on developer experience`
 
 **Orchestrator behavior**:
 
@@ -614,13 +864,18 @@ refinement log covering both iterations, and convergence rationale.
    above all others: developer experience — specifically onboarding ease,
    time-to-first-successful-call, error message clarity, and example quality.
    Weight your findings heavily toward these dimensions."
-4. Critic prompt includes: "Prioritize the following quality dimensions above
-   all others: developer experience. Weight your critique heavily toward these
-   dimensions. A flaw in a focus dimension is one severity level higher than it
-   would otherwise be."
-5. Synthesis weights focus-area findings 2× in priority ordering. For example,
-   if the critic flags a "weakness" in example quality (a focus dimension), it
-   is treated with the same priority as a "significant gap" in a non-focus
-   dimension. If the researcher independently identifies example coverage as a
-   best practice, the cross-reference elevates it to highest priority.
-6. Iterates until convergence, presents diff, writes result, delivers log.
+4. Harsh critic prompt includes: "Prioritize the following quality dimensions
+   above all others: developer experience. Weight your critique heavily toward
+   these dimensions. A flaw in a focus dimension is one severity level higher
+   than it would otherwise be."
+5. Advocate prompt includes: "Prioritize the following quality dimensions above
+   all others: developer experience. Weight your assessment heavily toward
+   strengths in these dimensions."
+6. Synthesis weights focus-area findings 2× in priority ordering. For example,
+   if the harsh critic flags a "weakness" in example quality (a focus
+   dimension), it is treated with the same priority as a "significant gap" in a
+   non-focus dimension. If the researcher independently identifies example
+   coverage as a best practice and the advocate identifies existing examples as
+   a standout strength, the cross-reference elevates it to highest priority
+   while protecting the existing effective examples from erosion.
+7. Iterates until convergence, presents diff, writes result, delivers log.
