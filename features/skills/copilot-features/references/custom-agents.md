@@ -6,8 +6,11 @@ Custom Agents define specialist assistants with explicit scope, tool restriction
 
 - **Purpose:** Define specialist assistants with explicit scope, tools, and constraints.
 - **When to use:** Use for role-specific workflows (planning, research, front-end, etc.).
-- **File location:**
-  - Directory: `.github/agents/`
+- **File locations:**
+  - Workspace: `.github/agents/` (default for Copilot)
+  - Workspace: `.claude/agents/` (Claude Code compatibility — uses different frontmatter format)
+  - User-level: `~/.copilot/agents/`
+  - Configurable via `chat.agentFilesLocations` VS Code setting
   - File naming: `<name>.agent.md` where `<name>` is descriptive and role-focused
   - Examples: `code-reviewer.agent.md`, `planner.agent.md`, `api-designer.agent.md`
   - Names must clearly indicate the agent's specialized function
@@ -19,21 +22,26 @@ Custom Agents define specialist assistants with explicit scope, tool restriction
 
 ## Frontmatter
 
-<!-- prettier-ignore -->
 ```yaml
 ---
 name: "Planner"                               # Optional: Defaults to filename
 description: "Generate implementation plans"  # Optional: Used for picker and subagent discovery
 argument-hint: "feature=..."                  # Optional: Hint text in chat input
 tools: ["search", "web"]                      # Optional: Defaults to all user-enabled tools
-model: "Claude Sonnet 4"                      # Optional: Overrides user's selected model
+model: "Claude Sonnet 4"                      # Optional: Overrides user's selected model (string or array)
 agents: ["Agent1", "Agent2"]                  # Optional: Restrict allowed subagents (omit=all, []=none)
 user-invocable: true                          # Optional: Default true. Whether users can select this agent in the UI
 disable-model-invocation: false               # Optional: Default false. If true, prevents subagent invocation
+target: "vscode"                              # Optional: "vscode" or "github-copilot" (for cloud coding agent)
+hooks:                                        # Optional (Preview): Agent-scoped hooks
+  PreToolUse:
+    - type: command
+      command: "./scripts/validate.sh"
 handoffs:                                     # Optional: Workflow transitions
   - label: "Implement Plan"
     agent: "agent"
     prompt: "Implement the plan..."
+    model: "Claude Sonnet 4"
     send: false
 ---
 ```
@@ -46,15 +54,21 @@ All fields are optional:
 - `tools`: List of available tools for this agent. If omitted, all user-enabled tools are available.
   - Use `[]` for no tools (conversational only)
   - Common patterns: `["read", "search"]` (read-only), `["read", "edit", "search"]` (no terminal)
-- `model`: Specific AI model to use (overrides user's selected model).
+  - Also accepts MCP server names (e.g., `"mcp__server-name__tool-name"`) and extension tool identifiers
+- `model`: Specific AI model to use (overrides user's selected model). Can be a string or an array for prioritized fallback (e.g., `['Claude Opus 4.5', 'GPT-5.2']` — uses the first available model).
 - `agents`: Restrict allowed subagents by name array. Omit for all agents, `[]` for none.
 - `user-invocable`: Whether the agent can be selected and invoked by users in the UI. Default is `true`.
 - `disable-model-invocation`: If `true`, prevents the agent from being invoked as a subagent. Default is `false`.
+- `target`: Environment targeting. Use `"vscode"` (default) for VS Code or `"github-copilot"` for the cloud-based Copilot coding agent.
+- `hooks`: (Preview — requires `chat.useCustomAgentHooks`) Agent-scoped hooks that run only when this agent is active. Uses the same event/command structure as workspace hooks.
 - `handoffs`: Define sequential workflow transitions with:
   - `label`: Button text shown to user
   - `agent`: Target agent name to switch to
   - `prompt`: Pre-filled prompt text for next agent
+  - `model`: Optional model override for the handoff target
   - `send`: Auto-submit flag (true/false). Recommended: false for user review.
+
+> **Deprecated:** The `infer` field has been replaced by the combination of `user-invocable` and `disable-model-invocation`. Do not use `infer` in new agents.
 
 ### Controlling Agent Visibility and Invocation
 
@@ -98,8 +112,6 @@ handoffs:
     prompt: Review this implementation plan for potential issues.
     send: false
 ---
-
-## Example: Planner Agent
 
 ## Role
 
@@ -149,10 +161,11 @@ Next: User clicks "Start Implementation" to begin coding
 
 ## Validation Checklist
 
-- Stored in `.github/agents/` folder
+- Stored in a recognized agents directory (`.github/agents/` or configured location)
 - File naming: `*.agent.md`
 - All frontmatter fields are optional
 - Configure `user-invocable` and `disable-model-invocation` to control UI visibility and subagent behavior
+- Do not use the deprecated `infer` field — use `user-invocable` and `disable-model-invocation` instead
 - Use minimal tool sets matched to the agent's specific role
 - Define clear constraints on what the agent should NOT do
 - Handoffs are defined when workflow needs staged steps

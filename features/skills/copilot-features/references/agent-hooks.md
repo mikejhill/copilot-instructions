@@ -6,10 +6,13 @@ Agent Hooks execute custom shell commands at specific agent lifecycle points wit
 
 - **Purpose:** Execute custom shell commands at key agent lifecycle points with guaranteed outcomes.
 - **When to use:** Use for deterministic automation that must enforce security policies, run code quality checks, create audit trails, or inject context.
-- **File location:**
+- **File locations:**
   - Workspace: `.github/hooks/*.json` (shared with team) — **preferred for Copilot**
   - Workspace: `.claude/settings.json` (Claude Code compatibility — project hooks)
   - Workspace: `.claude/settings.local.json` (Claude Code compatibility — local hooks, gitignored)
+  - User-level: `~/.copilot/hooks/*.json` (personal hooks, apply to all workspaces)
+  - Agent-scoped: `hooks` field in `.agent.md` frontmatter (Preview — requires `chat.useCustomAgentHooks`)
+  - Configurable via `chat.hookFilesLocations` VS Code setting
 - **Selection/activation:** Hooks fire automatically at specific lifecycle events. No manual invocation required.
 - **Format compatibility:** Uses the same format as Claude Code and Copilot CLI for cross-tool compatibility.
 
@@ -78,6 +81,17 @@ Each hook entry requires:
 | **timeout** | number | No       | Timeout in seconds (default: 30)                |
 
 \*Either `command` or an OS-specific property must be provided.
+
+## Environment Variables
+
+Hook commands have access to these environment variables:
+
+| Variable                  | Description                                            |
+| ------------------------- | ------------------------------------------------------ |
+| `$TOOL_INPUT_FILE_PATH`   | File path from tool input (when tool operates on a file) |
+| `$CLAUDE_PROJECT_DIR`     | Project root directory (Claude Code compatibility)     |
+
+Use workspace-relative paths in `.github/hooks/` for Copilot. Use `"$CLAUDE_PROJECT_DIR"` for project-relative scripts in Claude Code contexts. Additional variables can be defined via the `env` property in hook configuration.
 
 ## OS-Specific Commands
 
@@ -437,7 +451,7 @@ EOF
 - Validate and sanitize all input data
 - Quote shell variables: use `"$VAR"` not `$VAR`
 - Block path traversal: check for `..` in paths
-- Use absolute paths with `"$CLAUDE_PROJECT_DIR"` for project-relative scripts (Claude Code compatibility variable — use workspace-relative paths in `.github/hooks/` for Copilot)
+- Use absolute paths with `"$CLAUDE_PROJECT_DIR"` for project-relative scripts (Claude Code compatibility) — use workspace-relative paths in `.github/hooks/` for Copilot
 - Skip sensitive files: avoid `.env`, `.git/`, keys
 
 **VS Code mitigations:**
@@ -476,7 +490,7 @@ EOF
 
 ## Validation Checklist
 
-- Stored in correct location (`.github/hooks/*.json` or settings files)
+- Stored in correct location (`.github/hooks/*.json`, user-level `~/.copilot/hooks/`, or settings files)
 - `type` property set to `"command"`
 - Command exists and is executable
 - Script outputs valid JSON when needed

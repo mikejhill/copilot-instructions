@@ -6,14 +6,17 @@ AGENTS.md provides tool-agnostic instructions for all agents in the workspace, d
 
 - **Purpose:** Provide custom instructions intended for all agents in the workspace. Intended to be tool-agnostic (GitHub Copilot, Claude Code, etc.).
 - **When to use:** Use when multiple agents share the same baseline rules and constraints.
-- **File location:**
-  - Path: `AGENTS.md` (workspace root) or nested in subfolders (experimental)
-  - Examples: `AGENTS.md`, `src/AGENTS.md`
+- **File locations:**
+  - Path: `AGENTS.md` (workspace root) or nested in subfolders
+  - Claude Code equivalent: `CLAUDE.md` (workspace root or `.claude/CLAUDE.md`)
+  - User-level: `~/.copilot/AGENTS.md`, `~/.claude/CLAUDE.md`
   - Fixed filename with no variation
+  - VS Code settings: `chat.useAgentsMdFile` (enable/disable), `chat.useClaudeMdFile` (enable/disable), `chat.useNestedAgentsMdFiles` (experimental — enables nested files)
 - **Selection/activation:**
   - Automatically applied to all chat requests
   - When multiple `AGENTS.md` files exist, only the closest to the active file is used
   - For monorepos, this allows folder-specific overrides
+  - Use `chat.useCustomizationsInParentRepositories` for monorepo support with parent directory scanning
 - **Important:** Both copilot-instructions.md and AGENTS.md can coexist. Use copilot-instructions.md for Copilot-specific guidance and AGENTS.md for tool-agnostic rules. Do not duplicate the same rules in both files.
 
 ## Frontmatter
@@ -80,3 +83,4 @@ Root `AGENTS.md`:
 - Rules are tool-agnostic (no Copilot-specific or Claude-specific syntax)
 - Contains agent-wide instructions, not a discoverable registry
 - If copilot-instructions.md also exists, ensure no duplicate rules between the two files
+- If using nested AGENTS.md files, enable `chat.useNestedAgentsMdFiles` in VS Code settings

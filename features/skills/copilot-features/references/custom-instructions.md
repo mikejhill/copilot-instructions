@@ -6,10 +6,13 @@ Custom Instructions define workspace-wide rules, standards, and conventions that
 
 - **Purpose:** Define workspace-wide rules, standards, and conventions.
 - **When to use:** Use for guidance that should apply to every chat request in the workspace.
-- **File location:**
-  - Path: `.github/copilot-instructions.md`
-  - Fixed filename with no variation
+- **File locations:**
+  - Workspace: `.github/copilot-instructions.md` (default, fixed filename)
+  - Organization-level: Configured via GitHub organization settings (applies across all repos)
+  - User-level: `~/.copilot/instructions/` (personal defaults, see Instructions Files reference)
+  - For tool-agnostic instructions, use AGENTS.md instead
 - **Selection/activation:** Automatically applied to all chat requests in the workspace.
+- **VS Code only.** This specific file format is for GitHub Copilot. For cross-tool instructions, use AGENTS.md. Claude Code uses `CLAUDE.md` for the equivalent feature.
 
 ## Frontmatter
 
@@ -56,6 +59,7 @@ export const UserProfile = ({ userId }) => {
 - Duplicating README or other docs instead of linking to them
 - Adding obvious instructions already enforced by linters/formatters
 - Duplicating the same rules in both copilot-instructions.md and AGENTS.md
+- Using settings-based code generation or test generation instructions (deprecated in VS Code 1.102 — use instruction files instead)
 
 ## Validation Checklist
 
@@ -63,3 +67,4 @@ export const UserProfile = ({ userId }) => {
 - No YAML frontmatter
 - Rules are specific and testable
 - If AGENTS.md also exists, ensure no duplicate rules between the two files
+- If Claude Code is also used in the workspace, ensure CLAUDE.md and copilot-instructions.md complement rather than duplicate each other

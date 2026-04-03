@@ -6,11 +6,15 @@ Instructions Files enable scoped guidance for specific files, languages, or fold
 
 - **Purpose:** Define scoped instructions for specific files, languages, or folders.
 - **When to use:** Use when rules should apply only to matching files or tasks.
-- **File location:**
-  - Directory: `.github/instructions/`
+- **File locations:**
+  - Workspace: `.github/instructions/` (default for Copilot)
+  - User-level: `~/.copilot/instructions/` (personal defaults, synced via Settings Sync)
+  - Configurable via `chat.instructionsFilesLocations` VS Code setting
+  - Subdirectories are scanned recursively
   - File naming: `<name>.instructions.md` where `<name>` is descriptive and domain-specific
   - Examples: `python-standards.instructions.md`, `api-guidelines.instructions.md`, `react-patterns.instructions.md`
   - Must use lowercase and hyphens
+  - Claude Code equivalent: `.claude/rules/` directory (uses `paths` property instead of `applyTo`)
 - **Selection/activation:** Three modes:
   - **On-demand** (`description`): Agent detects task relevance (task-based: migrations, refactoring, API work)
   - **Explicit** (`applyTo`): Files matching glob in context (file-based: language standards, framework rules)
@@ -75,13 +79,13 @@ description: Use when designing or implementing REST APIs to ensure consistent e
 ## Anti-patterns
 
 - Vague descriptions that don't enable discovery (e.g., "Helpful coding tips")
-- Overly broad `applyTo` patterns (e.g., `"**"`) with content only relevant to specific files
+- Using `applyTo: "**"` with content only relevant to specific files (use custom instructions or AGENTS.md for truly global rules, or narrow the glob pattern)
 - Duplicating documentation instead of linking
 - Mixing multiple concerns in one file (testing + API design + styling)
 
 ## Validation Checklist
 
-- Stored in `.github/instructions/` folder
+- Stored in a recognized instructions directory (`.github/instructions/` or configured location)
 - File naming: `*.instructions.md`
 - `applyTo` enables explicit pattern-based activation
 - `description` enables on-demand semantic activation (use "Use when..." pattern)
