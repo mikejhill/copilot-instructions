@@ -18,6 +18,7 @@ All features belong under `features/`. Never create features in `.github/` withi
 | Custom agents       | `features/agents/`                    | `<name>.agent.md`                     |
 | Agent hooks         | `features/hooks/`                     | `<name>.json`                         |
 | Reference resources | `features/resources/`                 | `<name>.md`                           |
+| Intent files        | Alongside the feature                 | `INTENT.md` or `<name>.intent.md`     |
 
 Do not place any feature files in `.github/`. The `.github/` directory in this repository is reserved for CI workflows only.
 
@@ -39,6 +40,14 @@ When adding a new feature to this repository:
 3. Follow the naming conventions: lowercase, hyphen-separated for variable-name features (skills, prompts, agents, instructions).
 4. Invoke the `copilot-features` skill for detailed implementation guidance on any feature type.
 5. Run the markdown linter before committing: `npx markdownlint-cli2`.
+
+## Intent Files
+
+Record operator goals and decisions for a feature in an intent file (`INTENT.md`
+for skills, `<name>.intent.md` for flat features). Intent files live alongside
+their feature and are used for creation, maintenance, and quality assessment —
+not by agents consuming the feature. See the `copilot-features` skill for the
+format specification.
 
 ## Constraints
 

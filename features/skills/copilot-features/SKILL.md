@@ -151,6 +151,19 @@ VS Code provides commands to scaffold features interactively:
 
 For detailed guidance on phrasing rules, constraints, and instructions, reference the [writing-ai-instructions](../writing-ai-instructions/SKILL.md) skill.
 
+### Intent Files
+
+Intent files (`INTENT.md` or `<name>.intent.md`) record the operator's goals
+and decision history for a feature. They enable feature regeneration,
+maintenance, and quality assessment over time.
+
+- Create an intent file when the operator provides goals for a new or existing
+  feature.
+- When iterating on a feature, append to the intent file's Log section.
+- Do NOT include intent files in a skill's frontmatter `references` list.
+- See [Intent Files](./references/intent-files.md) for the format
+  specification and agent behavior rules.
+
 ## Feature Interaction & Precedence
 
 When multiple features activate simultaneously with overlapping guidance:
