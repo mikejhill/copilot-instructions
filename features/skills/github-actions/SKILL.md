@@ -446,6 +446,48 @@ Only use actions that meet ALL of these requirements:
 unknown publishers, excessive permission requirements, or functionality
 already covered by official `actions/*` actions.
 
+## README Badges
+
+Every project with GitHub Actions workflows MUST include status badges
+in the README. Badges go immediately below the top-level heading
+(`# Project Name`), before any description text.
+
+### Required Badges
+
+At minimum, include these badges:
+
+| Badge             | Source                                                     |
+| ----------------- | ---------------------------------------------------------- |
+| **CI**            | GitHub Actions workflow badge for `ci.yml`                 |
+| **Release**       | GitHub Actions workflow badge for `release.yml`            |
+| **License**       | `img.shields.io/github/license/{owner}/{repo}`             |
+
+### Optional Badges
+
+Add these when applicable:
+
+| Badge             | When to Include                              | Source                                              |
+| ----------------- | -------------------------------------------- | --------------------------------------------------- |
+| **Version**       | Published to a package registry              | `img.shields.io/pypi/v/{pkg}`, `npmjs.com`, etc.   |
+| **Python version**| Python projects                              | `img.shields.io/pypi/pyversions/{pkg}`              |
+| **Coverage**      | Coverage service configured                  | Codecov, Coveralls, or shields.io                   |
+| **HACS**          | Home Assistant integrations                  | HACS badge from `hacs.xyz`                          |
+| **Downloads**     | Published to a registry                      | `img.shields.io/pypi/dm/{pkg}`, etc.               |
+
+### Format
+
+Use Markdown image-link syntax with the badge image and a link to the
+relevant page:
+
+```markdown
+[![CI](https://github.com/{owner}/{repo}/actions/workflows/ci.yml/badge.svg)](https://github.com/{owner}/{repo}/actions/workflows/ci.yml)
+[![Release](https://github.com/{owner}/{repo}/actions/workflows/release.yml/badge.svg)](https://github.com/{owner}/{repo}/actions/workflows/release.yml)
+[![License](https://img.shields.io/github/license/{owner}/{repo})](LICENSE)
+```
+
+Place all badges on consecutive lines (one per line) with a blank line
+before and after the badge block.
+
 ## Anti-patterns
 
 - **Manual tags** — Developers pushing tags bypasses the release
