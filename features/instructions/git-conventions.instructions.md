@@ -72,3 +72,16 @@ imports and added unit tests for validation functions.
 Closes #789
 Related-To: REFACTOR-123
 ```
+
+## Pre-commit Validation
+
+When committing changes that include `.md` files, run markdown linting
+before creating the commit. Use the project's markdownlint configuration
+if present (`.markdownlint-cli2.yaml` or `.markdownlint.jsonc`).
+
+```bash
+npx markdownlint-cli2 "**/*.md"
+```
+
+Fix any violations before committing. This prevents CI markdown-lint
+failures that would otherwise only surface after pushing.
