@@ -259,7 +259,7 @@ unless no setup action covers your ecosystem.
 | --------------- | ---------------------------------- | ---------------------------------- |
 | Gradle          | `gradle/actions/setup-gradle@v4`   | Automatic                          |
 | Maven           | `actions/setup-java@v4`            | `cache: maven`                     |
-| Python (uv)     | `astral-sh/setup-uv@v6`           | Automatic                          |
+| Python (uv)     | `astral-sh/setup-uv@v7`           | Automatic                          |
 | Python (pip)    | `actions/setup-python@v5`          | `cache: pip`                       |
 | Node.js         | `actions/setup-node@v4`            | `cache: npm` (or `pnpm`, `yarn`)  |
 | Go              | `actions/setup-go@v5`              | Automatic                          |
@@ -393,9 +393,12 @@ Pin to major version tags for readability, or full commit SHAs for
 maximum security in release workflows:
 
 ```yaml
-uses: actions/checkout@v4                                              # Major tag
-uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4 SHA
+uses: actions/checkout@v6                                              # Major tag
+uses: actions/checkout@<full-commit-sha>                               # SHA pin
 ```
+
+When SHA-pinning, look up the full commit hash for the tag on the
+action's releases page. Dependabot automatically updates SHA pins.
 
 Configure Dependabot to keep action versions current. See
 [Release Automation Reference](./references/release-automation.md) for
@@ -417,7 +420,7 @@ Only use actions that meet ALL of these requirements:
 
 | Purpose          | Action                                          |
 | ---------------- | ----------------------------------------------- |
-| Checkout         | `actions/checkout@v4`                           |
+| Checkout         | `actions/checkout@v6`                           |
 | Artifacts        | `actions/upload-artifact@v4`                    |
 | Artifacts        | `actions/download-artifact@v4`                  |
 | Attestation      | `actions/attest@v4`                             |
@@ -428,7 +431,7 @@ Only use actions that meet ALL of these requirements:
 | Go               | `actions/setup-go@v5`                           |
 | .NET             | `actions/setup-dotnet@v4`                       |
 | Gradle           | `gradle/actions/setup-gradle@v4`                |
-| UV (Python)      | `astral-sh/setup-uv@v6`                         |
+| UV (Python)      | `astral-sh/setup-uv@v7`                         |
 | Rust toolchain   | `dtolnay/rust-toolchain@stable`                 |
 | Rust cache       | `Swatinem/rust-cache@v2`                        |
 | Go lint          | `golangci/golangci-lint-action@v6`              |
@@ -440,7 +443,7 @@ Only use actions that meet ALL of these requirements:
 | Test reporter    | `dorny/test-reporter@v1`                        |
 | PR title lint    | `amannn/action-semantic-pull-request@v6`        |
 | Semantic release | `go-semantic-release/action@v1`                 |
-| Markdown lint    | `DavidAnson/markdownlint-cli2-action@v20`       |
+| Markdown lint    | `DavidAnson/markdownlint-cli2-action@v23`       |
 
 **Avoid** actions with fewer than 100 stars, no updates in 12+ months,
 unknown publishers, excessive permission requirements, or functionality
