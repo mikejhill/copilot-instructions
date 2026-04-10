@@ -598,6 +598,71 @@ console.error("Processing complete");
 For agent skill CLIs, always default to JSON output. Support a `--format`
 flag for human-readable alternatives when appropriate.
 
+## Runtime Version Management
+
+Use **fnm** (Fast Node Manager) to manage Node.js versions. fnm is a
+Rust-based version manager that reads `.node-version` and auto-switches
+Node.js versions when entering a project directory.
+
+### Why fnm
+
+- **Fast:** Rust-based, near-instant version switching (no shell startup lag).
+- **Cross-platform:** Native support for Windows, macOS, and Linux.
+- **Reads `.node-version`:** Aligns with the `.node-version` file in project
+  templates. Also reads `.nvmrc` for nvm compatibility.
+- **Auto-switch:** With `--use-on-cd`, fnm detects `.node-version` on `cd`
+  and activates the correct Node.js version automatically.
+- **Analog to pyenv:** Same mental model as `.python-version` in the Python
+  ecosystem.
+
+### Setup
+
+Install fnm and configure auto-switching in the shell profile:
+
+**PowerShell (Windows):**
+
+```powershell
+# Install via winget
+winget install Schniz.fnm
+
+# Add to PowerShell profile ($PROFILE)
+fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
+```
+
+**Bash/Zsh (macOS/Linux):**
+
+```bash
+# Install via curl
+curl -fsSL https://fnm.vercel.app/install | bash
+
+# Add to ~/.bashrc or ~/.zshrc
+eval "$(fnm env --use-on-cd)"
+```
+
+### Project Integration
+
+Every full project includes a `.node-version` file at the root:
+
+```text
+22
+```
+
+When a developer enters the project directory, fnm automatically installs
+(if needed) and activates Node.js 22. This works in conjunction with:
+
+- **`engines` in package.json:** pnpm warns at install time if the active
+  Node.js version does not satisfy the constraint.
+- **Corepack `packageManager`:** Pins the pnpm version independently of
+  Node.js.
+
+The three mechanisms are complementary:
+
+| Mechanism | What it pins | When it acts |
+| --- | --- | --- |
+| `.node-version` + fnm | Node.js runtime version | On `cd` into project |
+| `engines` in package.json | Node.js minimum version | On `pnpm install` |
+| `packageManager` + Corepack | pnpm version | On any pnpm command |
+
 ## Nesting and Extraction
 
 - Max 3 levels of nesting.

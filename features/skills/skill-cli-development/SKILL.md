@@ -224,11 +224,22 @@ Defer to the language-specific skill for detailed configuration. Summary:
 | Type checking | `ty check` | `tsc --noEmit` |
 | Testing | `pytest` | `vitest` |
 | Build | None (source runs directly) | `tsc` (Standard) or none (Lightweight `.mjs`) |
-| Dev execution | `uv run` | `tsx` (Standard) or `node` (Lightweight `.mjs`) |
+| Execution | `uv run` | `tsx` (Standard) or `node` (Lightweight `.mjs`) |
 
 **Lightweight CLIs** skip formal lint, type-check, and test pipelines. Correctness is verified by manual execution.
 
 **Standard CLIs** must pass all four checks (lint, format, type-check, test) before every commit.
+
+### Execution Model
+
+Skill CLIs must always run **from source** via their language's runtime management tool — never installed as standalone executables.
+
+| Tier | Python | Node.js |
+| --- | --- | --- |
+| Lightweight | `uv run scripts/<name>.py` | `node scripts/<name>.mjs` |
+| Standard | `uv run` (from project directory) | `npx tsx src/main.ts` |
+
+Global or tool-level installation (`uv tool install`, `pip install`, `npm install -g`, `pnpm add -g`) creates copies that diverge from the skill's source as the skill evolves. Running from source guarantees the CLI always reflects the current skill content.
 
 ## Configuration
 
@@ -362,6 +373,7 @@ Skills may be replicated across many repositories. Minimize disk footprint.
 - Expose credentials in CLI output, error messages, or logs.
 - Allow agents to write credential files.
 - Bundle compiled binaries in the skill directory.
+- Install skill CLIs as standalone executables (`uv tool install`, `pip install`, `npm install -g`). Always run from source.
 - Hard-code paths or platform-specific values without OS detection.
 - Use Bash or PowerShell for CLIs requiring cross-platform support.
 - Store configuration defaults in config files (defaults belong in code).

@@ -63,6 +63,7 @@ and self-contained.
 - TypeScript 5.x with strict mode
 - pnpm as package manager (version pinned via Corepack)
 - Biome for linting and formatting (ESLint + Prettier as alternative)
+- fnm for Node.js version management (reads `.node-version`)
 - Node.js 22 LTS unless specified
 - Build tool determined by use case:
   - Browser: Vite (bundling + dev server)
@@ -81,7 +82,7 @@ and self-contained.
    `packageManager` field, and `engines` constraint
 2. tsconfig.json with strict compiler options
 3. biome.json with lint and format configuration
-4. .node-version pinning the Node.js runtime version
+4. .node-version pinning the Node.js runtime version (consumed by fnm)
 5. src/ with entry point, classes, and modules
 6. tests/ with Vitest test files
 7. Type annotations on all signatures
