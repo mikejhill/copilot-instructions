@@ -1,13 +1,17 @@
 ---
 name: typescript-development
-description: "Use when creating, modifying, or refactoring TypeScript projects for browser frontends or Node.js applications. Enforces OOP architecture, strict typing, Vite-based builds, Vitest testing, structured error handling, TSDoc documentation, and kebab-case file naming conventions."
+description: "Use when creating, modifying, or refactoring TypeScript projects for browser frontends, Node.js servers, or Node.js CLI tools. Enforces OOP architecture, strict typing, Biome linting/formatting, Vitest testing, structured error handling, TSDoc documentation, and kebab-case file naming conventions."
 ---
 
 # TypeScript Development
 
 ## Objective
 
-Produce TypeScript solutions in two modes: full projects for compiled browser frontends or Node.js applications and one-offs for ad-hoc execution. Full projects must be OOP-first, strictly typed, tested, and built with Vite; one-offs must be short and self-contained.
+Produce TypeScript solutions in two modes: full projects for compiled browser
+frontends, Node.js servers, or Node.js CLI tools, and one-offs for ad-hoc
+execution. Full projects must be OOP-first, strictly typed, tested, and built
+with the appropriate toolchain for the target use case; one-offs must be short
+and self-contained.
 
 ## Scope
 
@@ -18,12 +22,13 @@ Produce TypeScript solutions in two modes: full projects for compiled browser fr
 - One-off snippets
 - OOP design with strict typing
 - Project structure with src-layout
-- Vite build configuration
-- pnpm dependency management
+- Build configuration (Vite for browser, tsc for Node.js)
+- pnpm dependency management with Corepack
 - Vitest-based testing
-- ESLint and Prettier configuration
-- Browser frontend projects (primary)
-- Node.js applications (secondary)
+- Biome linting and formatting
+- Browser frontend projects
+- Node.js server projects
+- Node.js CLI tools (including agent skill CLIs)
 
 **Out-of-scope:**
 
@@ -41,24 +46,27 @@ Produce TypeScript solutions in two modes: full projects for compiled browser fr
 
 - Purpose and functional requirements
 - Target output form: FullProject or OneOff
-- Target runtime: Browser or Node
+- Target use case: Browser, Server, or CLI
 - New development or refactor
 
 **Optional inputs:**
 
 - Mode selection override
 - Existing patterns to mirror
-- Domain context (DOM, API, data processing)
+- Domain context (DOM, API, data processing, CLI)
 - Performance constraints
 - Node.js version constraints (default: 22 LTS)
+- Linting alternative (ESLint + Prettier instead of Biome)
 
 **Assumptions:**
 
 - TypeScript 5.x with strict mode
-- pnpm as package manager
-- Vite as build tool / dev server
-- ESLint + Prettier for linting and formatting
+- pnpm as package manager (version pinned via Corepack)
+- Biome for linting and formatting (ESLint + Prettier as alternative)
 - Node.js 22 LTS unless specified
+- Build tool determined by use case:
+  - Browser: Vite (bundling + dev server)
+  - Server / CLI: tsc (compilation), tsx (development execution)
 
 ## Outputs
 
@@ -69,14 +77,18 @@ Produce TypeScript solutions in two modes: full projects for compiled browser fr
 
 **Full Project Structure:**
 
-1. package.json with project metadata, scripts, and dependencies
+1. package.json with project metadata, scripts, dependencies, Corepack
+   `packageManager` field, and `engines` constraint
 2. tsconfig.json with strict compiler options
-3. vite.config.ts with build configuration
-4. eslint.config.ts with linting rules
-5. .prettierrc with formatting rules
-6. src/ with entry point, classes, and modules
-7. tests/ with Vitest test files
-8. Type annotations on all signatures
+3. biome.json with lint and format configuration
+4. .node-version pinning the Node.js runtime version
+5. src/ with entry point, classes, and modules
+6. tests/ with Vitest test files
+7. Type annotations on all signatures
+8. Additional per use case:
+   - Browser: vite.config.ts, index.html
+   - Server: vitest.config.ts
+   - CLI: vitest.config.ts, src/cli.ts for argument parsing
 
 **Files produced:**
 
@@ -85,8 +97,8 @@ Produce TypeScript solutions in two modes: full projects for compiled browser fr
 
 **Formatting requirements (FullProject):**
 
-- Formatting enforced by Prettier (do not specify manually)
-- Import ordering enforced by ESLint `perfectionist/sort-imports` rule
+- Formatting enforced by Biome (do not specify manually)
+- Import ordering enforced by Biome `organizeImports`
 - Naming conventions: see [references/standards.md](references/standards.md)
 - Guard clauses at method entry (instruction-only; not enforceable by tooling)
 - Max 3 levels of nesting (instruction-only; not enforceable by tooling)
@@ -100,6 +112,13 @@ Produce TypeScript solutions in two modes: full projects for compiled browser fr
 - OneOff when user asks for a snippet, quick function, or inline solution
 - FullProject when user asks for an application, reusable library, or multi-file project
 - Default to FullProject when ambiguous
+
+**Use-case selection rules:**
+
+- Browser when building a web frontend or browser utility
+- Server when building a web server, API, or backend service
+- CLI when building a command-line tool, script, or agent skill utility
+- Default to CLI when ambiguous for Node.js projects
 
 **Global MUST:**
 
@@ -135,9 +154,8 @@ Produce TypeScript solutions in two modes: full projects for compiled browser fr
 - Document all public classes, methods, and interfaces with TSDoc
 - Keep module-level code limited to imports, constants, and class/function definitions
 - Pass `tsc --noEmit` with zero errors
-- Pass `eslint .` with zero violations
-- Pass `prettier --check .` with zero violations
-- Include ESLint, Prettier, and Vitest in `devDependencies`
+- Pass `pnpm biome check .` with zero violations
+- Include Biome and Vitest in `devDependencies`
 
 **FullProject MUST NOT:**
 
@@ -163,11 +181,18 @@ Produce TypeScript solutions in two modes: full projects for compiled browser fr
 ## Procedure
 
 1. Select mode using the mode rules.
-2. Determine runtime target (Browser or Node).
-3. FullProject: scaffold directory structure, then populate tsconfig.json, package.json, vite.config.ts, ESLint config, source files, and tests.
+2. Determine use case (Browser, Server, or CLI).
+3. FullProject: scaffold directory structure per use case, then populate
+   tsconfig.json, package.json, biome.json, source files, and tests. Add
+   vite.config.ts for Browser or vitest.config.ts for Server/CLI.
 4. OneOff: write the minimal typed snippet within line limits.
-5. Apply typing, guard clauses, error handling, naming conventions, and documentation.
-6. FullProject post-generation: run `pnpm install`, `pnpm run build`, `pnpm run lint`, `pnpm run test`.
+5. Apply typing, guard clauses, error handling, naming conventions, and
+   documentation.
+6. CLI projects: apply patterns from
+   [references/cli-patterns.md](references/cli-patterns.md) — testable
+   argument parsing, two-layer validation, structured output.
+7. FullProject post-generation: run `pnpm install`, `pnpm run build`,
+   `pnpm run lint`, `pnpm run test`.
 
 ## Validation
 
@@ -181,8 +206,7 @@ Produce TypeScript solutions in two modes: full projects for compiled browser fr
 - Error classes extend a base application error
 - Tests cover success paths, error paths, and boundary values
 - `tsc --noEmit` reports zero errors
-- `eslint .` reports zero violations
-- `prettier --check .` reports zero violations
+- `pnpm biome check .` reports zero violations
 - `vitest run` passes with zero failures
 - Max nesting depth is 3
 

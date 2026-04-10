@@ -386,3 +386,210 @@ describe("UserService", () => {
   });
 });
 ```
+
+## Full Project (CLI Refactor Example)
+
+### Before (Monolithic Script)
+
+```typescript
+import { readFileSync, writeFileSync } from "node:fs";
+
+const args = process.argv.slice(2);
+const inputFile = args[0];
+if (!inputFile) {
+  console.log("Error: no input file");
+  process.exit(1);
+}
+
+const data = JSON.parse(readFileSync(inputFile, "utf-8"));
+const results = [];
+for (const item of data) {
+  if (item.status === "active") {
+    results.push({ id: item.id, name: item.name.toUpperCase() });
+  }
+}
+
+console.log(JSON.stringify(results, null, 2));
+```
+
+**Problems:** No type safety, `console.log` for both output and errors,
+argument parsing not testable, business logic mixed with I/O, no error
+handling.
+
+### After (Refactored CLI)
+
+#### src/errors.ts (CLI)
+
+```typescript
+abstract class AppError extends Error {
+
+```typescript
+import { parseArgs } from "node:util";
+import { ValidationError } from "./errors.ts";
+
+interface CliOptions {
+  readonly inputPath: string;
+  readonly outputFormat: "json" | "text";
+}
+
+function parseCli(argv: string[]): CliOptions {
+  const { values } = parseArgs({
+    args: argv,
+    options: {
+      input: { type: "string", short: "i" },
+      format: { type: "string", short: "f", default: "json" },
+      help: { type: "boolean", short: "h" },
+    },
+    strict: true,
+  });
+
+  if (values.help) {
+    console.error("Usage: transform --input <path> [--format json|text]");
+    process.exit(0);
+  }
+
+  if (!values.input) {
+    throw new ValidationError("input", "--input is required");
+  }
+
+  const format = values.format as string;
+  if (format !== "json" && format !== "text") {
+    throw new ValidationError("format", `invalid format: ${format}`);
+  }
+
+  return { inputPath: values.input, outputFormat: format };
+}
+
+export { parseCli };
+export type { CliOptions };
+```
+
+#### src/types.ts (CLI)
+
+```typescript
+interface InputItem {
+  readonly id: string;
+  readonly name: string;
+  readonly status: "active" | "inactive";
+}
+
+interface TransformedItem {
+  readonly id: string;
+  readonly name: string;
+}
+
+export type { InputItem, TransformedItem };
+```
+
+#### src/services/transformer.ts
+
+```typescript
+import type { InputItem, TransformedItem } from "../types.ts";
+
+class Transformer {
+  transform(items: readonly InputItem[]): readonly TransformedItem[] {
+    return items
+      .filter((item) => item.status === "active")
+      .map((item) => ({
+        id: item.id,
+        name: item.name.toUpperCase(),
+      }));
+  }
+}
+
+export { Transformer };
+```
+
+#### src/main.ts
+
+```typescript
+#!/usr/bin/env node
+
+import { readFileSync } from "node:fs";
+import { parseCli } from "./cli.ts";
+import { Transformer } from "./services/transformer.ts";
+import { AppError } from "./errors.ts";
+import type { InputItem } from "./types.ts";
+
+async function main(argv: string[]): Promise<number> {
+  const options = parseCli(argv);
+
+  const raw = readFileSync(options.inputPath, "utf-8");
+  const items = JSON.parse(raw) as InputItem[];
+
+  const transformer = new Transformer();
+  const results = transformer.transform(items);
+
+  if (options.outputFormat === "json") {
+    process.stdout.write(JSON.stringify(results, null, 2) + "\n");
+  } else {
+    for (const item of results) {
+      process.stdout.write(`${item.id}\t${item.name}\n`);
+    }
+  }
+
+  return 0;
+}
+
+main(process.argv.slice(2))
+  .then((code) => {
+    process.exitCode = code;
+  })
+  .catch((error: unknown) => {
+    if (error instanceof AppError) {
+      console.error(`Error: ${error.message}`);
+      process.exitCode = 1;
+    } else {
+      console.error("Unexpected error:", error);
+      process.exitCode = 2;
+    }
+  });
+```
+
+#### tests/cli.test.ts
+
+```typescript
+import { describe, expect, it } from "vitest";
+import { parseCli } from "../src/cli.ts";
+import { ValidationError } from "../src/errors.ts";
+
+describe("parseCli", () => {
+  it("parses valid arguments", () => {
+    const options = parseCli(["--input", "data.json"]);
+    expect(options).toEqual({
+      inputPath: "data.json",
+      outputFormat: "json",
+    });
+  });
+
+  it("throws for missing input", () => {
+    expect(() => parseCli([])).toThrow(ValidationError);
+  });
+});
+```
+
+#### tests/services/transformer.test.ts
+
+```typescript
+import { describe, expect, it } from "vitest";
+import { Transformer } from "../../src/services/transformer.ts";
+import type { InputItem } from "../../src/types.ts";
+
+describe("Transformer", () => {
+  const transformer = new Transformer();
+
+  it("transforms active items", () => {
+    const items: InputItem[] = [
+      { id: "1", name: "alice", status: "active" },
+      { id: "2", name: "bob", status: "inactive" },
+    ];
+    const result = transformer.transform(items);
+    expect(result).toEqual([{ id: "1", name: "ALICE" }]);
+  });
+
+  it("returns empty array for no active items", () => {
+    const items: InputItem[] = [{ id: "1", name: "alice", status: "inactive" }];
+    expect(transformer.transform(items)).toHaveLength(0);
+  });
+});
+```

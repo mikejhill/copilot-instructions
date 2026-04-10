@@ -198,13 +198,18 @@ skills/<skill-name>/
 skills/<skill-name>/
 ├── SKILL.md
 └── scripts/<name>/
-    ├── package.json              # Metadata, scripts, dependencies
-    ├── tsconfig.json             # strict: true
+    ├── package.json              # Corepack packageManager, engines, bin, scripts
+    ├── tsconfig.json             # strict: true, NodeNext module
+    ├── biome.json                # Lint and format config
+    ├── vitest.config.ts
+    ├── .node-version             # Pins Node.js runtime version
     ├── src/
-    │   ├── index.ts              # Entry point
-    │   ├── cli.ts                # Argument parsing and dispatch
+    │   ├── main.ts               # Entry point (bootstrap + error boundary)
+    │   ├── cli.ts                # Argument parsing (node:util parseArgs)
+    │   ├── errors.ts             # Error hierarchy
     │   └── <domain>.ts           # Business logic
     └── tests/
+        ├── cli.test.ts
         └── <domain>.test.ts
 ```
 
@@ -214,12 +219,12 @@ Defer to the language-specific skill for detailed configuration. Summary:
 
 | Concern | Python | Node.js |
 | --- | --- | --- |
-| Package manager | `uv` | `npm` or `pnpm` |
-| Linting | `ruff check` | `eslint` |
-| Formatting | `ruff format` | `prettier` |
+| Package manager | `uv` | `pnpm` (with Corepack) |
+| Linting + Formatting | `ruff check` + `ruff format` | `biome check .` |
 | Type checking | `ty check` | `tsc --noEmit` |
 | Testing | `pytest` | `vitest` |
 | Build | None (source runs directly) | `tsc` (Standard) or none (Lightweight `.mjs`) |
+| Dev execution | `uv run` | `tsx` (Standard) or `node` (Lightweight `.mjs`) |
 
 **Lightweight CLIs** skip formal lint, type-check, and test pipelines. Correctness is verified by manual execution.
 
@@ -256,12 +261,12 @@ def config_dir(skill_name: str) -> Path:
 
 **Node.js:**
 
-```javascript
+```typescript
 import { join } from "node:path";
 import { homedir } from "node:os";
 
-function configDir(skillName) {
-  const base = process.env.XDG_CONFIG_HOME || join(homedir(), ".config");
+function configDir(skillName: string): string {
+  const base = process.env["XDG_CONFIG_HOME"] ?? join(homedir(), ".config");
   return join(base, "copilot-skills", skillName);
 }
 ```

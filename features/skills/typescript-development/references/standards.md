@@ -15,12 +15,12 @@
 
 ```text
 project-name/
-├── package.json
+├── package.json            # Corepack packageManager, engines, scripts
 ├── tsconfig.json
 ├── tsconfig.node.json
 ├── vite.config.ts
-├── eslint.config.ts
-├── .prettierrc
+├── biome.json
+├── .node-version           # Pins Node.js runtime version
 ├── index.html
 ├── public/
 │   └── favicon.svg
@@ -48,18 +48,17 @@ project-name/
 └── node_modules/              # (gitignored)
 ```
 
-### Node.js Application
+### Node.js Server
 
 ```text
 project-name/
-├── package.json
+├── package.json            # Corepack packageManager, engines, scripts
 ├── tsconfig.json
-├── vite.config.ts
-├── eslint.config.ts
-├── .prettierrc
+├── vitest.config.ts
+├── biome.json
+├── .node-version           # Pins Node.js runtime version
 ├── src/
-│   ├── main.ts                # Entry point (CLI or server bootstrap)
-│   ├── cli.ts                 # Argument parsing (CLI projects)
+│   ├── main.ts                # Server bootstrap
 │   ├── config.ts              # Typed configuration
 │   ├── errors.ts              # Custom error hierarchy
 │   ├── types.ts               # Shared interfaces and type aliases
@@ -75,6 +74,34 @@ project-name/
 │   │   └── processor.test.ts
 │   └── models/
 │       └── result.test.ts
+└── node_modules/              # (gitignored)
+```
+
+### Node.js CLI
+
+```text
+project-name/
+├── package.json            # Corepack packageManager, engines, bin field
+├── tsconfig.json
+├── vitest.config.ts
+├── biome.json
+├── .node-version           # Pins Node.js runtime version
+├── src/
+│   ├── main.ts                # Entry point (bootstrap + error boundary)
+│   ├── cli.ts                 # Argument parsing (testable)
+│   ├── config.ts              # Typed configuration
+│   ├── errors.ts              # Custom error hierarchy
+│   ├── types.ts               # Shared interfaces and type aliases
+│   ├── services/
+│   │   └── processor.ts       # Core business logic
+│   └── utils/
+│       └── validation.ts      # Input validation utility
+├── tests/
+│   ├── cli.test.ts            # Argument parsing tests
+│   ├── services/
+│   │   └── processor.test.ts
+│   └── utils/
+│       └── validation.test.ts
 └── node_modules/              # (gitignored)
 ```
 
@@ -497,7 +524,79 @@ class Logger {
 
 ### Node.js Projects
 
-Use a structured logger library (pino or winston). Configure at the application entry point. Instantiate per-module loggers with context.
+Use **pino** for structured logging in Node.js server and CLI projects. pino
+outputs newline-delimited JSON by default, is the fastest Node.js logger, and
+has zero required dependencies beyond the core package.
+
+Configure the logger at the application entry point. Create child loggers with
+context for each module.
+
+```typescript
+import pino from "pino";
+
+// Application entry point — configure once
+const logger = pino({
+  level: process.env["LOG_LEVEL"] ?? "info",
+});
+
+// In service classes — create child loggers
+class Processor {
+  private readonly logger: pino.Logger;
+
+  constructor(parentLogger: pino.Logger) {
+    this.logger = parentLogger.child({ service: "Processor" });
+  }
+
+  async run(): Promise<void> {
+    this.logger.info({ inputPath: this.config.inputPath }, "processing started");
+    // ...
+    this.logger.info({ count: results.length }, "processing complete");
+  }
+}
+```
+
+**CLI projects:** Log diagnostics to stderr only (stdout is reserved for
+program output). Use `pino({ level: "info" }, pino.destination(2))` to direct
+logs to stderr, or use `console.error` for lightweight CLIs that do not need
+structured logging.
+
+## CLI I/O Standards
+
+CLI tools follow strict I/O conventions for composability. These apply to
+Node.js CLI and agent skill CLI projects.
+
+### stdout vs stderr
+
+- **stdout:** Program output only — results, data, structured responses.
+  This is what callers capture and parse.
+- **stderr:** Diagnostics — progress, warnings, errors, log messages.
+  This is what operators read during execution.
+
+Never mix diagnostics into stdout. Callers (including AI agents) parse stdout
+and expect clean, predictable output.
+
+### Exit Codes
+
+| Code | Meaning | When to Use |
+| --- | --- | --- |
+| 0 | Success | Operation completed normally |
+| 1 | User error | Bad arguments, invalid input, validation failure |
+| 2 | Runtime error | Unhandled exception, external service failure |
+
+### Structured Output
+
+When a CLI produces structured results, output JSON to stdout:
+
+```typescript
+// Correct: structured result to stdout
+process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+
+// Correct: diagnostics to stderr
+console.error("Processing complete");
+```
+
+For agent skill CLIs, always default to JSON output. Support a `--format`
+flag for human-readable alternatives when appropriate.
 
 ## Nesting and Extraction
 
