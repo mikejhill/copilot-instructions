@@ -317,11 +317,12 @@ page. Use `if: always()` so summaries appear even on failure.
 
 ### Test Reporters
 
-Use `dorny/test-reporter@v1` to render test results as GitHub checks
-with file-level annotations. Verify its maintenance status before
-adopting; if stale, use `$GITHUB_STEP_SUMMARY` markdown tables instead.
-Configure with JUnit XML paths and the appropriate reporter. Always
-gate with `if: always()`.
+Use `dorny/test-reporter@v3` to render test results as GitHub checks
+with file-level annotations. This version runs on Node.js 24 (required
+by GitHub Actions runners from June 2026). Verify its maintenance status
+before adopting; if stale, use `$GITHUB_STEP_SUMMARY` markdown tables
+instead. Configure with JUnit XML paths and the appropriate reporter.
+Always gate with `if: always()`.
 
 ### Build Scans (Gradle)
 
@@ -440,7 +441,7 @@ Only use actions that meet ALL of these requirements:
 | Docker build     | `docker/build-push-action@v6`                   |
 | Docker login     | `docker/login-action@v3`                        |
 | PyPI publish     | `pypa/gh-action-pypi-publish@release/v1`        |
-| Test reporter    | `dorny/test-reporter@v1`                        |
+| Test reporter    | `dorny/test-reporter@v3`                        |
 | PR title lint    | `amannn/action-semantic-pull-request@v6`        |
 | Semantic release | `go-semantic-release/action@v1`                 |
 | Markdown lint    | `DavidAnson/markdownlint-cli2-action@v23`       |
