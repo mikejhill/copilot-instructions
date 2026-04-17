@@ -259,7 +259,7 @@ unless no setup action covers your ecosystem.
 | --------------- | ---------------------------------- | ---------------------------------- |
 | Gradle          | `gradle/actions/setup-gradle@v4`   | Automatic                          |
 | Maven           | `actions/setup-java@v4`            | `cache: maven`                     |
-| Python (uv)     | `astral-sh/setup-uv@v7`           | Automatic                          |
+| Python (uv)     | `astral-sh/setup-uv@v8.1.0`        | Automatic                          |
 | Python (pip)    | `actions/setup-python@v5`          | `cache: pip`                       |
 | Node.js         | `actions/setup-node@v4`            | `cache: npm` (or `pnpm`, `yarn`)  |
 | Go              | `actions/setup-go@v5`              | Automatic                          |
@@ -484,6 +484,17 @@ runtime such as `docker` / `composite`) at the pinned tag. If a
 dependency still ships `using: node20` at its latest tag, raise an
 upstream issue and consider alternatives; do not mask the warning.
 
+Not every publisher maintains a floating major tag. Before pinning to
+`@vN`, confirm the tag exists:
+
+```bash
+gh api repos/{owner}/{repo}/tags --jq '.[].name' | head
+```
+
+If only `vN.M.P` tags are published (e.g. `astral-sh/setup-uv` at the
+time of writing), pin to the specific patch version instead of `@vN`;
+a non-existent floating tag causes an immediate workflow failure.
+
 #### Keeping currency
 
 - Enable Dependabot for `github-actions` with `interval: weekly` and an
@@ -521,7 +532,7 @@ Only use actions that meet ALL of these requirements:
 | Go               | `actions/setup-go@v5`                           |
 | .NET             | `actions/setup-dotnet@v4`                       |
 | Gradle           | `gradle/actions/setup-gradle@v4`                |
-| UV (Python)      | `astral-sh/setup-uv@v8`                         |
+| UV (Python)      | `astral-sh/setup-uv@v8.1.0`                     |
 | Rust toolchain   | `dtolnay/rust-toolchain@stable`                 |
 | Rust cache       | `Swatinem/rust-cache@v2`                        |
 | Go lint          | `golangci/golangci-lint-action@v6`              |

@@ -50,14 +50,14 @@ web-auth-bridge = { path = "../../web-auth-bridge", editable = true }
 
 ```text
 ┌─────────────────────────────────────────────────────┐
-│                   WebAuthBridge                       │
-│  (facade: ties auth, cache, HTTP client, pool)       │
-├─────────────┬──────────────┬────────────────────────┤
-│ Authenticator│  AuthCache   │  BrowserContextPool    │
-│ (browser +   │ (file-backed │ (N parallel contexts   │
-│  callback)   │  persistence)│  with cloned cookies)  │
-├─────────────┴──────────────┴────────────────────────┤
-│              BrowserManager (Playwright)              │
+│                   WebAuthBridge                     │
+│  (facade: ties auth, cache, HTTP client, pool)      │
+├──────────────┬──────────────┬───────────────────────┤
+│ Authenticator│  AuthCache   │  BrowserContextPool   │
+│ (browser +   │ (file-backed │ (N parallel contexts  │
+│  callback)   │  persistence)│  with cloned cookies) │
+├──────────────┴──────────────┴───────────────────────┤
+│              BrowserManager (Playwright)            │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -71,15 +71,15 @@ web-auth-bridge = { path = "../../web-auth-bridge", editable = true }
 
 ### Key Classes
 
-| Class | Import | Purpose |
-| --- | --- | --- |
-| `WebAuthBridge` | `web_auth_bridge` | Main facade — authenticate, get clients, manage pool |
-| `AuthResult` | `web_auth_bridge` | Cookies, tokens, localStorage from auth |
-| `CookieData` | `web_auth_bridge` | Single cookie with Playwright dict conversion |
-| `Credentials` | `web_auth_bridge` | Username/password/extra for headless auth |
-| `AuthCallback` | `web_auth_bridge` | Protocol: consumer implements `authenticate()` |
-| `SessionRenewalCallback` | `web_auth_bridge` | Protocol: per-context session renewal |
-| `StealthConfig` | `web_auth_bridge` | Anti-detection settings (user-agent, viewport) |
+| Class                    | Import            | Purpose                                              |
+| ------------------------ | ----------------- | ---------------------------------------------------- |
+| `WebAuthBridge`          | `web_auth_bridge` | Main facade — authenticate, get clients, manage pool |
+| `AuthResult`             | `web_auth_bridge` | Cookies, tokens, localStorage from auth              |
+| `CookieData`             | `web_auth_bridge` | Single cookie with Playwright dict conversion        |
+| `Credentials`            | `web_auth_bridge` | Username/password/extra for headless auth            |
+| `AuthCallback`           | `web_auth_bridge` | Protocol: consumer implements `authenticate()`       |
+| `SessionRenewalCallback` | `web_auth_bridge` | Protocol: per-context session renewal                |
+| `StealthConfig`          | `web_auth_bridge` | Anti-detection settings (user-agent, viewport)       |
 
 ## Implementation Guide
 
@@ -270,34 +270,34 @@ WebAuthBridge(
 
 **Methods:**
 
-| Method | Returns | Description |
-| --- | --- | --- |
-| `await ensure_authenticated()` | `AuthResult` | Auth if needed, return valid result |
-| `await force_authenticate()` | `AuthResult` | Force fresh auth, ignore cache |
-| `http_client(**kwargs)` | `httpx.AsyncClient` | Async HTTP client with auth cookies |
-| `http_client_sync(**kwargs)` | `httpx.Client` | Sync HTTP client with auth cookies |
-| `cookies()` | `list[dict]` | Raw cookies as Playwright dicts |
-| `tokens()` | `dict[str, str]` | Token key-value pairs |
-| `browser_pool(count, *, session_renewal)` | `AsyncContextManager[list[BrowserContext]]` | Parallel browser contexts |
-| `invalidate_cache()` | `None` | Delete cache, force re-auth next time |
+| Method                                    | Returns                                     | Description                           |
+| ----------------------------------------- | ------------------------------------------- | ------------------------------------- |
+| `await ensure_authenticated()`            | `AuthResult`                                | Auth if needed, return valid result   |
+| `await force_authenticate()`              | `AuthResult`                                | Force fresh auth, ignore cache        |
+| `http_client(**kwargs)`                   | `httpx.AsyncClient`                         | Async HTTP client with auth cookies   |
+| `http_client_sync(**kwargs)`              | `httpx.Client`                              | Sync HTTP client with auth cookies    |
+| `cookies()`                               | `list[dict]`                                | Raw cookies as Playwright dicts       |
+| `tokens()`                                | `dict[str, str]`                            | Token key-value pairs                 |
+| `browser_pool(count, *, session_renewal)` | `AsyncContextManager[list[BrowserContext]]` | Parallel browser contexts             |
+| `invalidate_cache()`                      | `None`                                      | Delete cache, force re-auth next time |
 
 ### AuthResult
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `cookies` | `list[CookieData]` | Extracted browser cookies |
-| `local_storage` | `dict[str, str]` | localStorage entries |
-| `tokens` | `dict[str, str]` | Arbitrary token key-value pairs |
-| `expires_at` | `datetime \| None` | When the auth expires |
-| `is_expired` | `bool` (property) | Whether auth has expired |
+| Field           | Type               | Description                     |
+| --------------- | ------------------ | ------------------------------- |
+| `cookies`       | `list[CookieData]` | Extracted browser cookies       |
+| `local_storage` | `dict[str, str]`   | localStorage entries            |
+| `tokens`        | `dict[str, str]`   | Arbitrary token key-value pairs |
+| `expires_at`    | `datetime \| None` | When the auth expires           |
+| `is_expired`    | `bool` (property)  | Whether auth has expired        |
 
 ### Credentials
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `username` | `str` | Login username/email |
-| `password` | `str` | Login password |
-| `extra` | `dict[str, str]` | Additional fields (MFA secrets, etc.) |
+| Field      | Type             | Description                           |
+| ---------- | ---------------- | ------------------------------------- |
+| `username` | `str`            | Login username/email                  |
+| `password` | `str`            | Login password                        |
+| `extra`    | `dict[str, str]` | Additional fields (MFA secrets, etc.) |
 
 ## Constraints
 
