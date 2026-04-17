@@ -317,12 +317,48 @@ page. Use `if: always()` so summaries appear even on failure.
 
 ### Test Reporters
 
-Use `dorny/test-reporter@v3` to render test results as GitHub checks
-with file-level annotations. This version runs on Node.js 24 (required
-by GitHub Actions runners from June 2026). Verify its maintenance status
-before adopting; if stale, use `$GITHUB_STEP_SUMMARY` markdown tables
-instead. Configure with JUnit XML paths and the appropriate reporter.
-Always gate with `if: always()`.
+Always emit JUnit XML from test runs and render it into the run UI with a
+dedicated reporter action. Two reporters are currently node24-native and
+actively maintained:
+
+- **`dorny/test-reporter@v3`** — creates a GitHub check with file-level
+  annotations for failures. Good when you want a linkable check listed
+  alongside other required checks.
+- **`mikepenz/action-junit-report@v6`** — posts a detailed table into the
+  run summary, adds check annotations, and supports passing a custom
+  `check_name` per matrix leg. Good default when you want the results
+  visible directly on the workflow run page.
+
+Emit JUnit output from the test step and pass the XML to the reporter in
+an `if: always()` step so failures still produce a report:
+
+```yaml
+- run: pytest --junitxml=junit.xml                              # or vitest, jest --reporters=jest-junit, gradle test, etc.
+- name: Publish test report
+  if: always()
+  uses: mikepenz/action-junit-report@v6
+  with:
+    report_paths: junit.xml
+    check_name: Tests (${{ matrix.os }} / py${{ matrix.python-version }})
+    include_passed: true
+    detailed_summary: true
+    require_tests: true
+- name: Upload test results
+  if: always()
+  uses: actions/upload-artifact@v7
+  with:
+    name: test-results-${{ matrix.os }}-py${{ matrix.python-version }}
+    path: junit.xml
+    if-no-files-found: ignore
+```
+
+When running a matrix, give each leg a unique `check_name` so results
+don't overwrite each other. When running a `pull_request` from a fork,
+note that `checks: write` is unavailable — fall back to
+`$GITHUB_STEP_SUMMARY` markdown tables in that case.
+
+**Do NOT omit test reporters.** A green workflow with no visible test
+results is operationally equivalent to one that never ran tests.
 
 ### Build Scans (Gradle)
 
@@ -405,6 +441,59 @@ Configure Dependabot to keep action versions current. See
 [Release Automation Reference](./references/release-automation.md) for
 the Dependabot configuration.
 
+### Action Version Currency
+
+Every workflow MUST use the latest major version of every action it
+references. Stale versions cause three classes of problem observed in
+practice:
+
+1. **Runtime deprecation warnings.** GitHub periodically retires Node.js
+   runtimes (Node 16 in 2023, Node 20 in 2026). Actions pinned to old
+   majors still declare `using: node20` and generate deprecation
+   annotations on every run until bumped.
+2. **Missing bug fixes and performance improvements.** Major bumps of
+   `actions/checkout`, `actions/upload-artifact`, `actions/setup-*`, and
+   `astral-sh/setup-uv` routinely deliver faster caching, larger upload
+   limits, and security patches.
+3. **Incompatibility with newer runner images.** Older action majors
+   occasionally break when Ubuntu / Windows / macOS runner images update
+   their preinstalled toolchains.
+
+**Do NOT use `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`, `FORCE_JAVASCRIPT_ACTIONS_TO_NODE20`,
+or `ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION` as a workaround.** These
+environment variables force a mismatched Node runtime onto actions that
+declare an older one. They silence the annotation but do not fix the
+underlying maintenance debt, and they can introduce subtle runtime
+incompatibilities. Bump the action version instead.
+
+#### Verifying currency
+
+Before committing a workflow, verify each `uses:` reference is on the
+latest major version:
+
+```bash
+# Latest release of an action
+gh api repos/{owner}/{repo}/releases/latest --jq .tag_name
+
+# Node runtime declared by a published tag
+curl -s https://raw.githubusercontent.com/{owner}/{repo}/{tag}/action.yml | grep "using:"
+```
+
+Every referenced action MUST declare `using: node24` (or a non-Node
+runtime such as `docker` / `composite`) at the pinned tag. If a
+dependency still ships `using: node20` at its latest tag, raise an
+upstream issue and consider alternatives; do not mask the warning.
+
+#### Keeping currency
+
+- Enable Dependabot for `github-actions` with `interval: weekly` and an
+  `open-pull-requests-limit` that allows batched updates.
+- Treat the resulting bump PRs as routine maintenance. Merge them after
+  CI passes; they should rarely require manual intervention.
+- During reviews, reject workflow changes that introduce `@v4` or older
+  of any action with a newer major available, unless there is a
+  documented, time-bounded blocker in a code comment.
+
 ## Trusted Actions
 
 ### Selection Criteria
@@ -422,8 +511,8 @@ Only use actions that meet ALL of these requirements:
 | Purpose          | Action                                          |
 | ---------------- | ----------------------------------------------- |
 | Checkout         | `actions/checkout@v6`                           |
-| Artifacts        | `actions/upload-artifact@v4`                    |
-| Artifacts        | `actions/download-artifact@v4`                  |
+| Artifacts        | `actions/upload-artifact@v7`                    |
+| Artifacts        | `actions/download-artifact@v8`                  |
 | Attestation      | `actions/attest@v4`                             |
 | Cache            | `actions/cache@v4`                              |
 | Java             | `actions/setup-java@v4`                         |
@@ -432,19 +521,24 @@ Only use actions that meet ALL of these requirements:
 | Go               | `actions/setup-go@v5`                           |
 | .NET             | `actions/setup-dotnet@v4`                       |
 | Gradle           | `gradle/actions/setup-gradle@v4`                |
-| UV (Python)      | `astral-sh/setup-uv@v7`                         |
+| UV (Python)      | `astral-sh/setup-uv@v8`                         |
 | Rust toolchain   | `dtolnay/rust-toolchain@stable`                 |
 | Rust cache       | `Swatinem/rust-cache@v2`                        |
 | Go lint          | `golangci/golangci-lint-action@v6`              |
-| GitHub Release   | `softprops/action-gh-release@v2`                |
+| GitHub Release   | `softprops/action-gh-release@v3`                |
 | Docker buildx    | `docker/setup-buildx-action@v3`                 |
 | Docker build     | `docker/build-push-action@v6`                   |
 | Docker login     | `docker/login-action@v3`                        |
 | PyPI publish     | `pypa/gh-action-pypi-publish@release/v1`        |
 | Test reporter    | `dorny/test-reporter@v3`                        |
+| JUnit reporter   | `mikepenz/action-junit-report@v6`               |
 | PR title lint    | `amannn/action-semantic-pull-request@v6`        |
 | Semantic release | `go-semantic-release/action@v1`                 |
 | Markdown lint    | `DavidAnson/markdownlint-cli2-action@v23`       |
+
+The table above reflects current latest major versions. Action versions
+move; see [Action Version Currency](#action-version-currency) for how to
+keep them fresh on each repository.
 
 **Avoid** actions with fewer than 100 stars, no updates in 12+ months,
 unknown publishers, excessive permission requirements, or functionality
@@ -518,6 +612,16 @@ before and after the badge block.
   `if: always()` on reporting steps instead
 - **`version: latest`** in lint actions — Breaks caching and
   reproducibility; pin to a specific version
+- **Stale action majors** — Leaving `@v4` / `@v5` pinned after newer
+  majors ship; causes Node.js runtime deprecation warnings and misses
+  upstream fixes. See [Action Version Currency](#action-version-currency).
+- **`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` / `ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION`**
+  — Masks deprecation warnings instead of fixing them; bump the action
+  version instead.
+- **Tests without a reporter** — Running `pytest` / `jest` / `go test`
+  without emitting JUnit XML and publishing it via a test-reporter
+  action makes failures invisible on the run page. See
+  [Test Reporters](#test-reporters).
 
 ## Related Files
 
